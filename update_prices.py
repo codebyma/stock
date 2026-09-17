@@ -20,7 +20,8 @@ from pathlib import Path
 import FinanceDataReader as fdr
 
 # 이 스크립트 파일과 같은 폴더에 있는 stock.json을 가리킴 (경로 하드코딩 없이 안전하게)
-DATA_PATH = Path(__file__).resolve() / "stock.json"
+DATA_PATH = Path(__file__).resolve().parent / "stock.json"
+
 
 
 def load_data(path):
