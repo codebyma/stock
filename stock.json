@@ -921,6 +921,32 @@
           "amount": 960
         }
       ]
+    },
+    {
+      "id": "divrec_856nsos",
+      "key": "381180",
+      "name": "TIGER 미국필라델피아반도체나스닥",
+      "ticker": "381180",
+      "month": "2026-09",
+      "date": "2026-09-17",
+      "perShare": 10,
+      "accounts": [
+        {
+          "accountId": "acc_aioddia",
+          "quantity": 144,
+          "amount": 1440
+        },
+        {
+          "accountId": "acc_1ynxc3d",
+          "quantity": 269,
+          "amount": 2690
+        },
+        {
+          "accountId": "acc_o4bjqgm",
+          "quantity": 525,
+          "amount": 5250
+        }
+      ]
     }
   ],
   "stockCatalog": [
