@@ -1,0 +1,1026 @@
+{
+  "owners": [
+    {
+      "id": "me",
+      "name": "빠빵"
+    },
+    {
+      "id": "wife",
+      "name": "앙빵"
+    }
+  ],
+  "targets": {
+    "133690": 25,
+    "305080": 10,
+    "319640": 5,
+    "360750": 35,
+    "381180": 10,
+    "458730": 15
+  },
+  "plannedCash": 10000,
+  "accounts": [
+    {
+      "id": "acc_aioddia",
+      "ownerId": "me",
+      "name": "연금저축"
+    },
+    {
+      "id": "acc_1q4nsbn",
+      "ownerId": "me",
+      "name": "ISA"
+    },
+    {
+      "id": "acc_1ynxc3d",
+      "ownerId": "wife",
+      "name": "연금저축"
+    },
+    {
+      "id": "acc_5ma36fu",
+      "ownerId": "wife",
+      "name": "IRP"
+    },
+    {
+      "id": "acc_brrccwl",
+      "ownerId": "wife",
+      "name": "ISA"
+    },
+    {
+      "id": "acc_o4bjqgm",
+      "ownerId": "wife",
+      "name": "DC"
+    }
+  ],
+  "stocks": [
+    {
+      "id": "stk_ciu0vbl",
+      "accountId": "acc_aioddia",
+      "quantity": 198,
+      "buys": [
+        {
+          "id": "tx_cklblvk",
+          "date": "2026-09-04",
+          "quantity": 182,
+          "price": 16946,
+          "amount": 3084172
+        },
+        {
+          "id": "tx_bd1bcj2",
+          "date": "2026-09-08",
+          "quantity": 16,
+          "price": 25655,
+          "amount": 410480
+        }
+      ],
+      "sells": [],
+      "dividends": [],
+      "key": "360750"
+    },
+    {
+      "id": "stk_j07rhyo",
+      "accountId": "acc_aioddia",
+      "quantity": 32,
+      "buys": [
+        {
+          "id": "tx_rlxdg7a",
+          "date": "2026-09-04",
+          "quantity": 32,
+          "price": 101712,
+          "amount": 3254784
+        }
+      ],
+      "sells": [],
+      "dividends": [],
+      "key": "133690"
+    },
+    {
+      "id": "stk_w0rfxnb",
+      "accountId": "acc_aioddia",
+      "quantity": 144,
+      "buys": [
+        {
+          "id": "tx_qqb1cg1",
+          "date": "2026-09-04",
+          "quantity": 144,
+          "price": 13897,
+          "amount": 2001168
+        }
+      ],
+      "sells": [],
+      "dividends": [],
+      "key": "381180"
+    },
+    {
+      "id": "stk_wj4tpvs",
+      "accountId": "acc_1ynxc3d",
+      "quantity": 373,
+      "buys": [
+        {
+          "id": "tx_8botibx",
+          "date": "2026-09-04",
+          "quantity": 373,
+          "price": 17178,
+          "amount": 6407394
+        }
+      ],
+      "sells": [],
+      "dividends": [],
+      "key": "360750"
+    },
+    {
+      "id": "stk_qqdaf6n",
+      "accountId": "acc_1ynxc3d",
+      "quantity": 46,
+      "buys": [
+        {
+          "id": "tx_5xugpr5",
+          "date": "2026-09-04",
+          "quantity": 46,
+          "price": 108497,
+          "amount": 4990862
+        }
+      ],
+      "sells": [],
+      "dividends": [],
+      "key": "133690"
+    },
+    {
+      "id": "stk_2pw5hr7",
+      "accountId": "acc_1ynxc3d",
+      "quantity": 269,
+      "buys": [
+        {
+          "id": "tx_foe90fe",
+          "date": "2026-09-04",
+          "quantity": 269,
+          "price": 16307,
+          "amount": 4386583
+        }
+      ],
+      "sells": [],
+      "dividends": [],
+      "key": "381180"
+    },
+    {
+      "id": "stk_ro133ti",
+      "accountId": "acc_aioddia",
+      "quantity": 26,
+      "buys": [
+        {
+          "id": "tx_u7t550a",
+          "date": "2026-09-04",
+          "quantity": 26,
+          "price": 15346,
+          "amount": 398996
+        }
+      ],
+      "sells": [],
+      "dividends": [],
+      "key": "458730"
+    },
+    {
+      "id": "stk_8krljwn",
+      "accountId": "acc_aioddia",
+      "quantity": 80,
+      "buys": [
+        {
+          "id": "tx_3jbyb3f",
+          "date": "2026-09-04",
+          "quantity": 80,
+          "price": 11930,
+          "amount": 954400
+        }
+      ],
+      "sells": [],
+      "dividends": [],
+      "key": "305080"
+    },
+    {
+      "id": "stk_ef8wp45",
+      "accountId": "acc_aioddia",
+      "quantity": 35,
+      "buys": [
+        {
+          "id": "tx_r9efht8",
+          "date": "2026-09-04",
+          "quantity": 35,
+          "price": 21291,
+          "amount": 745185
+        }
+      ],
+      "sells": [],
+      "dividends": [],
+      "key": "319640"
+    },
+    {
+      "id": "stk_l3pjnd0",
+      "accountId": "acc_aioddia",
+      "quantity": 35,
+      "buys": [
+        {
+          "id": "tx_0cchxh3",
+          "date": "2026-09-04",
+          "quantity": 35,
+          "price": 13149,
+          "amount": 460215
+        }
+      ],
+      "sells": [],
+      "dividends": [],
+      "key": "182480"
+    },
+    {
+      "id": "stk_mksk3xo",
+      "accountId": "acc_aioddia",
+      "quantity": 65,
+      "buys": [
+        {
+          "id": "tx_z1hnsli",
+          "date": "2026-09-04",
+          "quantity": 65,
+          "price": 8407,
+          "amount": 546455
+        }
+      ],
+      "sells": [],
+      "dividends": [],
+      "key": "304660"
+    },
+    {
+      "id": "stk_193wsro",
+      "accountId": "acc_aioddia",
+      "quantity": 71,
+      "buys": [
+        {
+          "id": "tx_pjtgeby",
+          "date": "2026-09-04",
+          "quantity": 71,
+          "price": 12094,
+          "amount": 858674
+        }
+      ],
+      "sells": [],
+      "dividends": [],
+      "key": "371460"
+    },
+    {
+      "id": "stk_6e1w47x",
+      "accountId": "acc_1ynxc3d",
+      "quantity": 39,
+      "buys": [
+        {
+          "id": "tx_mn5wfav",
+          "date": "2026-09-04",
+          "quantity": 39,
+          "price": 14077,
+          "amount": 549003
+        }
+      ],
+      "sells": [],
+      "dividends": [],
+      "key": "371460"
+    },
+    {
+      "id": "stk_ogcsuhq",
+      "accountId": "acc_1ynxc3d",
+      "quantity": 86,
+      "buys": [
+        {
+          "id": "tx_5b7qtgw",
+          "date": "2026-09-04",
+          "quantity": 86,
+          "price": 11772,
+          "amount": 1012392
+        }
+      ],
+      "sells": [],
+      "dividends": [],
+      "key": "305080"
+    },
+    {
+      "id": "stk_m53w39l",
+      "accountId": "acc_1ynxc3d",
+      "quantity": 32,
+      "buys": [
+        {
+          "id": "tx_77bzllq",
+          "date": "2026-09-04",
+          "quantity": 32,
+          "price": 9671,
+          "amount": 309472
+        }
+      ],
+      "sells": [],
+      "dividends": [],
+      "key": "304660"
+    },
+    {
+      "id": "stk_0slfxzl",
+      "accountId": "acc_5ma36fu",
+      "quantity": 245,
+      "buys": [
+        {
+          "id": "tx_1dgc6hy",
+          "date": "2026-09-06",
+          "quantity": 245,
+          "price": 15090,
+          "amount": 3697050
+        }
+      ],
+      "sells": [],
+      "dividends": [],
+      "key": "360750"
+    },
+    {
+      "id": "stk_n93tsbg",
+      "accountId": "acc_5ma36fu",
+      "quantity": 34,
+      "buys": [
+        {
+          "id": "tx_g6624qg",
+          "date": "2026-09-06",
+          "quantity": 34,
+          "price": 103134,
+          "amount": 3506556
+        }
+      ],
+      "sells": [],
+      "dividends": [],
+      "key": "133690"
+    },
+    {
+      "id": "stk_fxiabam",
+      "accountId": "acc_5ma36fu",
+      "quantity": 387,
+      "buys": [
+        {
+          "id": "tx_eampp1v",
+          "date": "2026-09-06",
+          "quantity": 387,
+          "price": 12742,
+          "amount": 4931154
+        }
+      ],
+      "sells": [],
+      "dividends": [],
+      "key": "329650"
+    },
+    {
+      "id": "stk_dk5wf2i",
+      "accountId": "acc_brrccwl",
+      "quantity": 37,
+      "buys": [
+        {
+          "id": "tx_tnz12tz",
+          "date": "2026-09-06",
+          "quantity": 37,
+          "price": 27995,
+          "amount": 1035815
+        }
+      ],
+      "sells": [],
+      "dividends": [],
+      "key": "360750"
+    },
+    {
+      "id": "stk_r2144xx",
+      "accountId": "acc_brrccwl",
+      "quantity": 13,
+      "buys": [
+        {
+          "id": "tx_ct4h1o2",
+          "date": "2026-09-06",
+          "quantity": 13,
+          "price": 157383,
+          "amount": 2045979
+        }
+      ],
+      "sells": [],
+      "dividends": [],
+      "key": "133690"
+    },
+    {
+      "id": "stk_bwh1i1q",
+      "accountId": "acc_brrccwl",
+      "quantity": 246,
+      "buys": [
+        {
+          "id": "tx_ct20jx9",
+          "date": "2026-09-06",
+          "quantity": 246,
+          "price": 12325,
+          "amount": 3031950
+        }
+      ],
+      "sells": [],
+      "dividends": [],
+      "key": "458730"
+    },
+    {
+      "id": "stk_hijgh1z",
+      "accountId": "acc_1q4nsbn",
+      "quantity": 13,
+      "buys": [
+        {
+          "id": "tx_slcq0e9",
+          "date": "2026-09-06",
+          "quantity": 13,
+          "price": 154390,
+          "amount": 2007070
+        }
+      ],
+      "sells": [],
+      "dividends": [],
+      "key": "133690"
+    },
+    {
+      "id": "stk_cq87j5i",
+      "accountId": "acc_1q4nsbn",
+      "quantity": 194,
+      "buys": [
+        {
+          "id": "tx_t7dn4i3",
+          "date": "2026-09-06",
+          "quantity": 194,
+          "price": 12184,
+          "amount": 2363696
+        }
+      ],
+      "sells": [],
+      "dividends": [],
+      "key": "458730"
+    },
+    {
+      "id": "stk_3ahv85y",
+      "accountId": "acc_1q4nsbn",
+      "quantity": 23,
+      "buys": [
+        {
+          "id": "tx_2mxg2v8",
+          "date": "2026-09-06",
+          "quantity": 23,
+          "price": 21772,
+          "amount": 500756
+        }
+      ],
+      "sells": [],
+      "dividends": [],
+      "key": "466940"
+    },
+    {
+      "id": "stk_62x7lgg",
+      "accountId": "acc_1q4nsbn",
+      "key": "441640",
+      "quantity": 10,
+      "buys": [
+        {
+          "id": "tx_j7xick0",
+          "date": "2026-09-08",
+          "quantity": 10,
+          "price": 12861,
+          "amount": 128610
+        }
+      ],
+      "sells": []
+    },
+    {
+      "id": "stk_nvssojl",
+      "accountId": "acc_1q4nsbn",
+      "key": "360750",
+      "quantity": 6,
+      "buys": [
+        {
+          "id": "tx_3wjxhud",
+          "date": "2026-09-10",
+          "quantity": 6,
+          "price": 25392,
+          "amount": 152352
+        }
+      ],
+      "sells": []
+    },
+    {
+      "id": "stk_dsjmytl",
+      "accountId": "acc_o4bjqgm",
+      "key": "381180",
+      "quantity": 525,
+      "buys": [
+        {
+          "id": "tx_yn57kda",
+          "date": "2026-09-04",
+          "quantity": 525,
+          "price": 15535,
+          "amount": 8155875
+        }
+      ],
+      "sells": []
+    },
+    {
+      "id": "stk_t0xfyur",
+      "accountId": "acc_o4bjqgm",
+      "key": "379800",
+      "quantity": 140,
+      "buys": [
+        {
+          "id": "tx_gb9qgk3",
+          "date": "2026-09-04",
+          "quantity": 140,
+          "price": 21085,
+          "amount": 2951900
+        }
+      ],
+      "sells": []
+    },
+    {
+      "id": "stk_yykf2no",
+      "accountId": "acc_o4bjqgm",
+      "key": "371460",
+      "quantity": 258,
+      "buys": [
+        {
+          "id": "tx_5t74gta",
+          "date": "2026-09-04",
+          "quantity": 258,
+          "price": 10056,
+          "amount": 2594448
+        }
+      ],
+      "sells": []
+    },
+    {
+      "id": "stk_9oh0bpy",
+      "accountId": "acc_o4bjqgm",
+      "key": "182480",
+      "quantity": 83,
+      "buys": [
+        {
+          "id": "tx_8d4harm",
+          "date": "2026-09-04",
+          "quantity": 83,
+          "price": 13037,
+          "amount": 1082071
+        }
+      ],
+      "sells": []
+    }
+  ],
+  "lastPriceUpdate": "2026-09-17 16:26 (KST)",
+  "snapshots": [
+    {
+      "date": "2026-09-11",
+      "totals": {
+        "me": 26125430,
+        "wife": 82028870,
+        "ALL": 108154300
+      }
+    },
+    {
+      "date": "2026-09-12",
+      "totals": {
+        "me": 26259945,
+        "wife": 82516695,
+        "ALL": 108776640
+      }
+    },
+    {
+      "date": "2026-09-15",
+      "totals": {
+        "me": 26178305,
+        "wife": 81692850,
+        "ALL": 107871155
+      }
+    },
+    {
+      "date": "2026-09-16",
+      "totals": {
+        "me": 26397185,
+        "wife": 82523990,
+        "ALL": 108921175
+      }
+    },
+    {
+      "date": "2026-09-17",
+      "totals": {
+        "me": 26662550,
+        "wife": 83500520,
+        "ALL": 110163070
+      }
+    }
+  ],
+  "dividends": [
+    {
+      "id": "divrec_xl0ulp7",
+      "key": "360750",
+      "name": "TIGER S&P500",
+      "ticker": "360750",
+      "month": "2026-07",
+      "date": "2026-07-30",
+      "perShare": 66,
+      "accounts": [
+        {
+          "accountId": "acc_aioddia",
+          "quantity": 182,
+          "amount": 12012
+        },
+        {
+          "accountId": "acc_1ynxc3d",
+          "quantity": 373,
+          "amount": 24618
+        },
+        {
+          "accountId": "acc_5ma36fu",
+          "quantity": 245,
+          "amount": 16170
+        },
+        {
+          "accountId": "acc_brrccwl",
+          "quantity": 37,
+          "amount": 2442
+        }
+      ]
+    },
+    {
+      "id": "divrec_ye6bmfw",
+      "key": "133690",
+      "name": "TIGER 나스닥100",
+      "ticker": "133690",
+      "month": "2026-07",
+      "date": "2026-07-30",
+      "perShare": 255,
+      "accounts": [
+        {
+          "accountId": "acc_aioddia",
+          "quantity": 32,
+          "amount": 8160
+        },
+        {
+          "accountId": "acc_1ynxc3d",
+          "quantity": 46,
+          "amount": 11730
+        },
+        {
+          "accountId": "acc_5ma36fu",
+          "quantity": 34,
+          "amount": 8670
+        },
+        {
+          "accountId": "acc_brrccwl",
+          "quantity": 13,
+          "amount": 3315
+        },
+        {
+          "accountId": "acc_1q4nsbn",
+          "quantity": 13,
+          "amount": 3315
+        }
+      ]
+    },
+    {
+      "id": "divrec_av1jb6a",
+      "key": "466940",
+      "name": "TIGER 은행고배당플러스TOP10",
+      "ticker": "466940",
+      "month": "2026-07",
+      "date": "2026-07-30",
+      "perShare": 100,
+      "accounts": [
+        {
+          "accountId": "acc_1q4nsbn",
+          "quantity": 23,
+          "amount": 2300
+        }
+      ]
+    },
+    {
+      "id": "divrec_6slqxiy",
+      "key": "329650",
+      "name": "KODEX TRF3070",
+      "ticker": "329650",
+      "month": "2026-07",
+      "date": "2026-07-14",
+      "perShare": 31,
+      "accounts": [
+        {
+          "accountId": "acc_5ma36fu",
+          "quantity": 387,
+          "amount": 11997
+        }
+      ]
+    },
+    {
+      "id": "divrec_ecknywt",
+      "key": "329650",
+      "name": "KODEX TRF3070",
+      "ticker": "329650",
+      "month": "2026-08",
+      "date": "2026-08-13",
+      "perShare": 31,
+      "accounts": [
+        {
+          "accountId": "acc_5ma36fu",
+          "quantity": 387,
+          "amount": 11997
+        }
+      ]
+    },
+    {
+      "id": "divrec_gz5pzn9",
+      "key": "466940",
+      "name": "TIGER 은행고배당플러스TOP10",
+      "ticker": "466940",
+      "month": "2026-08",
+      "date": "2026-08-28",
+      "perShare": 100,
+      "accounts": [
+        {
+          "accountId": "acc_1q4nsbn",
+          "quantity": 23,
+          "amount": 2300
+        }
+      ]
+    },
+    {
+      "id": "divrec_rkw31fa",
+      "key": "458730",
+      "name": "TIGER 미국배당다우존스",
+      "ticker": "458730",
+      "month": "2026-07",
+      "date": "2026-07-30",
+      "perShare": 37,
+      "accounts": [
+        {
+          "accountId": "acc_aioddia",
+          "quantity": 26,
+          "amount": 962
+        },
+        {
+          "accountId": "acc_brrccwl",
+          "quantity": 246,
+          "amount": 9102
+        },
+        {
+          "accountId": "acc_1q4nsbn",
+          "quantity": 194,
+          "amount": 7178
+        }
+      ]
+    },
+    {
+      "id": "divrec_4uil22l",
+      "key": "458730",
+      "name": "TIGER 미국배당다우존스",
+      "ticker": "458730",
+      "month": "2026-08",
+      "date": "2026-08-28",
+      "perShare": 30,
+      "accounts": [
+        {
+          "accountId": "acc_aioddia",
+          "quantity": 26,
+          "amount": 780
+        },
+        {
+          "accountId": "acc_brrccwl",
+          "quantity": 246,
+          "amount": 7380
+        },
+        {
+          "accountId": "acc_1q4nsbn",
+          "quantity": 194,
+          "amount": 5820
+        }
+      ]
+    },
+    {
+      "id": "divrec_vmixqwi",
+      "key": "379800",
+      "name": "KODEX 미국S&P500",
+      "ticker": "379800",
+      "month": "2026-07",
+      "date": "2026-07-30",
+      "perShare": 132,
+      "accounts": [
+        {
+          "accountId": "acc_o4bjqgm",
+          "quantity": 140,
+          "amount": 18480
+        }
+      ]
+    },
+    {
+      "id": "divrec_wzn9vsw",
+      "key": "381180",
+      "name": "TIGER 미국필라델피아반도체나스닥",
+      "ticker": "381180",
+      "month": "2026-07",
+      "date": "2026-07-30",
+      "perShare": 49,
+      "accounts": [
+        {
+          "accountId": "acc_aioddia",
+          "quantity": 144,
+          "amount": 7056
+        },
+        {
+          "accountId": "acc_1ynxc3d",
+          "quantity": 269,
+          "amount": 13181
+        },
+        {
+          "accountId": "acc_o4bjqgm",
+          "quantity": 525,
+          "amount": 25725
+        }
+      ]
+    },
+    {
+      "id": "divrec_dmx6yyy",
+      "key": "182480",
+      "name": "TIGER 미국MSCI리츠(합성H)",
+      "ticker": "182480",
+      "month": "2026-07",
+      "date": "2026-07-30",
+      "perShare": 46,
+      "accounts": [
+        {
+          "accountId": "acc_aioddia",
+          "quantity": 35,
+          "amount": 1610
+        },
+        {
+          "accountId": "acc_o4bjqgm",
+          "quantity": 83,
+          "amount": 3818
+        }
+      ]
+    },
+    {
+      "id": "divrec_m79tynp",
+      "key": "182480",
+      "name": "TIGER 미국MSCI리츠(합성H)",
+      "ticker": "182480",
+      "month": "2026-08",
+      "date": "2026-08-28",
+      "perShare": 20,
+      "accounts": [
+        {
+          "accountId": "acc_aioddia",
+          "quantity": 35,
+          "amount": 700
+        },
+        {
+          "accountId": "acc_o4bjqgm",
+          "quantity": 83,
+          "amount": 1660
+        }
+      ]
+    },
+    {
+      "id": "divrec_s2kbn9o",
+      "key": "441640",
+      "name": "KODEX 미국배당커버드콜액티브",
+      "ticker": "441640",
+      "month": "2026-07",
+      "date": "2026-07-14",
+      "perShare": 103,
+      "accounts": [
+        {
+          "accountId": "acc_1q4nsbn",
+          "quantity": 10,
+          "amount": 1030
+        }
+      ]
+    },
+    {
+      "id": "divrec_upj6wco",
+      "key": "441640",
+      "name": "KODEX 미국배당커버드콜액티브",
+      "ticker": "441640",
+      "month": "2026-08",
+      "date": "2026-08-13",
+      "perShare": 102,
+      "accounts": [
+        {
+          "accountId": "acc_1q4nsbn",
+          "quantity": 10,
+          "amount": 1020
+        }
+      ]
+    },
+    {
+      "id": "divrec_hemlhyn",
+      "key": "441640",
+      "name": "KODEX 미국배당커버드콜액티브",
+      "ticker": "441640",
+      "month": "2026-09",
+      "date": "2026-09-14",
+      "perShare": 96,
+      "accounts": [
+        {
+          "accountId": "acc_1q4nsbn",
+          "quantity": 10,
+          "amount": 960
+        }
+      ]
+    }
+  ],
+  "stockCatalog": [
+    {
+      "key": "360750",
+      "ticker": "360750",
+      "name": "TIGER S&P500",
+      "currentPrice": 26055,
+      "dividendUrl": "https://m.stock.naver.com/domestic/stock/360750/analysis"
+    },
+    {
+      "key": "133690",
+      "ticker": "133690",
+      "name": "TIGER 나스닥100",
+      "currentPrice": 178260,
+      "dividendUrl": "https://m.stock.naver.com/domestic/stock/133690/analysis"
+    },
+    {
+      "key": "381180",
+      "ticker": "381180",
+      "name": "TIGER 미국필라델피아반도체나스닥",
+      "currentPrice": 40750,
+      "dividendUrl": "https://m.stock.naver.com/domestic/stock/381180/analysis"
+    },
+    {
+      "key": "305080",
+      "ticker": "305080",
+      "name": "TIGER 미국채10년선물",
+      "currentPrice": 12075,
+      "dividendUrl": "https://m.stock.naver.com/domestic/stock/305080/analysis"
+    },
+    {
+      "key": "304660",
+      "ticker": "304660",
+      "name": "KODEX 미국30년국채울트라선물(H)",
+      "currentPrice": 7165,
+      "dividendUrl": "https://m.stock.naver.com/domestic/stock/304660/analysis"
+    },
+    {
+      "key": "458730",
+      "ticker": "458730",
+      "name": "TIGER 미국배당다우존스",
+      "currentPrice": 14835,
+      "dividendUrl": "https://m.stock.naver.com/domestic/stock/458730/analysis"
+    },
+    {
+      "key": "319640",
+      "ticker": "319640",
+      "name": "TIGER 골드선물(H)",
+      "currentPrice": 25300,
+      "dividendUrl": "https://m.stock.naver.com/domestic/stock/319640/analysis"
+    },
+    {
+      "key": "0008S0",
+      "ticker": "0008S0",
+      "name": "TIGER 마국배당다우존스타켓데일리커버드콜",
+      "currentPrice": 9765,
+      "dividendUrl": "https://m.stock.naver.com/domestic/stock/0008S0/analysis"
+    },
+    {
+      "key": "182480",
+      "ticker": "182480",
+      "name": "TIGER 미국MSCI리츠(합성H)",
+      "currentPrice": 13050,
+      "dividendUrl": "https://m.stock.naver.com/domestic/stock/182480/analysis"
+    },
+    {
+      "key": "371460",
+      "ticker": "371460",
+      "name": "TIGER 차이나전기차SOLACTIVE",
+      "currentPrice": 9365,
+      "dividendUrl": "https://m.stock.naver.com/domestic/stock/371460/analysis"
+    },
+    {
+      "key": "466940",
+      "ticker": "466940",
+      "name": "TIGER 은행고배당플러스TOP10",
+      "currentPrice": 27430,
+      "dividendUrl": "https://m.stock.naver.com/domestic/stock/466940/analysis"
+    },
+    {
+      "key": "441640",
+      "ticker": "441640",
+      "name": "KODEX 미국배당커버드콜액티브",
+      "currentPrice": 12415,
+      "dividendUrl": "https://m.stock.naver.com/domestic/stock/441640/analysis"
+    },
+    {
+      "key": "329650",
+      "ticker": "329650",
+      "name": "KODEX TRF3070",
+      "currentPrice": 13960,
+      "dividendUrl": "https://m.stock.naver.com/domestic/stock/329650/analysis"
+    },
+    {
+      "key": "379800",
+      "ticker": "379800",
+      "name": "KODEX 미국S&P500",
+      "currentPrice": 23690,
+      "dividendUrl": "https://m.stock.naver.com/domestic/stock/379800/analysis"
+    }
+  ]
+}
