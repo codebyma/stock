@@ -65,21 +65,6 @@
   }
   .num{font-variant-numeric:tabular-nums;white-space:nowrap;font-family:'Roboto',sans-serif;letter-spacing:-0.4px;}
   .won-sign{font-size:1em;margin-right:1px;}
-  header{
-    padding:28px 20px 18px;
-    border-bottom:1px solid var(--border);
-  }
-  header h1{
-    font-size:22px;
-    font-weight:500;
-    margin:0 0 4px;
-    letter-spacing:-0.01em;
-  }
-  header p{
-    margin:0;
-    font-size:13px;
-    color:var(--text2);
-  }
   .owner-tabs{
     display:flex;
     gap:8px;
@@ -299,8 +284,9 @@
     display:flex;
     flex-wrap:wrap;
     gap:7px 16px;
-    padding:0 2px;
+    padding:0;
   }
+  .stock-stat-grid.px-2{padding:0 2px;}
   .stock-stat{font-size:13px;flex:auto;min-width:45%;}
   .stock-stat:nth-child(odd){text-align:left;}
   .stock-stat:nth-child(even){text-align:right;}
@@ -587,7 +573,7 @@ background: var(--surface2);
   .save-status{
     font-size:11px;
     color:var(--text3);
-    padding:4px 20px 0;
+    padding:24px 20px 0;
   }
   .toast{
     position:fixed;
@@ -719,9 +705,9 @@ background: var(--surface2);
   .value-sub{font-size:13px;font-weight:400;margin-top:2px;}
   .suffix-text{font-weight:400;font-size:12px;}
   .hint-text{font-size:11.5px;color:var(--text3);padding:2px 4px 2px;}
-  .stat-footnote{font-size:11px;color:var(--text3);margin:6px 0 2px;}
+  .stat-footnote{font-size:11px;color:var(--text2);margin:6px 0 2px;}
   .divider-top{border-top:1px solid var(--border);}
-  .amt-lg{font-size:14.5px;}
+  .amt-lg{font-size:13.5px;}
   .amt-md{font-size:14px;}
   .account-suffix-wrap{text-align:right;flex-shrink:0;}
   .account-total-value{font-size:17px;color:var(--text1);}
@@ -773,6 +759,7 @@ background: var(--surface2);
   .mb-4{margin-bottom:4px !important;}
   .mb-6{margin-bottom:6px !important;}
   .mb-8{margin-bottom:8px !important;}
+  .mb-12{margin-bottom:12px !important;}
   .mb-16{margin-bottom:16px !important;}
 
   .scroll-locked{overflow:hidden;}
@@ -792,34 +779,7 @@ background: var(--surface2);
 </head>
 <body>
 
-<header>
-  <h1>주식 현황 정리2</h1>
-  <p>계좌별 보유 종목, 매수·매도, 배당을 기록합니다</p>
-  <div class="header-actions mt-12">
-    <button class="add-btn no-wrap" id="toggleJsonBtn">JSON 보기/편집</button>
-    <button class="add-btn no-wrap" id="reloadJsonBtn">stock.json 새로고침</button>
-    <button class="add-btn no-wrap" id="themeToggleBtn">라이트 모드</button>
-  </div>
-</header>
 <div class="save-status" id="saveStatus">저장된 데이터 불러오는 중...</div>
-
-<div class="json-panel" id="jsonPanel">
-  <div class="fs-12 text-dim mb-8">
-    stock.json 파일로 내보내서 보관해두세요. 데이터가 사라지면 그 파일을 다시 가져오면 복원됩니다. 아래 텍스트를 직접 고친 뒤 '적용'을 눌러도 됩니다.
-  </div>
-  <textarea id="jsonTextarea" spellcheck="false"></textarea>
-  <div class="json-error" id="jsonError">JSON 형식이 올바르지 않습니다. 콤마, 괄호를 확인해주세요.</div>
-  <div class="json-actions">
-    <button class="btn-primary" onclick="exportJsonFile()">stock.json 내보내기</button>
-    <button class="btn-primary" onclick="triggerImportFile()">stock.json 가져오기</button>
-  </div>
-  <div class="json-actions">
-    <button class="btn-ghost" onclick="applyJson()">텍스트 적용하고 저장</button>
-    <button class="btn-ghost" onclick="copyJson()">복사(클립보드)</button>
-    <button class="btn-ghost" onclick="refreshJsonView()">현재 데이터로 새로고침</button>
-  </div>
-  <input type="file" id="importFileInput" accept="application/json,.json" class="hidden">
-</div>
 
 <div class="owner-tabs" id="ownerTabs"></div>
 
@@ -849,6 +809,35 @@ background: var(--surface2);
 </main>
 
 <div class="section-divider-gray spaced-top"></div>
+<div class="panel-wrap">
+  <div class="header-actions mt-40">
+    <button class="add-btn no-wrap" id="reloadJsonBtn">stock.json 새로고침</button>
+    <button class="add-btn no-wrap" id="themeToggleBtn">라이트 모드</button>
+  </div>
+  <div class="panel-title title-row mt-20">
+    JSON 편집
+    <button class="add-btn no-wrap" id="toggleJsonBtn">JSON 보기/편집</button>
+  </div>
+  <div class="json-panel" id="jsonPanel">
+    <div class="fs-12 text-dim mb-8">
+      stock.json 파일로 내보내서 보관해두세요. 데이터가 사라지면 그 파일을 다시 가져오면 복원됩니다. 아래 텍스트를 직접 고친 뒤 '적용'을 눌러도 됩니다.
+    </div>
+    <textarea id="jsonTextarea" spellcheck="false"></textarea>
+    <div class="json-error" id="jsonError">JSON 형식이 올바르지 않습니다. 콤마, 괄호를 확인해주세요.</div>
+    <div class="json-actions">
+      <button class="btn-primary" onclick="exportJsonFile()">stock.json 내보내기</button>
+      <button class="btn-primary" onclick="triggerImportFile()">stock.json 가져오기</button>
+    </div>
+    <div class="json-actions">
+      <button class="btn-ghost" onclick="applyJson()">텍스트 적용하고 저장</button>
+      <button class="btn-ghost" onclick="copyJson()">복사(클립보드)</button>
+      <button class="btn-ghost" onclick="refreshJsonView()">현재 데이터로 새로고침</button>
+    </div>
+    <input type="file" id="importFileInput" accept="application/json,.json" class="hidden">
+  </div>
+</div>
+
+<div class="section-divider-gray spaced-top"></div>
 <div class="panel-wrap pb-40">
   <div class="panel-title mt-40">GitHub 저장</div>
   <div class="panel-caption">현재 데이터를 GitHub 저장소의 stock.json에 바로 커밋해요. 최초 1회만 아래 설정을 입력하면, 이후엔 이 브라우저에서 버튼 한 번으로 저장돼요.</div>
@@ -859,7 +848,7 @@ background: var(--surface2);
       <input type="text" id="gh_repo" placeholder="저장소 (예: codeby/codeby.github.io)">
     </div>
     <div class="form-row">
-      <input type="text" id="gh_path" placeholder="파일 경로 (예: stock.json)">
+      <input type="text" id="gh_path" placeholder="파일 경로 (예: stock/stock.json)">
     </div>
     <div class="form-row">
       <input type="password" id="gh_token" placeholder="Personal Access Token">
@@ -1754,10 +1743,21 @@ function buildTargetSheetContent(key, sid){
     <div class="panel-title sub-title">보유현황</div>
     ${holdingsListHtmlForKey(key)}
 
-    <div class="button-row mt-20">
-      <button class="action-btn-prominent" onclick="openGroupPriceForm('${keyEsc}','${sid}')">현재가 일괄수정</button>
-      <button class="action-btn-prominent" onclick="openGroupDividendForm('${keyEsc}','${sid}')">배당 일괄 입력</button>
+    <div class="mt-20 pt-14 divider-top">
+      <div class="panel-title sub-title title-row cursor-pointer" onclick="openKeyDividendSheet('${keyEsc}')"><span>배당현황</span>${CHEVRON_SVG}</div>
+      <div class="yield-grid">
+        <div class="yield-card" onclick="showYieldTooltip(event,2)">
+          <div class="yield-label">최근 12개월<br>평균매입가 기준</div>
+          <div class="yield-value num">${fmtPctPlain(y2)}</div>
+        </div>
+        <div class="yield-card" onclick="showYieldTooltip(event,3)">
+          <div class="yield-label">최근 12개월<br>현재가 기준</div>
+          <div class="yield-value num">${fmtPctPlain(y3)}</div>
+        </div>
+      </div>
+      <div class="stat-footnote">누적 배당 ${fmtWon(divTotal)} · 최근 12개월 ${fmtWon(divTTM)}</div>
     </div>
+
     <div class="form-panel" id="grpform_${sid}">
       <div class="form-row">
         <div class="field">
@@ -1789,20 +1789,9 @@ function buildTargetSheetContent(key, sid){
         <button class="btn-primary" onclick="applyGroupDividend('${keyEsc}','${sid}')">전체 계좌에 반영</button>
       </div>
     </div>
-
-    <div class="mt-20 pt-14 divider-top">
-      <div class="panel-title sub-title title-row cursor-pointer" onclick="openKeyDividendSheet('${keyEsc}')"><span>배당현황</span>${CHEVRON_SVG}</div>
-      <div class="yield-grid">
-        <div class="yield-card" onclick="showYieldTooltip(event,2)">
-          <div class="yield-label">최근 12개월<br>평균매입가 기준</div>
-          <div class="yield-value num">${fmtPctPlain(y2)}</div>
-        </div>
-        <div class="yield-card" onclick="showYieldTooltip(event,3)">
-          <div class="yield-label">최근 12개월<br>현재가 기준</div>
-          <div class="yield-value num">${fmtPctPlain(y3)}</div>
-        </div>
-      </div>
-      <div class="stat-footnote">누적 배당 ${fmtWon(divTotal)} · 최근 12개월 ${fmtWon(divTTM)}</div>
+    <div class="button-row mt-20">
+      <button class="cta-btn" onclick="openGroupPriceForm('${keyEsc}','${sid}')">현재가</button>
+      <button class="cta-btn" onclick="openGroupDividendForm('${keyEsc}','${sid}')">배당</button>
     </div>
   `;
   return { title: item.name, bodyHtml };
@@ -1822,6 +1811,7 @@ function openTargetSheet(key, sid){
   if(!content) return;
   openTargetSheetLayer = { key, layer: 1 };
   openSheet(content.title, content.bodyHtml, ()=>openDividendLink(key));
+  document.getElementById('sheetTitle').insertAdjacentHTML('beforeend', CHEVRON_SVG);
 }
 
 function openTargetSheetNested(key, sid){
@@ -1829,6 +1819,7 @@ function openTargetSheetNested(key, sid){
   if(!content) return;
   openTargetSheetLayer = { key, layer: 2 };
   openSheet2(content.title, content.bodyHtml, ()=>openDividendLink(key));
+  document.getElementById('sheetTitle2').insertAdjacentHTML('beforeend', CHEVRON_SVG);
 }
 
 async function applyGroupPrice(key, sid){
@@ -2047,7 +2038,7 @@ function buildStockRow(stock){
         <span class="stock-card-name">${stockEmoji(cat.name, cat.ticker)} ${escapeHtml(cat.name)}</span>${cat.ticker ? '<span class="stock-card-ticker">('+escapeHtml(cat.ticker)+')</span>' : ''}
       </div>
     </div>
-    <div class="stock-stat-grid">
+    <div class="stock-stat-grid px-2">
       <div class="stock-stat"><span class="stock-stat-label">투자원금</span><span class="stock-stat-value num">${fmtWon(cost)}</span></div>
       <div class="stock-stat"><span class="stock-stat-label">수량</span><span class="stock-stat-value num">${qty.toLocaleString('ko-KR')}</span></div>
       <div class="stock-stat"><span class="stock-stat-label">평가금액</span><span class="stock-stat-value num">${fmtWon(stockTotal(stock))}</span></div>
@@ -2090,14 +2081,30 @@ function refreshStockDetailSheetIfOpen(stockId){
 
 function buildStockDetailHtml(stock){
   const keyEsc = stock.key.replace(/'/g,"\\'");
+  const hasBuys = stock.buys && stock.buys.length>0;
+  const hasSells = stock.sells && stock.sells.length>0;
+  const value = stockTotal(stock);
+  const cost = stockCostBasis(stock);
+  const pl = stockPL(stock);
+  const plPct = stockPLPercent(stock);
   return `
+    <div class="stock-stat-grid mb-16">
+      <div class="stock-stat"><span class="stock-stat-label">평가금액</span><span class="stock-stat-value num">${fmtWon(value)}</span></div>
+      <div class="stock-stat"><span class="stock-stat-label">투자원금</span><span class="stock-stat-value num">${fmtWon(cost)}</span></div>
+      <div class="stock-stat"><span class="stock-stat-label">수익</span><span class="stock-stat-value num ${plClass(pl)}">${fmtPL(pl)}${plPct!==null ? ' ('+fmtPercent(plPct)+')' : ''}</span></div>
+      <div class="stock-stat"><span class="stock-stat-label">보유수량</span><span class="stock-stat-value num">${(stock.quantity||0).toLocaleString('ko-KR')}주</span></div>
+    </div>
+     ${hasBuys ? `
      <div class="panel-title sub-title mb-4">매수</div>
      ${entryListHtml(stock.buys, stock.id, 'buys')}
+     ` : ''}
     <div class="form-panel" id="buyform_${stock.id}">
         ${txFormHtml(stock.id,'buys')}
       </div>
-    <div class="panel-title sub-title mt-12 mb-4">매도</div>
+    ${hasSells ? `
+    <div class="panel-title sub-title ${hasBuys ? 'mt-12 ' : ''}mb-4">매도</div>
      ${entryListHtml(stock.sells, stock.id, 'sells')}
+     ` : ''}
       <div class="form-panel" id="sellform_${stock.id}">
         ${txFormHtml(stock.id,'sells')}
       </div>
@@ -2308,10 +2315,10 @@ function openMonthDividendSheet(month){
     let dayLabel = '';
     if(rec.date){
       const parts = rec.date.split('-');
-      if(parts.length===3) dayLabel = ` · ${parseInt(parts[1],10)}월 ${parseInt(parts[2],10)}일`;
+      if(parts.length===3) dayLabel = `${parseInt(parts[1],10)}월 ${parseInt(parts[2],10)}일 · `;
     }
     return `
-      <div class="mb-8">
+      <div class="mb-12">
         <div class="cursor-pointer" onclick="openDividendAccountDetail('${keyEsc}','${month}')">
           <div class="entry-row text-strong no-border-bottom pb-0">
             <span class="amt-lg">${escapeHtml(rec.name)}</span>
@@ -2321,7 +2328,7 @@ function openMonthDividendSheet(month){
             </span>
           </div>
           <div class="entry-row fs-11-5 text-dim pt-0 mt-2">
-            <span>총 <span class="num">${totalQty.toLocaleString('ko-KR')}</span>주 보유${rec.perShare ? ' · 주당 <span class="won-sign">₩</span><span class="num">'+rec.perShare.toLocaleString('ko-KR')+'</span>' : ''}${dayLabel}</span>
+            <span>${dayLabel}<span class="num">${totalQty.toLocaleString('ko-KR')}</span>주${rec.perShare ? ' · 주당 <span class="won-sign">₩</span><span class="num">'+rec.perShare.toLocaleString('ko-KR')+'</span>' : ''}</span>
             <span></span>
           </div>
         </div>
