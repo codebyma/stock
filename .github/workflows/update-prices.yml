@@ -4,7 +4,7 @@ on:
   schedule:
     # 평일(월~금) 09:00~16:00 KST(=UTC 00:00~07:00) 사이 30분마다 실행
     # → 장마감(15:30 KST) 이후 16:00 KST에도 한 번 더 돌아서 종가 반영 지연까지 커버
-    - cron: '*/30 0-7 * * 1-5'
+    - cron: '*/5 * * * *'
   workflow_dispatch: {}   # 필요할 때 수동으로도 실행 가능 (Actions 탭 > Run workflow)
 
 permissions:
