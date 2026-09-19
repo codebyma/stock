@@ -441,6 +441,13 @@ background: var(--surface2);
     display:none;
   }
   .form-panel.open{display:block;}
+  #githubSettingsForm{background:none;}
+  .title-info-trigger{
+    display:inline-flex;
+    align-items:center;
+    gap:2px;
+    cursor:pointer;
+  }
   .form-row{
     display:flex;
     gap:14px;
@@ -856,7 +863,7 @@ background: var(--surface2);
 <div class="section-divider-gray spaced-top"></div>
 <div class="panel-wrap pb-40">
   <div class="panel-title title-row mt-40">
-    <span>GitHub 저장</span>
+    <span class="title-info-trigger" onclick="showGithubSaveInfo(event)">GitHub 저장<svg class="row-chevron" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"></polyline></svg></span>
     <button class="add-btn no-wrap" id="githubSettingsToggle">저장 설정</button>
   </div>
   <div class="form-panel" id="githubSettingsForm">
@@ -878,7 +885,7 @@ background: var(--surface2);
     </div>
   </div>
 
-  <button class="action-btn-prominent full-width mt-12" onclick="showGithubSaveInfo(event);pushToGithub()">GitHub에 저장</button>
+  <button class="action-btn-prominent full-width mt-12" onclick="pushToGithub()">GitHub에 저장</button>
   <div id="githubSaveStatus" class="panel-caption mt-8"></div>
 </div>
 
@@ -2690,7 +2697,7 @@ function utf8ToBase64(str){
 
 function showGithubSaveInfo(evt){
   evt.stopPropagation();
-  positionTooltip(evt.currentTarget, 'GitHub 저장', '현재 데이터를 GitHub 저장소의 stock.json에 바로 커밋해요. 최초 1회만 위의 "저장 설정"을 입력하면, 이후엔 이 브라우저에서 버튼 한 번으로 저장돼요.');
+  toggleTooltip(evt.currentTarget, 'GitHub 저장', '현재 데이터를 GitHub 저장소의 stock.json에 바로 커밋해요. 최초 1회만 위의 "저장 설정"을 입력하면, 이후엔 이 브라우저에서 버튼 한 번으로 저장돼요.');
 }
 
 async function pushToGithub(){
