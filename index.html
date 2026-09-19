@@ -830,12 +830,10 @@ background: var(--surface2);
 <div class="panel-wrap">
   <div class="header-actions mt-40">
     <button class="add-btn no-wrap" id="reloadJsonBtn">stock.json 새로고침</button>
+    <button class="add-btn no-wrap" id="toggleJsonBtn">JSON 보기</button>
     <button class="add-btn no-wrap" id="themeToggleBtn">라이트 모드</button>
   </div>
-  <div class="panel-title title-row mt-20">
-    JSON 편집
-    <button class="add-btn no-wrap" id="toggleJsonBtn">JSON 보기/편집</button>
-  </div>
+  <div class="panel-title mt-20">JSON 편집</div>
   <div class="json-panel" id="jsonPanel">
     <div class="fs-12 text-dim mb-8">
       stock.json 파일로 내보내서 보관해두세요. 데이터가 사라지면 그 파일을 다시 가져오면 복원됩니다. 아래 텍스트를 직접 고친 뒤 '적용'을 눌러도 됩니다.
@@ -857,10 +855,10 @@ background: var(--surface2);
 
 <div class="section-divider-gray spaced-top"></div>
 <div class="panel-wrap pb-40">
-  <div class="panel-title mt-40">GitHub 저장</div>
-  <div class="panel-caption">현재 데이터를 GitHub 저장소의 stock.json에 바로 커밋해요. 최초 1회만 아래 설정을 입력하면, 이후엔 이 브라우저에서 버튼 한 번으로 저장돼요.</div>
-
-  <button class="mini-add" id="githubSettingsToggle">저장 설정</button>
+  <div class="panel-title title-row mt-40">
+    <span>GitHub 저장</span>
+    <button class="add-btn no-wrap" id="githubSettingsToggle">저장 설정</button>
+  </div>
   <div class="form-panel" id="githubSettingsForm">
     <div class="form-row">
       <input type="text" id="gh_repo" placeholder="저장소 (예: codeby/codeby.github.io)">
@@ -880,7 +878,7 @@ background: var(--surface2);
     </div>
   </div>
 
-  <button class="action-btn-prominent full-width mt-12" onclick="pushToGithub()">GitHub에 저장</button>
+  <button class="action-btn-prominent full-width mt-12" onclick="showGithubSaveInfo(event);pushToGithub()">GitHub에 저장</button>
   <div id="githubSaveStatus" class="panel-caption mt-8"></div>
 </div>
 
@@ -1449,7 +1447,7 @@ function renderDividendCalendar(){
     el.innerHTML = `
       <div class="panel-wrap">
         <div class="panel-title title-row">
-          <span>월별 배당 현황</span>
+          <span>월별 배당</span>
           ${pensionCalcBtnHtml}
         </div>
         <div class="panel-empty">아직 기록된 배당이 없어요. 종목 상세에서 배당을 추가하면 여기 그래프로 나타나요.</div>
@@ -1473,7 +1471,7 @@ function renderDividendCalendar(){
   el.innerHTML = `
     <div class="panel-wrap">
       <div class="panel-title title-row">
-          <span>월별 배당 현황</span>
+          <span>월별 배당</span>
           ${pensionCalcBtnHtml}
         </div>
       <div class="fs-14 mb-8"><span class="text-dim">최근 12개월</span> <span class="text-mint">${fmtWon(total)}</span></div>
@@ -1661,7 +1659,7 @@ function renderBreakdown(){
   el.innerHTML = `
     <div class="section-divider-gray spaced-top"></div>
     <div class="breakdown-wrap">
-      <div class="breakdown-title mt-40" id="breakdownToggle">포트폴리오 모음</div>
+      <div class="breakdown-title mt-40" id="breakdownToggle">전체 포트폴리오 비율</div>
       ${breakdownOpen ? `<div class="breakdown-card">${rows}</div>${targetSumHint}` : ''}
     </div>
   `;
@@ -2688,6 +2686,11 @@ function saveGithubSettings(){
 
 function utf8ToBase64(str){
   return btoa(unescape(encodeURIComponent(str)));
+}
+
+function showGithubSaveInfo(evt){
+  evt.stopPropagation();
+  positionTooltip(evt.currentTarget, 'GitHub 저장', '현재 데이터를 GitHub 저장소의 stock.json에 바로 커밋해요. 최초 1회만 위의 "저장 설정"을 입력하면, 이후엔 이 브라우저에서 버튼 한 번으로 저장돼요.');
 }
 
 async function pushToGithub(){
