@@ -2349,11 +2349,11 @@ function buildPensionCalcHtml(){
   const ownerSections = owners.map(owner=>{
     const accounts = accountsForOwner(owner.id);
     if(accounts.length===0) return '';
-    const accRows = accounts.map(acc=>{
+    const accRows = accounts.map((acc, idx)=>{
       const total = accountTotal(acc.id);
       const yieldPct = accountYieldOnCurrentPrice(acc.id);
       return `
-        <div class="mt-14 pt-14">
+        <div class="${idx===0 ? 'mt-6' : 'mt-14'} pt-14">
           <div class="fs-13 text-strong mb-4">${escapeHtml(acc.name)}</div>
           <div class="form-row mb-0">
             <div class="field">
