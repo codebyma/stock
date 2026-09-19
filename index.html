@@ -292,6 +292,9 @@
   .stock-stat:nth-child(even){text-align:right;}
   .stock-stat-label{color:var(--text2);margin-right:6px;}
   .stock-stat-value{color:var(--text1);}
+  .stat-rows{display:flex;flex-direction:column;gap:7px;}
+  .stat-row{display:flex;justify-content:space-between;gap:4px;}
+  .stat-row .stock-stat{flex:none;min-width:0;}
   .stock-stat-value.text-red{color:var(--red);}
   .stock-stat-value.text-blue{color:var(--blue);}
   .stock-stat-value.price-highlight{color:var(--mint);}
@@ -707,6 +710,24 @@ background: var(--surface2);
   .hint-text{font-size:11.5px;color:var(--text3);padding:2px 4px 2px;}
   .stat-footnote{font-size:11px;color:var(--text2);margin:6px 0 2px;}
   .divider-top{border-top:1px solid var(--border);}
+  .pension-sum{
+    padding:12px 14px;
+    border-radius:10px;
+    border:1px solid transparent;
+  }
+  .pension-sum .entry-row{padding-top:0 !important;padding-bottom:0 !important;}
+  .pension-owner-divider{
+    margin:36px 0 0;
+    border-top:1px dotted var(--border-strong);
+  }
+  .pension-sum-owner{
+    background:var(--blue-dim);
+    border-color:var(--blue);
+  }
+  .pension-sum-total{
+    background:var(--mint-dim);
+    border-color:var(--mint);
+  }
   .amt-lg{font-size:13.5px;}
   .amt-md{font-size:14px;}
   .account-suffix-wrap{text-align:right;flex-shrink:0;}
@@ -812,6 +833,7 @@ background: var(--surface2);
 <div class="panel-wrap">
   <div class="header-actions mt-40">
     <button class="add-btn no-wrap" id="reloadJsonBtn">stock.json 새로고침</button>
+    <button class="add-btn no-wrap" onclick="openPensionCalcSheet()">연금 배당 계산기</button>
     <button class="add-btn no-wrap" id="themeToggleBtn">라이트 모드</button>
   </div>
   <div class="panel-title title-row mt-20">
@@ -1313,6 +1335,14 @@ function accountTotal(accountId){
 function accountCostBasis(accountId){
   return stocksForAccount(accountId).reduce((sum,s)=>sum+stockCostBasis(s),0);
 }
+function accountDividendTTM(accountId){
+  return stocksForAccount(accountId).reduce((sum,s)=>sum+stockDividendTTM(s),0);
+}
+function accountYieldOnCurrentPrice(accountId){
+  const total = accountTotal(accountId);
+  if(!total) return 0;
+  return (accountDividendTTM(accountId) / total) * 100;
+}
 function ownerTotal(ownerId){
   return accountsForOwner(ownerId).reduce((sum,a)=>sum+accountTotal(a.id),0);
 }
@@ -1734,11 +1764,15 @@ function buildTargetSheetContent(key, sid){
   const keyPLPct = item.cost ? (keyPL/item.cost)*100 : null;
 
   const bodyHtml = `
-    <div class="stock-stat-grid mb-16">
-      <div class="stock-stat"><span class="stock-stat-label">평가금액</span><span class="stock-stat-value num">${fmtWon(item.value)}</span></div>
-      <div class="stock-stat"><span class="stock-stat-label">투자원금</span><span class="stock-stat-value num">${fmtWon(item.cost)}</span></div>
-      <div class="stock-stat"><span class="stock-stat-label">수익</span><span class="stock-stat-value num ${plClass(keyPL)}">${fmtPL(keyPL)}${keyPLPct!==null ? ' ('+fmtPercent(keyPLPct)+')' : ''}</span></div>
-      <div class="stock-stat"><span class="stock-stat-label">보유수량</span><span class="stock-stat-value num">${item.quantity.toLocaleString('ko-KR')}주</span></div>
+    <div class="stat-rows mb-16">
+      <div class="stat-row">
+        <div class="stock-stat"><span class="stock-stat-label">평가금액</span><span class="stock-stat-value num">${fmtWon(item.value)}</span></div>
+        <div class="stock-stat"><span class="stock-stat-label">투자원금</span><span class="stock-stat-value num">${fmtWon(item.cost)}</span></div>
+      </div>
+      <div class="stat-row">
+        <div class="stock-stat"><span class="stock-stat-label">수익</span><span class="stock-stat-value num ${plClass(keyPL)}">${fmtPL(keyPL)}${keyPLPct!==null ? ' ('+fmtPercent(keyPLPct)+')' : ''}</span></div>
+        <div class="stock-stat"><span class="stock-stat-label">보유수량</span><span class="stock-stat-value num">${item.quantity.toLocaleString('ko-KR')}주</span></div>
+      </div>
     </div>
     <div class="panel-title sub-title">보유현황</div>
     ${holdingsListHtmlForKey(key)}
@@ -2088,11 +2122,15 @@ function buildStockDetailHtml(stock){
   const pl = stockPL(stock);
   const plPct = stockPLPercent(stock);
   return `
-    <div class="stock-stat-grid mb-16">
-      <div class="stock-stat"><span class="stock-stat-label">평가금액</span><span class="stock-stat-value num">${fmtWon(value)}</span></div>
-      <div class="stock-stat"><span class="stock-stat-label">투자원금</span><span class="stock-stat-value num">${fmtWon(cost)}</span></div>
-      <div class="stock-stat"><span class="stock-stat-label">수익</span><span class="stock-stat-value num ${plClass(pl)}">${fmtPL(pl)}${plPct!==null ? ' ('+fmtPercent(plPct)+')' : ''}</span></div>
-      <div class="stock-stat"><span class="stock-stat-label">보유수량</span><span class="stock-stat-value num">${(stock.quantity||0).toLocaleString('ko-KR')}주</span></div>
+    <div class="stat-rows mb-16">
+      <div class="stat-row">
+        <div class="stock-stat"><span class="stock-stat-label">평가금액</span><span class="stock-stat-value num">${fmtWon(value)}</span></div>
+        <div class="stock-stat"><span class="stock-stat-label">투자원금</span><span class="stock-stat-value num">${fmtWon(cost)}</span></div>
+      </div>
+      <div class="stat-row">
+        <div class="stock-stat"><span class="stock-stat-label">수익</span><span class="stock-stat-value num ${plClass(pl)}">${fmtPL(pl)}${plPct!==null ? ' ('+fmtPercent(plPct)+')' : ''}</span></div>
+        <div class="stock-stat"><span class="stock-stat-label">보유수량</span><span class="stock-stat-value num">${(stock.quantity||0).toLocaleString('ko-KR')}주</span></div>
+      </div>
     </div>
      ${hasBuys ? `
      <div class="panel-title sub-title mb-4">매수</div>
@@ -2293,6 +2331,126 @@ async function deleteStockDividend(stockId, month){
   }
   refreshStockDetailSheetIfOpen(stockId);
   showToast('배당 기록을 삭제했어요');
+}
+
+function formatMoneyInput(el){
+  const raw = el.value.replace(/[^0-9]/g,'');
+  el.value = raw ? Number(raw).toLocaleString('ko-KR') : '';
+}
+
+function buildPensionCalcHtml(){
+  const owners = DATA.owners || [];
+  if(owners.length===0) return `<div class="empty-hint">등록된 계좌가 없어요</div>`;
+  const ownerSections = owners.map(owner=>{
+    const accounts = accountsForOwner(owner.id);
+    if(accounts.length===0) return '';
+    const accRows = accounts.map(acc=>{
+      const total = accountTotal(acc.id);
+      const yieldPct = accountYieldOnCurrentPrice(acc.id);
+      return `
+        <div class="mt-14 pt-14">
+          <div class="fs-13 text-strong mb-4">${escapeHtml(acc.name)}</div>
+          <div class="form-row mb-0">
+            <div class="field">
+              <span class="field-label">총액</span>
+              <input type="text" inputmode="numeric" id="pension_total_${acc.id}" value="${Math.round(total).toLocaleString('ko-KR')}" oninput="formatMoneyInput(this);recalcPensionSheet()">
+            </div>
+            <div class="field">
+              <span class="field-label">배당률(%)</span>
+              <input type="number" inputmode="decimal" step="0.01" id="pension_yield_${acc.id}" value="${yieldPct.toFixed(2)}" oninput="recalcPensionSheet()">
+            </div>
+          </div>
+          <div class="entry-row no-border-bottom pb-0">
+            <span class="text-dim">월 예상 배당(세후)</span>
+            <span class="amt num" id="pension_result_${acc.id}">₩0</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    return `
+      <div class="panel-title sub-title mt-20 mb-4">${escapeHtml(owner.name)}</div>
+      ${accRows}
+      <div class="pension-sum pension-sum-owner mt-14">
+        <div class="entry-row no-border-bottom pb-0">
+          <span class="text-strong">${escapeHtml(owner.name)} 월 합계(세후)</span>
+          <span class="amt num fs-16" id="pensionOwnerTotal_${owner.id}">₩0</span>
+        </div>
+        <div class="fs-11-5 text-red mt-8 hidden" id="pensionOwnerOverLimit_${owner.id}">${escapeHtml(owner.name)}님의 연 배당 합계가 1,500만원을 초과해 16.5% 세율 적용</div>
+      </div>
+    `;
+  }).filter(Boolean).join('<div class="pension-owner-divider"></div>');
+
+  return `
+    <div class="form-row">
+      <div class="field">
+        <span class="field-label">연금소득세율</span>
+        <select id="pensionTaxRate" onchange="recalcPensionSheet()">
+          <option value="3.3">3.3%</option>
+          <option value="4.4">4.4%</option>
+          <option value="5.5" selected>5.5%</option>
+        </select>
+      </div>
+    </div>
+    <div class="panel-caption mt-0">계좌별 총액·배당률은 현재 데이터 기준으로 자동 채워지며, 직접 수정할 수 있어요. 계좌 주인별로 연 배당 합계가 1,500만원을 넘으면 그 사람만 선택한 세율 대신 16.5%가 자동 적용돼요.</div>
+    ${ownerSections}
+    <div class="pension-sum pension-sum-total mt-20">
+      <div class="entry-row no-border-bottom pb-0">
+        <span class="text-strong">전체 합계(세후)</span>
+        <span class="amt num fs-16" id="pensionTotalResult">₩0</span>
+      </div>
+    </div>
+  `;
+}
+
+function openPensionCalcSheet(){
+  openSheet('연금 배당 계산기', buildPensionCalcHtml());
+  recalcPensionSheet();
+}
+
+function recalcPensionSheet(){
+  const owners = DATA.owners || [];
+  const taxSelect = document.getElementById('pensionTaxRate');
+  if(!taxSelect) return;
+  const selectedRate = parseFloat(taxSelect.value) || 5.5;
+
+  let grandTotalMonthlyNet = 0;
+
+  owners.forEach(owner=>{
+    const accounts = accountsForOwner(owner.id);
+    let ownerAnnual = 0;
+    const perAccount = accounts.map(acc=>{
+      const totalInput = document.getElementById(`pension_total_${acc.id}`);
+      const yieldInput = document.getElementById(`pension_yield_${acc.id}`);
+      if(!totalInput || !yieldInput) return null;
+      const total = parseFloat(totalInput.value.replace(/,/g,'')) || 0;
+      const yieldPct = parseFloat(yieldInput.value) || 0;
+      const annual = total * (yieldPct/100);
+      ownerAnnual += annual;
+      return { id: acc.id, annual };
+    }).filter(Boolean);
+
+    const overLimit = ownerAnnual > 15000000;
+    const effectiveRate = overLimit ? 16.5 : selectedRate;
+
+    perAccount.forEach(a=>{
+      const monthlyNet = (a.annual * (1 - effectiveRate/100)) / 12;
+      const el = document.getElementById(`pension_result_${a.id}`);
+      if(el) el.innerHTML = fmtWon(Math.round(monthlyNet));
+    });
+
+    const ownerMonthlyNet = (ownerAnnual * (1 - effectiveRate/100)) / 12;
+    grandTotalMonthlyNet += ownerMonthlyNet;
+
+    const ownerTotalEl = document.getElementById(`pensionOwnerTotal_${owner.id}`);
+    if(ownerTotalEl) ownerTotalEl.innerHTML = fmtWon(Math.round(ownerMonthlyNet));
+
+    const noteEl = document.getElementById(`pensionOwnerOverLimit_${owner.id}`);
+    if(noteEl) noteEl.classList.toggle('hidden', !overLimit);
+  });
+
+  const totalEl = document.getElementById('pensionTotalResult');
+  if(totalEl) totalEl.innerHTML = fmtWon(Math.round(grandTotalMonthlyNet));
 }
 
 function openMonthDividendSheet(month){
