@@ -639,6 +639,52 @@ background: var(--surface2);
     font-weight:500;
     color:var(--text1);
   }
+  .sheet-title-wrap{
+    display:flex;
+    align-items:center;
+    gap:4px;
+    min-width:0;
+  }
+  .sheet-back-btn{
+    background:none;
+    border:none;
+    color:var(--text2);
+    padding:0;
+    margin-left:-4px;
+    cursor:pointer;
+    display:inline-flex;
+    align-items:center;
+  }
+  .acc-stock-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+    padding:14px 0;
+    border-bottom:1px solid var(--border);
+    cursor:pointer;
+  }
+  .acc-stock-row:last-child{border-bottom:none;}
+  .acc-stock-name{
+    font-size:14px;
+    font-weight:600;
+    color:var(--text1);
+    min-width:0;
+  }
+  .acc-stock-ticker{
+    font-size:11.5px;
+    font-weight:400;
+    color:var(--text3);
+    margin-left:4px;
+  }
+  .acc-stock-right{
+    margin-left:auto;
+    text-align:right;
+    flex-shrink:0;
+    font-size:14px;
+    color:var(--text1);
+  }
+  .acc-stock-pl{font-size:12px;margin-top:2px;}
   .sheet-close-btn{
     background:none;
     border:none;
@@ -892,7 +938,10 @@ background: var(--surface2);
 <div class="sheet-overlay" id="sheetOverlay" onclick="closeSheet()"></div>
 <div class="bottom-sheet" id="bottomSheet">
   <div class="sheet-header">
-    <span id="sheetTitle"></span>
+    <span class="sheet-title-wrap">
+      <button class="sheet-back-btn hidden" id="sheetBackBtn" onclick="sheetBack()" aria-label="뒤로"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 6 9 12 15 18"></polyline></svg></button>
+      <span id="sheetTitle"></span>
+    </span>
     <button class="sheet-close-btn" onclick="closeSheet()" aria-label="닫기">&times;</button>
   </div>
   <div class="sheet-body" id="sheetBody"></div>
@@ -916,7 +965,6 @@ background: var(--surface2);
 let DATA = { owners: [], accounts: [], stocks: [] };
 const CHEVRON_SVG = '<svg class="row-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"></polyline></svg>';
 let currentOwner = null;
-let openAccounts = new Set();
 let openStocks = new Set();
 let openTxSections = new Set();
 let breakdownOpen = true;
@@ -1932,14 +1980,13 @@ function renderAccounts(){
   }
   list.innerHTML = '';
   accounts.forEach(acc=>{
-    const isOpen = openAccounts.has(acc.id);
     const ownerName = isAll ? (DATA.owners.find(o=>o.id===acc.ownerId)||{}).name : null;
     const accTotal = accountTotal(acc.id);
     const accCost = accountCostBasis(acc.id);
     const accPL = accTotal - accCost;
     const accPLPct = accCost ? (accPL/accCost)*100 : null;
     const card = document.createElement('div');
-    card.className = 'account-card' + (isOpen ? ' open':'');
+    card.className = 'account-card';
     card.id = `acccard_${acc.id}`;
     card.innerHTML = `
       <div class="account-head" data-acc="${acc.id}">
@@ -1953,37 +2000,42 @@ function renderAccounts(){
           </div>
         </div>
       </div>
-      <div class="account-body" id="body_${acc.id}"></div>
     `;
-    card.querySelector('.account-head').onclick = ()=>{
-      const willOpen = !openAccounts.has(acc.id);
-      if(openAccounts.has(acc.id)) openAccounts.delete(acc.id);
-      else openAccounts.add(acc.id);
-      render();
-      if(willOpen) scrollToId(`acccard_${acc.id}`);
-    };
+    card.querySelector('.account-head').onclick = ()=> openAccountSheet(acc.id);
     list.appendChild(card);
-    if(isOpen){
-      renderAccountBody(acc, card.querySelector('.account-body'));
-    }
   });
 }
 
-function renderAccountBody(acc, bodyEl){
+// 계좌를 누르면 바텀시트 1개로 종목 목록을 보여준다. 종목을 누르면 새 시트를 쌓지 않고
+// 같은 시트 안에서 종목 상세로 화면만 바뀌고, 헤더 왼쪽 ‹ 로 계좌 목록으로 돌아온다.
+function openAccountSheet(accId){
+  const acc = DATA.accounts.find(a=>a.id===accId);
+  if(!acc) return;
+  const owner = (DATA.owners||[]).find(o=>o.id===acc.ownerId);
+  const title = acc.name + (currentOwner==='ALL' && owner ? ` (${owner.name})` : '');
   const stocks = stocksForAccount(acc.id);
-  let html = `
+  const rows = stocks.map(st=>{
+    const cat = catalogFor(st);
+    const pl = stockPL(st);
+    const plPct = stockPLPercent(st);
+    return `
+      <div class="acc-stock-row" onclick="openStockDetailSheet('${st.id}')">
+        <div class="acc-stock-name">${stockEmoji(cat.name, cat.ticker)} ${escapeHtml(cat.name)}${cat.ticker ? '<span class="acc-stock-ticker">('+escapeHtml(cat.ticker)+')</span>' : ''}</div>
+        <div class="acc-stock-right">
+          <div class="num">${fmtWon(stockTotal(st))}</div>
+          <div class="num acc-stock-pl ${plClass(pl)}">${fmtPL(pl)}${plPct!==null ? ' ('+fmtPercent(plPct)+')' : ''}</div>
+        </div>
+        ${CHEVRON_SVG}
+      </div>
+    `;
+  }).join('');
+  openSheet(title, `
     <div class="account-row-head">
       <span class="empty-hint p-0">종목 ${stocks.length}개</span>
-      <button class="mini-add" data-add-stock="${acc.id}">+ 종목 추가</button>
+      <button class="mini-add" onclick="openStockPickerSheet('${acc.id}')">+ 종목 추가</button>
     </div>
-    <div id="stockList_${acc.id}"></div>
-  `;
-  bodyEl.innerHTML = html;
-  bodyEl.querySelector(`[data-add-stock]`).onclick = ()=>{
-    openStockPickerSheet(acc.id);
-  };
-  const stockListEl = bodyEl.querySelector(`#stockList_${acc.id}`);
-  stocks.forEach(s=> stockListEl.appendChild(buildStockRow(s)));
+    ${rows || '<div class="empty-hint">아직 등록된 종목이 없어요</div>'}
+  `);
 }
 
 function openStockPickerSheet(accountId){
@@ -2011,7 +2063,7 @@ function openStockPickerSheet(accountId){
       </div>
     </div>
   `;
-  openSheet('종목 선택', bodyHtml);
+  openSheet('종목 선택', bodyHtml, null, ()=>openAccountSheet(accountId));
 }
 
 async function addHoldingFromCatalog(accountId, key){
@@ -2020,10 +2072,9 @@ async function addHoldingFromCatalog(accountId, key){
   const newStock = { id: uid('stk'), accountId, key, quantity:0, buys:[], sells:[] };
   DATA.stocks.push(newStock);
   await saveData();
-  closeSheet();
   render();
   showToast(`${cat.name} 추가됨 · 매수 내역을 등록해주세요`);
-  setTimeout(()=>openStockDetailSheet(newStock.id), 300);
+  openStockDetailSheet(newStock.id);
 }
 
 async function createCatalogAndAdd(accountId){
@@ -2034,10 +2085,9 @@ async function createCatalogAndAdd(accountId){
   const newStock = { id: uid('stk'), accountId, key: cat.key, quantity:0, buys:[], sells:[] };
   DATA.stocks.push(newStock);
   await saveData();
-  closeSheet();
   render();
   showToast(`${cat.name} 새로 등록됨 · 현재가와 매수 내역을 등록해주세요`);
-  setTimeout(()=>openStockDetailSheet(newStock.id), 300);
+  openStockDetailSheet(newStock.id);
 }
 
 function stockEmoji(name, ticker){
@@ -2058,60 +2108,14 @@ function stockEmoji(name, ticker){
   return '📊';
 }
 
-function buildStockRow(stock){
-  const cat = catalogFor(stock);
-  const qty = stock.quantity || 0;
-  const price = cat.currentPrice || 0;
-  const cost = stockCostBasis(stock);
-  const avgPrice = qty ? Math.round(cost / qty) : 0;
-  const pl = stockPL(stock);
-  const plPct = stockPLPercent(stock);
-  const divMonths = [...new Set(recordsForStock(stock).map(r=>parseInt(r.month.split('-')[1],10)))].sort((a,b)=>a-b);
-  const divMonthsStr = divMonths.length ? divMonths.join(', ') : '-';
-  const divYield = stockYieldOnAvgPrice(stock);
-  const divTTM = stockDividendTTM(stock);
-
-  const row = document.createElement('div');
-  row.className = 'stock-row';
-  row.id = `stockrow_${stock.id}`;
-  row.innerHTML = `
-    <div class="stock-card-head">
-      <div class="stock-card-title">
-        <span class="stock-card-name">${stockEmoji(cat.name, cat.ticker)} ${escapeHtml(cat.name)}</span>${cat.ticker ? '<span class="stock-card-ticker">('+escapeHtml(cat.ticker)+')</span>' : ''}
-      </div>
-    </div>
-    <div class="stat-rows px-2">
-      <div class="stat-row">
-        <div class="stock-stat"><span class="stock-stat-label">투자원금</span><span class="stock-stat-value num">${fmtWon(cost)}</span></div>
-        <div class="stock-stat"><span class="stock-stat-label">수량</span><span class="stock-stat-value num">${qty.toLocaleString('ko-KR')}</span></div>
-      </div>
-      <div class="stat-row">
-        <div class="stock-stat"><span class="stock-stat-label">평가금액</span><span class="stock-stat-value num">${fmtWon(stockTotal(stock))}</span></div>
-        <div class="stock-stat"><span class="stock-stat-label">평균단가</span><span class="stock-stat-value num"><span class="won-sign">₩</span>${avgPrice.toLocaleString('ko-KR')}</span></div>
-      </div>
-      <div class="stat-row">
-        <div class="stock-stat"><span class="stock-stat-label">수익</span><span class="stock-stat-value num ${plClass(pl)}">${fmtPL(pl)}${plPct!==null ? ' ('+fmtPercent(plPct)+')' : ''}</span></div>
-        <div class="stock-stat"><span class="stock-stat-label">현재가</span><span class="stock-stat-value num price-highlight"><span class="won-sign">₩</span>${price.toLocaleString('ko-KR')}</span></div>
-      </div>
-      <div class="stat-row">
-        <div class="stock-stat"><span class="stock-stat-label">배당월</span><span class="stock-stat-value">${divMonthsStr}</span></div>
-        <div class="stock-stat"><span class="stock-stat-label">배당률</span><span class="stock-stat-value num text-gold cursor-pointer" onclick="showStockDividendYieldTooltip(event,'${stock.id}')">${fmtPctPlain(divYield)}${divTTM ? ' ('+fmtWon(divTTM)+')' : ''}</span></div>
-      </div>
-    </div>
-  `;
-  row.onclick = ()=>{
-    openStockDetailSheet(stock.id);
-  };
-  return row;
-}
-
 function openStockDetailSheet(stockId){
   const stock = DATA.stocks.find(s=>s.id===stockId);
   if(!stock) return;
   const cat = catalogFor(stock);
   // const title = cat.name + (cat.ticker ? ` (${cat.ticker})` : '');
   const title = cat.name;
-  openSheet(title, buildStockDetailHtml(stock));
+  const accId = stock.accountId;
+  openSheet(title, buildStockDetailHtml(stock), null, ()=>openAccountSheet(accId));
 }
 
 // 두 시트(1단계/2단계) 중 실제로 이 종목의 상세(매수/매도 폼)를 보여주고 있는 쪽만
@@ -2295,20 +2299,31 @@ function unlockBodyScroll(){
   }
 }
 
-function openSheet(title, bodyHtml, onTitleClick){
+let sheetBackFn = null;
+function sheetBack(){
+  if(sheetBackFn) sheetBackFn();
+}
+function openSheet(title, bodyHtml, onTitleClick, backFn){
   const sheetEl = document.getElementById('bottomSheet');
   const wasOpen = sheetEl.classList.contains('open');
   const titleEl = document.getElementById('sheetTitle');
   titleEl.textContent = title;
   titleEl.classList.toggle('cursor-pointer', !!onTitleClick);
   titleEl.onclick = onTitleClick || null;
-  document.getElementById('sheetBody').innerHTML = bodyHtml;
+  sheetBackFn = backFn || null;
+  document.getElementById('sheetBackBtn').classList.toggle('hidden', !backFn);
+  closeYieldTooltip();
+  const bodyEl = document.getElementById('sheetBody');
+  bodyEl.innerHTML = bodyHtml;
+  bodyEl.scrollTop = 0;
   document.getElementById('sheetOverlay').classList.add('open');
   sheetEl.classList.add('open');
   if(!wasOpen) lockBodyScroll();
 }
 function closeSheet(){
   const wasOpen = document.getElementById('bottomSheet').classList.contains('open');
+  sheetBackFn = null;
+  document.getElementById('sheetBackBtn').classList.add('hidden');
   document.getElementById('sheetOverlay').classList.remove('open');
   document.getElementById('bottomSheet').classList.remove('open');
   if(openTargetSheetLayer.layer===1) openTargetSheetLayer = { key:null, layer:null };
@@ -2614,6 +2629,7 @@ async function deleteEntry(stockId, field, entryId){
 
 async function deleteStock(stockId){
   const stock = DATA.stocks.find(s=>s.id===stockId);
+  const accIdOfStock = stock ? stock.accountId : null;
   if(stock){
     (DATA.dividends||[]).forEach(rec=>{
       if(rec.key===stock.key){
@@ -2624,9 +2640,14 @@ async function deleteStock(stockId){
   }
   DATA.stocks = DATA.stocks.filter(s=>s.id!==stockId);
   openStocks.delete(stockId);
-  closeSheet();
   await saveData();
   render();
+  // 계좌 시트 안에서 열었던 상세면 계좌 목록으로 돌아가고, 그 외(포트폴리오 모음 등)는 기존처럼 닫는다
+  if(accIdOfStock && !document.getElementById('bottomSheet2').classList.contains('open') && sheetBackFn){
+    openAccountSheet(accIdOfStock);
+  } else {
+    closeSheet();
+  }
   showToast('종목이 삭제되었습니다');
 }
 
