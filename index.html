@@ -830,7 +830,6 @@ background: var(--surface2);
 <div class="panel-wrap">
   <div class="header-actions mt-40">
     <button class="add-btn no-wrap" id="reloadJsonBtn">stock.json 새로고침</button>
-    <button class="add-btn no-wrap" onclick="openPensionCalcSheet()">연금 배당 계산기</button>
     <button class="add-btn no-wrap" id="themeToggleBtn">라이트 모드</button>
   </div>
   <div class="panel-title title-row mt-20">
@@ -1441,6 +1440,7 @@ function monthlyDividendSeries(ownerId, monthsBack){
 
 function renderDividendCalendar(){
   const el = document.getElementById('dividendCalendarSection');
+  const pensionCalcBtnHtml = `<button class="add-btn" onclick="openPensionCalcSheet()">연금 배당 계산기</button>`;
   const series = monthlyDividendSeries(currentOwner, 12);
   const total = series.reduce((s,m)=>s+m.amount,0);
   const maxAmt = Math.max(...series.map(m=>m.amount), 1);
@@ -1448,7 +1448,10 @@ function renderDividendCalendar(){
   if(total===0){
     el.innerHTML = `
       <div class="panel-wrap">
-        <div class="panel-title">월별 배당 현황</div>
+        <div class="panel-title title-row">
+          <span>월별 배당 현황</span>
+          ${pensionCalcBtnHtml}
+        </div>
         <div class="panel-empty">아직 기록된 배당이 없어요. 종목 상세에서 배당을 추가하면 여기 그래프로 나타나요.</div>
       </div>
     `;
@@ -1469,7 +1472,10 @@ function renderDividendCalendar(){
 
   el.innerHTML = `
     <div class="panel-wrap">
-      <div class="panel-title">월별 배당 현황</div>
+      <div class="panel-title title-row">
+          <span>월별 배당 현황</span>
+          ${pensionCalcBtnHtml}
+        </div>
       <div class="fs-14 mb-8"><span class="text-dim">최근 12개월</span> <span class="text-mint">${fmtWon(total)}</span></div>
       <div class="div-chart-scroll" id="divChartScroll">
         <div class="div-chart">${bars}</div>
@@ -2387,6 +2393,12 @@ function buildPensionCalcHtml(){
   }).filter(Boolean).join('<div class="pension-owner-divider"></div>');
 
   return `
+    <div class="pension-sum pension-sum-total mb-16">
+      <div class="entry-row no-border-bottom pb-0">
+        <span class="text-strong">전체 합계(세후)</span>
+        <span class="amt num fs-16" id="pensionTotalResult">₩0</span>
+      </div>
+    </div>
     <div class="form-row">
       <div class="field">
         <span class="field-label">연금소득세율</span>
@@ -2399,12 +2411,6 @@ function buildPensionCalcHtml(){
     </div>
     <div class="panel-caption mt-0">계좌별 총액·배당률은 현재 데이터 기준으로 자동 채워지며, 직접 수정할 수 있어요. 계좌 주인별로 연 배당 합계가 1,500만원을 넘으면 그 사람만 선택한 세율 대신 16.5%가 자동 적용돼요.</div>
     ${ownerSections}
-    <div class="pension-sum pension-sum-total mt-20">
-      <div class="entry-row no-border-bottom pb-0">
-        <span class="text-strong">전체 합계(세후)</span>
-        <span class="amt num fs-16" id="pensionTotalResult">₩0</span>
-      </div>
-    </div>
   `;
 }
 
