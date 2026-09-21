@@ -1127,7 +1127,7 @@ function renderOwnerTabs(){
   if(DATA.owners.length > 1){
     const allBtn = document.createElement('div');
     allBtn.className = 'owner-tab' + (currentOwner==='ALL' ? ' active' : '');
-    allBtn.textContent = '합계';
+    allBtn.textContent = '전체';
     allBtn.onclick = ()=>{ currentOwner = 'ALL'; render(); };
     el.appendChild(allBtn);
   }
@@ -1302,7 +1302,7 @@ function stockYieldOnCurrentPrice(stock){
   return (stockDividendTTM(stock) / mv) * 100;
 }
 const YIELD_TOOLTIP_INFO = {
-  2: { title:'최근 12개월 · 평균매입가 기준', desc:'내가 산 가격 대비 지금 얼마나 받고 있는지 보는, 내 투자 성과 지표예요. 최근 12개월 배당금 ÷ 총 투자원금(평균매입단가 × 수량)으로 계산해요.' },
+  2: { title:'최근 12개월 · 평균매입가 기준', desc:'내가 산 가격 대비 지금 얼마나 받고 있는지 보는, 내 투자 성과 지표예요. 최근 12개월 배당금 ÷ 총 투자원금(평균매입가 × 수량)으로 계산해요.' },
   3: { title:'최근 12개월 · 현재가 기준', desc:'지금 이 가격에 사면 얼마를 기대할 수 있는지 보는 지표예요. 최근 12개월 배당금 ÷ 현재 평가금액으로 계산하며, 증권사에서 보여주는 배당수익률과 같은 방식이에요.' }
 };
 
@@ -1831,7 +1831,7 @@ function buildTargetSheetContent(key, sid){
     <div class="stat-rows mb-16">
       <div class="stat-row">
         <div class="stock-stat"><span class="stock-stat-label">평가금액</span><span class="stock-stat-value num">${fmtWon(item.value)}</span></div>
-        <div class="stock-stat"><span class="stock-stat-label">수익</span><span class="stock-stat-value num ${plClass(keyPL)}">${fmtPL(keyPL)}${keyPLPct!==null ? ' ('+fmtPercent(keyPLPct)+')' : ''}</span></div>
+        <div class="stock-stat"><span class="stock-stat-label">평가손익</span><span class="stock-stat-value num ${plClass(keyPL)}">${fmtPL(keyPL)}${keyPLPct!==null ? ' ('+fmtPercent(keyPLPct)+')' : ''}</span></div>
       </div>
       <div class="stat-row">
         <div class="stock-stat"><span class="stock-stat-label">투자원금</span><span class="stock-stat-value num">${fmtWon(item.cost)}</span></div>
@@ -1859,7 +1859,7 @@ function buildTargetSheetContent(key, sid){
     <div class="form-panel" id="grpform_${sid}">
       <div class="form-row">
         <div class="field">
-          <span class="field-label">새 현재가 (1주당)</span>
+          <span class="field-label">새 현재가 (주당)</span>
           <input type="number" inputmode="decimal" placeholder="예: 25000" id="grpprice_${sid}">
         </div>
       </div>
@@ -1878,7 +1878,7 @@ function buildTargetSheetContent(key, sid){
           </div>
         </div>
         <div class="field">
-          <span class="field-label">1주당 배당금</span>
+          <span class="field-label">주당 배당금</span>
           <input type="number" inputmode="decimal" placeholder="예: 500" id="divgrp_amount_${sid}">
         </div>
       </div>
@@ -1963,7 +1963,7 @@ async function applyGroupDividend(key, sid){
   const date = document.getElementById(`divgrp_date_${sid}`).value;
   const perShare = parseFloat(document.getElementById(`divgrp_amount_${sid}`).value) || 0;
   if(!date){ showToast('배당일을 선택해주세요'); return; }
-  if(!perShare){ showToast('1주당 배당금을 입력해주세요'); return; }
+  if(!perShare){ showToast('주당 배당금을 입력해주세요'); return; }
   const cat = catalogByKey(key);
   const stockList = stocksMatchingKey(key).map(s=>({ accountId:s.accountId, quantity:quantityAsOfDate(s, date) }));
   const rec = upsertDividendGroupBulk(key, date, cat ? cat.name : '', cat ? cat.ticker : '', perShare, stockList);
@@ -2142,7 +2142,7 @@ function buildStockDetailHtml(stock){
     <div class="stat-rows mb-16">
       <div class="stat-row">
         <div class="stock-stat"><span class="stock-stat-label">평가금액</span><span class="stock-stat-value num">${fmtWon(value)}</span></div>
-        <div class="stock-stat"><span class="stock-stat-label">수익</span><span class="stock-stat-value num ${plClass(pl)}">${fmtPL(pl)}${plPct!==null ? ' ('+fmtPercent(plPct)+')' : ''}</span></div>
+        <div class="stock-stat"><span class="stock-stat-label">평가손익</span><span class="stock-stat-value num ${plClass(pl)}">${fmtPL(pl)}${plPct!==null ? ' ('+fmtPercent(plPct)+')' : ''}</span></div>
       </div>
       <div class="stat-row">
         <div class="stock-stat"><span class="stock-stat-label">투자원금</span><span class="stock-stat-value num">${fmtWon(cost)}</span></div>
@@ -2217,7 +2217,7 @@ function txFormHtml(stockId, field){
         <input type="number" inputmode="decimal" placeholder="예: 10" id="${field}_qty_${stockId}">
       </div>
       <div class="field">
-        <span class="field-label">1주당 단가</span>
+        <span class="field-label">주당 단가</span>
         <input type="number" inputmode="decimal" placeholder="예: 20000" id="${field}_price_${stockId}">
       </div>
     </div>
@@ -2380,7 +2380,7 @@ function buildPensionCalcHtml(){
           <div class="fs-13 text-strong mb-4">${escapeHtml(acc.name)}</div>
           <div class="form-row mb-0">
             <div class="field">
-              <span class="field-label">총액</span>
+              <span class="field-label">평가금액</span>
               <input type="text" inputmode="numeric" id="pension_total_${acc.id}" value="${Math.round(total).toLocaleString('ko-KR')}" oninput="formatMoneyInput(this);recalcPensionSheet()">
             </div>
             <div class="field">
@@ -2426,7 +2426,7 @@ function buildPensionCalcHtml(){
         </select>
       </div>
     </div>
-    <div class="panel-caption mt-0">계좌별 총액·배당률은 현재 데이터 기준으로 자동 채워지며, 직접 수정할 수 있어요. 계좌 주인별로 연 배당 합계가 1,500만원을 넘으면 그 사람만 선택한 세율 대신 16.5%가 자동 적용돼요.</div>
+    <div class="panel-caption mt-0">계좌별 평가금액·배당률은 현재 데이터 기준으로 자동 채워지며, 직접 수정할 수 있어요. 계좌 주인별로 연 배당 합계가 1,500만원을 넘으면 그 사람만 선택한 세율 대신 16.5%가 자동 적용돼요.</div>
     ${ownerSections}
   `;
 }
