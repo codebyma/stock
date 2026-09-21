@@ -2138,6 +2138,13 @@ function buildStockDetailHtml(stock){
   const cost = stockCostBasis(stock);
   const pl = stockPL(stock);
   const plPct = stockPLPercent(stock);
+  const qty = stock.quantity || 0;
+  const price = catalogFor(stock).currentPrice || 0;
+  const avgPrice = qty ? Math.round(cost / qty) : 0;
+  const divMonths = [...new Set(recordsForStock(stock).map(r=>parseInt(r.month.split('-')[1],10)))].sort((a,b)=>a-b);
+  const divMonthsStr = divMonths.length ? divMonths.join(', ') : '-';
+  const divYield = stockYieldOnAvgPrice(stock);
+  const divTTM = stockDividendTTM(stock);
   return `
     <div class="stat-rows mb-16">
       <div class="stat-row">
@@ -2147,6 +2154,14 @@ function buildStockDetailHtml(stock){
       <div class="stat-row">
         <div class="stock-stat"><span class="stock-stat-label">투자원금</span><span class="stock-stat-value num">${fmtWon(cost)}</span></div>
         <div class="stock-stat"><span class="stock-stat-label">보유수량</span><span class="stock-stat-value num">${(stock.quantity||0).toLocaleString('ko-KR')}주</span></div>
+      </div>
+      <div class="stat-row">
+        <div class="stock-stat"><span class="stock-stat-label">평균단가</span><span class="stock-stat-value num"><span class="won-sign">₩</span>${avgPrice.toLocaleString('ko-KR')}</span></div>
+        <div class="stock-stat"><span class="stock-stat-label">현재가</span><span class="stock-stat-value num price-highlight"><span class="won-sign">₩</span>${price.toLocaleString('ko-KR')}</span></div>
+      </div>
+      <div class="stat-row">
+        <div class="stock-stat"><span class="stock-stat-label">배당월</span><span class="stock-stat-value">${divMonthsStr}</span></div>
+        <div class="stock-stat"><span class="stock-stat-label">배당률</span><span class="stock-stat-value num text-gold cursor-pointer" onclick="showStockDividendYieldTooltip(event,'${stock.id}')">${fmtPctPlain(divYield)}${divTTM ? ' ('+fmtWon(divTTM)+')' : ''}</span></div>
       </div>
     </div>
      ${hasBuys ? `
