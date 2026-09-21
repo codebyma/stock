@@ -225,6 +225,13 @@
   .trend-tip-date{color:var(--text3);margin-bottom:3px;}
   .trend-tip-row{display:flex;justify-content:space-between;gap:12px;line-height:1.5;}
   .trend-tip-row > span:first-child{color:var(--text2);}
+  .trend-minmax{
+    text-align:center;
+    font-size:11.5px;
+    color:var(--text3);
+    margin-top:8px;
+  }
+  .trend-minmax .num{color:var(--text2);}
   .trend-legend{
     display:flex;
     gap:12px;
@@ -1817,10 +1824,7 @@ function renderAssetTrend(){
         <span>${fmtDateDot(snaps[0].date)}</span>
         <span>${fmtDateDot(snaps[snaps.length-1].date)}</span>
       </div>
-      <div class="trend-caption-row">
-        <span>최고 ${fmtWon(maxV)}</span>
-        <span>최저 ${fmtWon(minV)}</span>
-      </div>
+      <div class="trend-minmax">기간 최고 <span class="num">${fmtWon(maxV)}</span> · 최저 <span class="num">${fmtWon(minV)}</span></div>
       ${hasCost ? `<div class="trend-legend"><span><i class="lg-line"></i>평가금액</span><span><i class="lg-dash"></i>투자원금</span></div>` : ''}
     `;
   }
@@ -1837,7 +1841,6 @@ function renderAssetTrend(){
       ${periodHtml}
       ${rangeTabsHtml}
       ${chartHtml}
-      <div class="panel-caption mt-6">스냅샷 ${allSnaps.length}개 기록됨 · 그래프를 누르면 날짜별 금액을 볼 수 있어요</div>
       ${manageHtml}
     </div>
   `;
