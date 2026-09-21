@@ -2175,7 +2175,7 @@ function entryListHtml(list, stockId, field){
   const sorted = [...list].sort((a,b)=> (b.date||'').localeCompare(a.date||''));
   return sorted.map(item=>`
     <div class="entry-row">
-      <span>${fmtDateDot(item.date)} ${item.quantity||0}주${item.price ? ' x <span class="won-sign">₩</span>'+item.price.toLocaleString('ko-KR') : ''}</span>
+      <span>${fmtDateDot(item.date)}${item.price ? ' · 주당 <span class="won-sign">₩</span>'+item.price.toLocaleString('ko-KR') : ''} · ${item.quantity||0}주</span>
       <span class="del-icon" onclick="deleteEntry('${stockId}','${field}','${item.id}')">🗑️</span>
     </div>
   `).join('');
