@@ -1405,11 +1405,6 @@ function ownerCostBasis(ownerId){
 function fmtPL(n){
   return '<span class="won-sign">₩</span>' + Math.abs(n).toLocaleString('ko-KR');
 }
-// 자산 추이의 증감처럼 부호가 필요한 곳용
-function fmtPLSigned(n){
-  const sign = n > 0 ? '+' : (n < 0 ? '-' : '');
-  return sign + '<span class="won-sign">₩</span>' + Math.abs(n).toLocaleString('ko-KR');
-}
 function fmtPercent(n){
   if(n===null) return '';
   const sign = n > 0 ? '+' : (n < 0 ? '-' : '');
@@ -1624,8 +1619,8 @@ function renderAssetTrend(){
         ${saveBtnHtml}
       </div>
       <div class="trend-latest num">${fmtWon(last)}</div>
-      <div class="trend-latest-delta num ${plClass(delta)}">${fmtPLSigned(delta)}${deltaPct!==null ? ' ('+fmtPercent(deltaPct)+')' : ''} · 직전 기록 대비</div>
-      <div class="trend-first-delta num">${fmtPLSigned(firstDelta)}${firstDeltaPct!==null ? ' ('+fmtPercent(firstDeltaPct)+')' : ''} · 첫 기록 대비</div>
+      <div class="trend-latest-delta num ${plClass(delta)}">${fmtPL(delta)}${deltaPct!==null ? ' ('+fmtPercent(deltaPct)+')' : ''} · 직전 기록 대비</div>
+      <div class="trend-first-delta num">${fmtPL(firstDelta)}${firstDeltaPct!==null ? ' ('+fmtPercent(firstDeltaPct)+')' : ''} · 첫 기록 대비</div>
       <div class="trend-svg-wrap">
         <svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}" preserveAspectRatio="none">
           <polygon points="${areaPoints}" fill="var(--mint-dim)" opacity="0.6"></polygon>
