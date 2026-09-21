@@ -593,6 +593,7 @@ background: var(--surface2);
     cursor:pointer;
   }
   .form-row .field{overflow:hidden;}
+  .form-row .field input, .form-row .field select{flex:none;height:42px;}
   .form-row input::placeholder{color:var(--text3);}
   .form-actions{display:flex;gap:8px;justify-content:flex-end;}
   .btn-primary{
@@ -1882,8 +1883,8 @@ function buildSnapshotSheetHtml(){
         <input type="text" inputmode="numeric" placeholder="예: 5,000,000" id="snap_value" oninput="formatMoneyInput(this)">
       </div>
       <div class="field">
-        <span class="field-label">투자원금 (선택)</span>
-        <input type="text" inputmode="numeric" placeholder="예: 4,500,000" id="snap_cost" oninput="formatMoneyInput(this)">
+        <span class="field-label">투자원금</span>
+        <input type="text" inputmode="numeric" placeholder="선택 (예: 4,500,000)" id="snap_cost" oninput="formatMoneyInput(this)">
       </div>
     </div>
     <div class="form-actions">
