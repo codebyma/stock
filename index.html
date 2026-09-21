@@ -1805,10 +1805,11 @@ function renderAssetTrend(){
     const firstDelta = values[values.length-1] - first;
     const firstDeltaPct = first ? (firstDelta/first)*100 : null;
     const firstLabel = rng.key==='all' ? '첫 기록 대비' : `${rng.label} 내 첫 기록 대비`;
-    periodHtml = `<div class="trend-first-delta num">${fmtPL(firstDelta)}${firstDeltaPct!==null ? ' ('+fmtPercent(firstDeltaPct)+')' : ''} · ${firstLabel}</div>`;
-
     const maxV = Math.max(...values);
     const minV = Math.min(...values);
+    periodHtml = `<div class="trend-first-delta num">${fmtPL(firstDelta)}${firstDeltaPct!==null ? ' ('+fmtPercent(firstDeltaPct)+')' : ''} · ${firstLabel}</div>
+      <div class="trend-minmax">기간 최고 <span class="num">${fmtWon(maxV)}</span> · 최저 <span class="num">${fmtWon(minV)}</span></div>`;
+
     chartHtml = `
       <div class="trend-svg-wrap" id="trendChartWrap">
         <svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}" preserveAspectRatio="none">
@@ -1824,7 +1825,6 @@ function renderAssetTrend(){
         <span>${fmtDateDot(snaps[0].date)}</span>
         <span>${fmtDateDot(snaps[snaps.length-1].date)}</span>
       </div>
-      <div class="trend-minmax">기간 최고 <span class="num">${fmtWon(maxV)}</span> · 최저 <span class="num">${fmtWon(minV)}</span></div>
       ${hasCost ? `<div class="trend-legend"><span><i class="lg-line"></i>평가금액</span><span><i class="lg-dash"></i>투자원금</span></div>` : ''}
     `;
   }
