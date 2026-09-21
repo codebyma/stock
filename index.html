@@ -161,7 +161,81 @@
   .div-bar-col.current .div-bar-label{color:var(--text1);font-weight:600;}
   .div-bar-col.current .div-bar-amount{color:var(--text1);font-weight:600;}
 
-  .trend-svg-wrap{width:100%;}
+  .trend-svg-wrap{
+    position:relative;
+    width:100%;
+    height:140px;
+    touch-action:pan-y;
+    user-select:none;
+    -webkit-user-select:none;
+  }
+  .trend-svg-wrap svg{display:block;}
+  .range-tabs{display:flex;gap:6px;margin:10px 0 8px;}
+  .range-tab{
+    flex:1;
+    padding:6px 0;
+    border-radius:8px;
+    border:1px solid var(--border);
+    background:var(--surface1);
+    color:var(--text2);
+    font-size:12px;
+    font-weight:500;
+    cursor:pointer;
+  }
+  .range-tab.active{
+    background:var(--mint-dim);
+    border-color:var(--mint);
+    color:var(--mint);
+  }
+  .trend-guide{
+    display:none;
+    position:absolute;
+    top:0;
+    bottom:0;
+    width:1px;
+    background:var(--border-strong);
+    pointer-events:none;
+  }
+  .trend-dot{
+    display:none;
+    position:absolute;
+    width:10px;
+    height:10px;
+    border-radius:50%;
+    background:var(--bg, #0f1115);
+    border:2px solid var(--mint);
+    transform:translate(-50%,-50%);
+    box-sizing:border-box;
+    pointer-events:none;
+  }
+  .trend-tip{
+    display:none;
+    position:absolute;
+    top:4px;
+    z-index:2;
+    background:var(--surface2);
+    border:1px solid var(--border-strong);
+    border-radius:8px;
+    padding:6px 9px;
+    font-size:11.5px;
+    color:var(--text1);
+    pointer-events:none;
+    min-width:150px;
+  }
+  .trend-tip-date{color:var(--text3);margin-bottom:3px;}
+  .trend-tip-row{display:flex;justify-content:space-between;gap:12px;line-height:1.5;}
+  .trend-tip-row > span:first-child{color:var(--text2);}
+  .trend-legend{
+    display:flex;
+    gap:12px;
+    font-size:11px;
+    color:var(--text3);
+    margin-top:6px;
+  }
+  .trend-legend span{display:inline-flex;align-items:center;gap:5px;}
+  .lg-line{display:inline-block;width:14px;height:0;border-top:2px solid var(--mint);}
+  .lg-dash{display:inline-block;width:14px;height:0;border-top:2px dashed var(--text3);}
+  .snap-row{cursor:pointer;}
   .trend-caption-row{
     display:flex;
     justify-content:space-between;
@@ -997,10 +1071,12 @@ function isValidPortfolio(obj){
 async function autoSaveTodaySnapshotIfNeeded(){
   ensureDataShape();
   const today = new Date().toISOString().slice(0,10);
-  if(DATA.snapshots.some(s=>s.date===today)) return;
+  const existing = DATA.snapshots.find(s=>s.date===today);
+  if(existing && existing.costs) return;
   upsertSnapshot();
   await saveData();
-  showToast('오늘 자산 스냅샷을 자동으로 저장했어요');
+  // 오늘 기록이 이미 있었다면(투자원금만 보강) 알림 없이 조용히 갱신
+  if(!existing) showToast('오늘 자산 스냅샷을 자동으로 저장했어요');
 }
 
 async function finishLoad(){
@@ -1553,11 +1629,13 @@ function upsertSnapshot(){
   ensureDataShape();
   const today = new Date().toISOString().slice(0,10);
   const totals = {};
-  DATA.owners.forEach(o=>{ totals[o.id] = ownerTotal(o.id); });
+  const costs = {};
+  DATA.owners.forEach(o=>{ totals[o.id] = ownerTotal(o.id); costs[o.id] = ownerCostBasis(o.id); });
   totals['ALL'] = ownerTotal('ALL');
+  costs['ALL'] = ownerCostBasis('ALL');
   const idx = DATA.snapshots.findIndex(s=>s.date===today);
-  if(idx>=0) DATA.snapshots[idx] = { date: today, totals };
-  else DATA.snapshots.push({ date: today, totals });
+  if(idx>=0) DATA.snapshots[idx] = { date: today, totals, costs };
+  else DATA.snapshots.push({ date: today, totals, costs });
   DATA.snapshots.sort((a,b)=>a.date.localeCompare(b.date));
 }
 
@@ -1568,13 +1646,95 @@ async function saveSnapshotNow(){
   showToast('오늘 자산 스냅샷을 저장했어요');
 }
 
+let trendRange = 'all';
+let trendChart = null;
+const TREND_RANGES = [
+  { key:'1m', label:'1개월', days:30 },
+  { key:'3m', label:'3개월', days:91 },
+  { key:'6m', label:'6개월', days:182 },
+  { key:'1y', label:'1년', days:365 },
+  { key:'all', label:'전체', days:0 },
+];
+
+function setTrendRange(key){
+  trendRange = key;
+  renderAssetTrend();
+}
+
+function hideTrendTip(){
+  ['trendGuide','trendDot','trendTip'].forEach(id=>{
+    const e = document.getElementById(id);
+    if(e) e.style.display = 'none';
+  });
+}
+
+function showTrendTip(i){
+  const c = trendChart;
+  if(!c || !c.points[i]) return;
+  const p = c.points[i];
+  const snap = c.snaps[i];
+  const v = snap.totals[currentOwner];
+  const cost = c.costs[i];
+  const leftPct = p.x / c.w * 100;
+  const topPct = p.y / c.h * 100;
+  const guide = document.getElementById('trendGuide');
+  const dot = document.getElementById('trendDot');
+  const tip = document.getElementById('trendTip');
+  if(!guide || !dot || !tip) return;
+  guide.style.left = leftPct + '%';
+  guide.style.display = 'block';
+  dot.style.left = leftPct + '%';
+  dot.style.top = topPct + '%';
+  dot.style.display = 'block';
+  let rows = `<div class="trend-tip-date">${fmtDateDot(snap.date)}</div>
+    <div class="trend-tip-row"><span>평가금액</span><span class="num">${fmtWon(v)}</span></div>`;
+  if(cost !== null){
+    const pl = v - cost;
+    const pct = cost ? (pl / cost) * 100 : null;
+    rows += `
+      <div class="trend-tip-row"><span>투자원금</span><span class="num">${fmtWon(cost)}</span></div>
+      <div class="trend-tip-row"><span>평가손익</span><span class="num ${plClass(pl)}">${fmtPL(pl)}${pct!==null ? ' ('+fmtPercent(pct)+')' : ''}</span></div>`;
+  }
+  tip.innerHTML = rows;
+  // 점과 겹치지 않도록 반대편 모서리에 띄운다
+  tip.style.left = leftPct > 50 ? '4px' : 'auto';
+  tip.style.right = leftPct > 50 ? 'auto' : '4px';
+  tip.style.display = 'block';
+}
+
+function bindTrendChartEvents(){
+  const wrap = document.getElementById('trendChartWrap');
+  if(!wrap || !trendChart) return;
+  const pick = (ev)=>{
+    const rect = wrap.getBoundingClientRect();
+    const vx = Math.min(1, Math.max(0, (ev.clientX - rect.left) / rect.width)) * trendChart.w;
+    let best = 0, bestDist = Infinity;
+    trendChart.points.forEach((pt, i)=>{
+      const d = Math.abs(pt.x - vx);
+      if(d < bestDist){ bestDist = d; best = i; }
+    });
+    showTrendTip(best);
+  };
+  wrap.onpointerdown = pick;
+  wrap.onpointermove = pick;
+  wrap.onpointerleave = (ev)=>{ if(ev.pointerType === 'mouse') hideTrendTip(); };
+  if(!window._trendOutsideBound){
+    window._trendOutsideBound = true;
+    document.addEventListener('pointerdown', (ev)=>{
+      if(!ev.target.closest || !ev.target.closest('#trendChartWrap')) hideTrendTip();
+    });
+  }
+}
+
 function renderAssetTrend(){
   const el = document.getElementById('assetTrendSection');
-  const snaps = (DATA.snapshots||[]).filter(s=> typeof s.totals[currentOwner] === 'number');
+  const allSnaps = (DATA.snapshots||[]).filter(s=> s.totals && typeof s.totals[currentOwner] === 'number');
 
   const saveBtnHtml = `<button class="add-btn" onclick="saveSnapshotNow()">오늘 스냅샷 저장</button>`;
+  const manageHtml = `<div class="button-row center mt-12"><button class="text-link-btn" onclick="openSnapshotSheet()">스냅샷 기록 관리</button></div>`;
 
-  if(snaps.length < 2){
+  if(allSnaps.length < 2){
+    trendChart = null;
     el.innerHTML = `
       <div class="section-divider-gray spaced-top"></div>
       <div class="panel-wrap">
@@ -1583,36 +1743,86 @@ function renderAssetTrend(){
           ${saveBtnHtml}
         </div>
         <div class="panel-empty">스냅샷을 2번 이상 저장하면(예: 매주 한 번씩) 여기에 자산 변화 그래프가 나타나요. 현재가를 업데이트한 날 눌러두시면 좋아요.</div>
+        ${manageHtml}
       </div>
     `;
     return;
   }
 
-  const values = snaps.map(s=>s.totals[currentOwner]);
-  const dates = snaps.map(s=>s.date);
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const range = (max - min) || 1;
-  const w = 600, h = 140, pad = 8;
-
-  const points = values.map((v,i)=>{
-    const x = pad + (values.length===1 ? 0 : (i/(values.length-1))*(w-2*pad));
-    const y = h-pad - ((v-min)/range)*(h-2*pad);
-    return {x, y};
-  });
-  const polyPoints = points.map(p=>`${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
-  const areaPoints = `${pad},${h-pad} ${polyPoints} ${w-pad},${h-pad}`;
-
-  const first = values[0];
-  const prev = values[values.length-2];
-  const last = values[values.length-1];
+  // 헤드라인: 항상 전체 기록 기준 최신값과 직전 스냅샷 대비
+  const allDates = allSnaps.map(s=>s.date);
+  const allVals = allSnaps.map(s=>s.totals[currentOwner]);
+  const last = allVals[allVals.length-1];
+  const prev = allVals[allVals.length-2];
   const delta = last - prev;
   const deltaPct = prev ? (delta/prev)*100 : null;
-  const firstDelta = last - first;
-  const firstDeltaPct = first ? (firstDelta/first)*100 : null;
-  // 직전 스냅샷을 저장한 날부터 며칠이 지났는지
-  const gapDays = Math.round((Date.parse(dates[dates.length-1]) - Date.parse(dates[dates.length-2])) / 86400000);
+  const gapDays = Math.round((Date.parse(allDates[allDates.length-1]) - Date.parse(allDates[allDates.length-2])) / 86400000);
   const prevLabel = Number.isFinite(gapDays) && gapDays > 0 ? `${gapDays}일 전 기록 대비` : '직전 기록 대비';
+
+  // 기간 필터
+  const rng = TREND_RANGES.find(r=>r.key===trendRange) || TREND_RANGES[TREND_RANGES.length-1];
+  let snaps = allSnaps;
+  if(rng.days){
+    const cutoff = new Date(Date.now() - rng.days*86400000).toISOString().slice(0,10);
+    snaps = allSnaps.filter(s=>s.date >= cutoff);
+  }
+  const rangeTabsHtml = `<div class="range-tabs">${TREND_RANGES.map(r=>
+    `<button class="range-tab${r.key===rng.key ? ' active' : ''}" onclick="setTrendRange('${r.key}')">${r.label}</button>`
+  ).join('')}</div>`;
+
+  let periodHtml = '';
+  let chartHtml = '';
+  trendChart = null;
+
+  if(snaps.length < 2){
+    chartHtml = `<div class="panel-empty">이 기간에는 기록이 부족해요. 더 긴 기간을 선택해 보세요.</div>`;
+  } else {
+    const values = snaps.map(s=>s.totals[currentOwner]);
+    const costs = snaps.map(s=> (s.costs && typeof s.costs[currentOwner] === 'number') ? s.costs[currentOwner] : null);
+    const w = 600, h = 140, pad = 8;
+    const all = values.concat(costs.filter(c=>c!==null));
+    const min = Math.min(...all);
+    const max = Math.max(...all);
+    const span = (max - min) || 1;
+    const xOf = i => pad + (i/(values.length-1))*(w-2*pad);
+    const yOf = v => h-pad - ((v-min)/span)*(h-2*pad);
+    const points = values.map((v,i)=>({ x: xOf(i), y: yOf(v) }));
+    const polyPoints = points.map(p=>`${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+    const areaPoints = `${pad},${h-pad} ${polyPoints} ${w-pad},${h-pad}`;
+    const costPts = costs.map((c,i)=> c===null ? null : `${xOf(i).toFixed(1)},${yOf(c).toFixed(1)}`).filter(Boolean);
+    const hasCost = costPts.length >= 2;
+    trendChart = { snaps, costs, points, w, h };
+
+    const first = values[0];
+    const firstDelta = values[values.length-1] - first;
+    const firstDeltaPct = first ? (firstDelta/first)*100 : null;
+    const firstLabel = rng.key==='all' ? '첫 기록 대비' : `${rng.label} 내 첫 기록 대비`;
+    periodHtml = `<div class="trend-first-delta num">${fmtPL(firstDelta)}${firstDeltaPct!==null ? ' ('+fmtPercent(firstDeltaPct)+')' : ''} · ${firstLabel}</div>`;
+
+    const maxV = Math.max(...values);
+    const minV = Math.min(...values);
+    chartHtml = `
+      <div class="trend-svg-wrap" id="trendChartWrap">
+        <svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}" preserveAspectRatio="none">
+          <polygon points="${areaPoints}" fill="var(--mint-dim)" opacity="0.6"></polygon>
+          ${hasCost ? `<polyline points="${costPts.join(' ')}" fill="none" stroke="var(--text3)" stroke-width="1.5" stroke-dasharray="4 3" stroke-linejoin="round" vector-effect="non-scaling-stroke"></polyline>` : ''}
+          <polyline points="${polyPoints}" fill="none" stroke="var(--mint)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"></polyline>
+        </svg>
+        <div class="trend-guide" id="trendGuide"></div>
+        <div class="trend-dot" id="trendDot"></div>
+        <div class="trend-tip" id="trendTip"></div>
+      </div>
+      <div class="trend-caption-row">
+        <span>${fmtDateDot(snaps[0].date)}</span>
+        <span>${fmtDateDot(snaps[snaps.length-1].date)}</span>
+      </div>
+      <div class="trend-caption-row">
+        <span>최고 ${fmtWon(maxV)}</span>
+        <span>최저 ${fmtWon(minV)}</span>
+      </div>
+      ${hasCost ? `<div class="trend-legend"><span><i class="lg-line"></i>평가금액</span><span><i class="lg-dash"></i>투자원금</span></div>` : ''}
+    `;
+  }
 
   el.innerHTML = `
     <div class="section-divider-gray spaced-top"></div>
@@ -1623,20 +1833,119 @@ function renderAssetTrend(){
       </div>
       <div class="trend-latest num">${fmtWon(last)}</div>
       <div class="trend-latest-delta num ${plClass(delta)}">${fmtPL(delta)}${deltaPct!==null ? ' ('+fmtPercent(deltaPct)+')' : ''} · ${prevLabel}</div>
-      <div class="trend-first-delta num">${fmtPL(firstDelta)}${firstDeltaPct!==null ? ' ('+fmtPercent(firstDeltaPct)+')' : ''} · 첫 기록 대비</div>
-      <div class="trend-svg-wrap">
-        <svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}" preserveAspectRatio="none">
-          <polygon points="${areaPoints}" fill="var(--mint-dim)" opacity="0.6"></polygon>
-          <polyline points="${polyPoints}" fill="none" stroke="var(--mint)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"></polyline>
-        </svg>
-      </div>
-      <div class="trend-caption-row">
-        <span>${fmtDateDot(dates[0])}</span>
-        <span>${fmtDateDot(dates[dates.length-1])}</span>
-      </div>
-      <div class="panel-caption mt-6">스냅샷 ${snaps.length}개 기록됨</div>
+      ${periodHtml}
+      ${rangeTabsHtml}
+      ${chartHtml}
+      <div class="panel-caption mt-6">스냅샷 ${allSnaps.length}개 기록됨 · 그래프를 누르면 날짜별 금액을 볼 수 있어요</div>
+      ${manageHtml}
     </div>
   `;
+  bindTrendChartEvents();
+}
+
+// ===== 스냅샷 기록 관리 (추가·수정·삭제) =====
+function parseMoneyField(id){
+  const el = document.getElementById(id);
+  return el ? (parseInt(el.value.replace(/[^0-9]/g,''), 10) || 0) : 0;
+}
+
+function buildSnapshotSheetHtml(){
+  const ownerName = currentOwner==='ALL' ? '전체' : ((DATA.owners||[]).find(o=>o.id===currentOwner)||{}).name || '';
+  const snaps = (DATA.snapshots||[])
+    .filter(s=> s.totals && typeof s.totals[currentOwner] === 'number')
+    .sort((a,b)=>b.date.localeCompare(a.date));
+  const rows = snaps.map(sn=>{
+    const cost = (sn.costs && typeof sn.costs[currentOwner] === 'number') ? sn.costs[currentOwner] : null;
+    return `
+      <div class="entry-row snap-row" onclick="prefillSnapshotForm('${sn.date}')">
+        <span>${fmtDateDot(sn.date)}</span>
+        <span>
+          <span class="amt num">${fmtWon(sn.totals[currentOwner])}</span>${cost!==null ? `<span class="text-dim"> · 원금 ${fmtWon(cost)}</span>` : ''}
+          <span class="del-icon" onclick="event.stopPropagation();deleteSnapshot('${sn.date}')">🗑️</span>
+        </span>
+      </div>`;
+  }).join('');
+  return `
+    <div class="panel-caption">${escapeHtml(ownerName)} 기준으로 표시·저장돼요. 이미 있는 날짜로 저장하면 그 날짜의 값이 수정되고, 아래 기록을 누르면 값이 채워져요.</div>
+    <div class="form-row">
+      <div class="field">
+        <span class="field-label">날짜</span>
+        <div class="date-display-wrap">
+          <span class="date-display-text" id="snap_date_display" data-placeholder="날짜 선택">날짜 선택</span>
+          <input type="date" id="snap_date" class="date-native-hidden" onchange="syncDateDisplay(this)">
+        </div>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="field">
+        <span class="field-label">평가금액</span>
+        <input type="text" inputmode="numeric" placeholder="예: 5,000,000" id="snap_value" oninput="formatMoneyInput(this)">
+      </div>
+      <div class="field">
+        <span class="field-label">투자원금 (선택)</span>
+        <input type="text" inputmode="numeric" placeholder="예: 4,500,000" id="snap_cost" oninput="formatMoneyInput(this)">
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn-primary" onclick="submitSnapshotForm()">저장</button>
+    </div>
+    <div class="panel-title mt-20 fs-16">기록 ${snaps.length}개</div>
+    ${rows || '<div class="empty-hint">아직 기록이 없어요</div>'}
+  `;
+}
+
+function openSnapshotSheet(){
+  openSheet('스냅샷 기록', buildSnapshotSheetHtml());
+}
+
+function prefillSnapshotForm(date){
+  const sn = (DATA.snapshots||[]).find(x=>x.date===date);
+  if(!sn) return;
+  const dateEl = document.getElementById('snap_date');
+  dateEl.value = date;
+  syncDateDisplay(dateEl);
+  const v = sn.totals[currentOwner];
+  document.getElementById('snap_value').value = typeof v === 'number' ? Math.round(v).toLocaleString('ko-KR') : '';
+  const c = sn.costs && sn.costs[currentOwner];
+  document.getElementById('snap_cost').value = typeof c === 'number' ? Math.round(c).toLocaleString('ko-KR') : '';
+  document.getElementById('sheetBody').scrollTop = 0;
+}
+
+async function submitSnapshotForm(){
+  const date = document.getElementById('snap_date').value;
+  const value = parseMoneyField('snap_value');
+  const cost = parseMoneyField('snap_cost');
+  const today = new Date().toISOString().slice(0,10);
+  if(!date){ showToast('날짜를 선택해주세요'); return; }
+  if(date > today){ showToast('오늘 이후 날짜는 기록할 수 없어요'); return; }
+  if(!value){ showToast('평가금액을 입력해주세요'); return; }
+  ensureDataShape();
+  let sn = DATA.snapshots.find(x=>x.date===date);
+  if(!sn){
+    sn = { date, totals: {} };
+    DATA.snapshots.push(sn);
+  }
+  sn.totals[currentOwner] = value;
+  if(cost){
+    sn.costs = sn.costs || {};
+    sn.costs[currentOwner] = cost;
+  } else if(sn.costs){
+    delete sn.costs[currentOwner];
+  }
+  DATA.snapshots.sort((a,b)=>a.date.localeCompare(b.date));
+  await saveData();
+  render();
+  openSnapshotSheet();
+  showToast('스냅샷을 저장했어요');
+}
+
+async function deleteSnapshot(date){
+  if(!confirm(`${fmtDateDot(date)} 스냅샷을 삭제할까요? (모든 탭에서 이 날짜 기록이 사라져요)`)) return;
+  DATA.snapshots = DATA.snapshots.filter(x=>x.date!==date);
+  await saveData();
+  render();
+  openSnapshotSheet();
+  showToast('스냅샷을 삭제했어요');
 }
 
 
