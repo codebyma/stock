@@ -867,6 +867,9 @@ background: var(--surface2);
     <button class="add-btn" id="addAccountBtn">+ 계좌 추가</button>
   </div>
   <div class="form-panel" id="accountForm">
+    <div class="form-row hidden" id="accountOwnerRow">
+      <select id="newAccountOwner"></select>
+    </div>
     <div class="form-row">
       <input type="text" id="newAccountName" placeholder="계좌 이름 (예: 미래에셋 연금저축)">
     </div>
@@ -1970,9 +1973,16 @@ async function applyGroupDividend(key, sid){
 function renderAccounts(){
   const list = document.getElementById('accountList');
   const isAll = currentOwner === 'ALL';
-  document.getElementById('addAccountBtn').classList.toggle('hidden', isAll);
   document.getElementById('accountsLabel').textContent = isAll ? '전체 계좌' : '계좌';
-  if(isAll) closeForm('accountForm');
+  // 전체 보기에서는 계좌를 넣을 주인을 고를 수 있게 한다
+  document.getElementById('accountOwnerRow').classList.toggle('hidden', !isAll);
+  const ownerSel = document.getElementById('newAccountOwner');
+  const ownerOptions = (DATA.owners||[]).map(o=>`<option value="${o.id}">${escapeHtml(o.name)}</option>`).join('');
+  if(ownerSel.innerHTML !== ownerOptions){
+    const prev = ownerSel.value;
+    ownerSel.innerHTML = ownerOptions;
+    if(prev && (DATA.owners||[]).some(o=>o.id===prev)) ownerSel.value = prev;
+  }
   const accounts = accountsForOwner(currentOwner);
   if(accounts.length===0){
     list.innerHTML = `<div class="empty-state">아직 등록된 계좌가 없습니다.<br>위 '계좌 추가' 버튼으로 시작해보세요.</div>`;
@@ -2091,11 +2101,9 @@ async function createCatalogAndAdd(accountId){
 }
 
 function stockEmoji(name, ticker){
-  /*
   const n = (name||'') + ' ' + (ticker||'');
  const rules = [
-    
-     [/반도체|semiconductor/i, '⚡'],
+    [/반도체|semiconductor/i, '⚡'],
     [/나스닥|nasdaq/i, '🚀'],
     [/s&?p\s?500|에스앤피/i, '🇺🇸'],
     [/리츠|reit/i, '🏠'],
@@ -2105,13 +2113,9 @@ function stockEmoji(name, ticker){
     [/차이나|중국|china/i, '🇨🇳'],
     [/채권|bond/i, '📜'],
     [/은행|금융|financial|증권/i, '🏦'],
-
   ];
   for(const [re, emoji] of rules){ if(re.test(n)) return emoji; }
   return '📊';
-   */
-  return '';
-  
 }
 
 function openStockDetailSheet(stockId){
@@ -2587,7 +2591,9 @@ async function submitAccount(){
   const nameEl = document.getElementById('newAccountName');
   const name = nameEl.value.trim();
   if(!name){ showToast('계좌 이름을 입력해주세요'); return; }
-  DATA.accounts.push({ id: uid('acc'), ownerId: currentOwner, name });
+  const ownerId = currentOwner==='ALL' ? document.getElementById('newAccountOwner').value : currentOwner;
+  if(!ownerId){ showToast('계좌 주인을 선택해주세요'); return; }
+  DATA.accounts.push({ id: uid('acc'), ownerId, name });
   nameEl.value = '';
   closeForm('accountForm');
   await saveData();
