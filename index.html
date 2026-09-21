@@ -1610,6 +1610,9 @@ function renderAssetTrend(){
   const deltaPct = prev ? (delta/prev)*100 : null;
   const firstDelta = last - first;
   const firstDeltaPct = first ? (firstDelta/first)*100 : null;
+  // 직전 스냅샷을 저장한 날부터 며칠이 지났는지
+  const gapDays = Math.round((Date.parse(dates[dates.length-1]) - Date.parse(dates[dates.length-2])) / 86400000);
+  const prevLabel = Number.isFinite(gapDays) && gapDays > 0 ? `${gapDays}일 전 기록 대비` : '직전 기록 대비';
 
   el.innerHTML = `
     <div class="section-divider-gray spaced-top"></div>
@@ -1619,7 +1622,7 @@ function renderAssetTrend(){
         ${saveBtnHtml}
       </div>
       <div class="trend-latest num">${fmtWon(last)}</div>
-      <div class="trend-latest-delta num ${plClass(delta)}">${fmtPL(delta)}${deltaPct!==null ? ' ('+fmtPercent(deltaPct)+')' : ''} · 직전 기록 대비</div>
+      <div class="trend-latest-delta num ${plClass(delta)}">${fmtPL(delta)}${deltaPct!==null ? ' ('+fmtPercent(deltaPct)+')' : ''} · ${prevLabel}</div>
       <div class="trend-first-delta num">${fmtPL(firstDelta)}${firstDeltaPct!==null ? ' ('+fmtPercent(firstDeltaPct)+')' : ''} · 첫 기록 대비</div>
       <div class="trend-svg-wrap">
         <svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}" preserveAspectRatio="none">
