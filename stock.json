@@ -945,21 +945,24 @@
       "ticker": "360750",
       "name": "TIGER S&P500",
       "currentPrice": 26365,
-      "dividendUrl": "https://m.stock.naver.com/domestic/stock/360750/analysis"
+      "dividendUrl": "https://m.stock.naver.com/domestic/stock/360750/analysis",
+      "tossUrl": "https://tossinvest.com/_ul/kUSDQA"
     },
     {
       "key": "133690",
       "ticker": "133690",
       "name": "TIGER 나스닥100",
       "currentPrice": 182625,
-      "dividendUrl": "https://m.stock.naver.com/domestic/stock/133690/analysis"
+      "dividendUrl": "https://m.stock.naver.com/domestic/stock/133690/analysis",
+      "tossUrl": "https://tossinvest.com/_ul/kUyScA"
     },
     {
       "key": "381180",
       "ticker": "381180",
       "name": "TIGER 미국필라델피아반도체나스닥",
       "currentPrice": 43420,
-      "dividendUrl": "https://m.stock.naver.com/domestic/stock/381180/analysis"
+      "dividendUrl": "https://m.stock.naver.com/domestic/stock/381180/analysis",
+       "tossUrl": "https://tossinvest.com/_ul/kgSKyD"
     },
     {
       "key": "305080",
