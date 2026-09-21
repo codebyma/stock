@@ -945,7 +945,7 @@
       "ticker": "360750",
       "name": "TIGER S&P500",
       "currentPrice": 26365,
-      "dividendUrl": "https://m.stock.naver.com/domestic/stock/360750/analysis",
+      "naverUrl": "https://m.stock.naver.com/domestic/stock/360750/analysis",
       "tossUrl": "https://tossinvest.com/_ul/kUSDQA"
     },
     {
@@ -953,7 +953,7 @@
       "ticker": "133690",
       "name": "TIGER 나스닥100",
       "currentPrice": 182625,
-      "dividendUrl": "https://m.stock.naver.com/domestic/stock/133690/analysis",
+      "naverUrl": "https://m.stock.naver.com/domestic/stock/133690/analysis",
       "tossUrl": "https://tossinvest.com/_ul/kUyScA"
     },
     {
@@ -961,15 +961,15 @@
       "ticker": "381180",
       "name": "TIGER 미국필라델피아반도체나스닥",
       "currentPrice": 43420,
-      "dividendUrl": "https://m.stock.naver.com/domestic/stock/381180/analysis",
-       "tossUrl": "https://tossinvest.com/_ul/kgSKyD"
+      "naverUrl": "https://m.stock.naver.com/domestic/stock/381180/analysis",
+      "tossUrl": "https://tossinvest.com/_ul/kgSKyD"
     },
     {
       "key": "305080",
       "ticker": "305080",
       "name": "TIGER 미국채10년선물",
       "currentPrice": 12090,
-      "dividendUrl": "https://m.stock.naver.com/domestic/stock/305080/analysis",
+      "naverUrl": "https://m.stock.naver.com/domestic/stock/305080/analysis",
       "tossUrl": "https://tossinvest.com/_ul/kUSDQA"
     },
     {
@@ -977,7 +977,7 @@
       "ticker": "304660",
       "name": "KODEX 미국30년국채울트라선물(H)",
       "currentPrice": 7200,
-      "dividendUrl": "https://m.stock.naver.com/domestic/stock/304660/analysis",
+      "naverUrl": "https://m.stock.naver.com/domestic/stock/304660/analysis",
       "tossUrl": "https://tossinvest.com/_ul/kUSDQA"
     },
     {
@@ -985,7 +985,7 @@
       "ticker": "458730",
       "name": "TIGER 미국배당다우존스",
       "currentPrice": 14765,
-      "dividendUrl": "https://m.stock.naver.com/domestic/stock/458730/analysis",
+      "naverUrl": "https://m.stock.naver.com/domestic/stock/458730/analysis",
       "tossUrl": "https://tossinvest.com/_ul/kUSDQA"
     },
     {
@@ -993,7 +993,7 @@
       "ticker": "319640",
       "name": "TIGER 골드선물(H)",
       "currentPrice": 25590,
-      "dividendUrl": "https://m.stock.naver.com/domestic/stock/319640/analysis",
+      "naverUrl": "https://m.stock.naver.com/domestic/stock/319640/analysis",
       "tossUrl": "https://tossinvest.com/_ul/kUSDQA"
     },
     {
@@ -1001,7 +1001,7 @@
       "ticker": "0008S0",
       "name": "TIGER 마국배당다우존스타켓데일리커버드콜",
       "currentPrice": 9710,
-      "dividendUrl": "https://m.stock.naver.com/domestic/stock/0008S0/analysis",
+      "naverUrl": "https://m.stock.naver.com/domestic/stock/0008S0/analysis",
       "tossUrl": "https://tossinvest.com/_ul/kUSDQA"
     },
     {
@@ -1009,15 +1009,15 @@
       "ticker": "182480",
       "name": "TIGER 미국MSCI리츠(합성H)",
       "currentPrice": 13125,
-      "dividendUrl": "https://m.stock.naver.com/domestic/stock/182480/analysis",
-      ,"tossUrl": "https://tossinvest.com/_ul/kUSDQA"
+      "naverUrl": "https://m.stock.naver.com/domestic/stock/182480/analysis",
+      "tossUrl": "https://tossinvest.com/_ul/kUSDQA"
     },
     {
       "key": "371460",
       "ticker": "371460",
       "name": "TIGER 차이나전기차SOLACTIVE",
       "currentPrice": 9515,
-      "dividendUrl": "https://m.stock.naver.com/domestic/stock/371460/analysis",
+      "naverUrl": "https://m.stock.naver.com/domestic/stock/371460/analysis",
       "tossUrl": "https://tossinvest.com/_ul/kUSDQA"
     },
     {
@@ -1025,7 +1025,7 @@
       "ticker": "466940",
       "name": "TIGER 은행고배당플러스TOP10",
       "currentPrice": 27335,
-      "dividendUrl": "https://m.stock.naver.com/domestic/stock/466940/analysis",
+      "naverUrl": "https://m.stock.naver.com/domestic/stock/466940/analysis",
       "tossUrl": "https://tossinvest.com/_ul/kUSDQA"
     },
     {
@@ -1033,15 +1033,15 @@
       "ticker": "441640",
       "name": "KODEX 미국배당커버드콜액티브",
       "currentPrice": 12500,
-      "dividendUrl": "https://m.stock.naver.com/domestic/stock/441640/analysis",
-      ,"tossUrl": "https://tossinvest.com/_ul/kUSDQA"
+      "naverUrl": "https://m.stock.naver.com/domestic/stock/441640/analysis",
+      "tossUrl": "https://tossinvest.com/_ul/kUSDQA"
     },
     {
       "key": "329650",
       "ticker": "329650",
       "name": "KODEX TRF3070",
       "currentPrice": 14045,
-      "dividendUrl": "https://m.stock.naver.com/domestic/stock/329650/analysis",
+      "naverUrl": "https://m.stock.naver.com/domestic/stock/329650/analysis",
       "tossUrl": "https://tossinvest.com/_ul/kUSDQA"
     },
     {
@@ -1049,7 +1049,7 @@
       "ticker": "379800",
       "name": "KODEX 미국S&P500",
       "currentPrice": 23960,
-      "dividendUrl": "https://m.stock.naver.com/domestic/stock/379800/analysis",
+      "naverUrl": "https://m.stock.naver.com/domestic/stock/379800/analysis",
       "tossUrl": "https://tossinvest.com/_ul/kUSDQA"
     }
   ]
