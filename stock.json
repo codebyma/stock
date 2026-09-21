@@ -937,6 +937,22 @@
           "amount": 960
         }
       ]
+    },
+    {
+      "id": "divrec_wruk8xm",
+      "key": "329650",
+      "name": "KODEX TRF3070",
+      "ticker": "329650",
+      "month": "2026-09",
+      "date": "2026-09-14",
+      "perShare": 30,
+      "accounts": [
+        {
+          "accountId": "acc_5ma36fu",
+          "quantity": 387,
+          "amount": 11610
+        }
+      ]
     }
   ],
   "stockCatalog": [
