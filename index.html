@@ -1882,7 +1882,11 @@ function buildTargetSheetContent(key, sid){
         <button class="btn-primary" onclick="applyGroupDividend('${keyEsc}','${sid}')">전체 계좌에 반영</button>
       </div>
     </div>
-    <div class="button-row mt-20">
+    <div class="button-row center mt-18">
+      <button class="text-link-btn" onclick="openStockLink('${keyEsc}','toss')">토스</button>
+      <button class="text-link-btn" onclick="openStockLink('${keyEsc}','naver')">네이버</button>
+    </div>
+    <div class="button-row mt-12">
       <button class="cta-btn" onclick="openGroupPriceForm('${keyEsc}','${sid}')">현재가</button>
       <button class="cta-btn" onclick="openGroupDividendForm('${keyEsc}','${sid}')">배당</button>
     </div>
@@ -1890,12 +1894,15 @@ function buildTargetSheetContent(key, sid){
   return { title: item.name, bodyHtml };
 }
 
-function openDividendLink(key){
+// 종목 링크: 토스는 stockCatalog의 tossUrl, 네이버는 naverUrl(기존 dividendUrl도 인식)
+function openStockLink(key, type){
   const cat = catalogByKey(key);
-  if(cat && cat.dividendUrl){
-    window.open(cat.dividendUrl, '_blank', 'noopener');
+  const isToss = type === 'toss';
+  const url = cat ? (isToss ? cat.tossUrl : (cat.naverUrl || cat.dividendUrl)) : '';
+  if(url){
+    window.open(url, '_blank', 'noopener');
   } else {
-    showToast('배당확인 링크가 아직 설정되지 않았어요 (stockCatalog의 dividendUrl 필드에 추가해주세요)');
+    showToast(`${isToss ? '토스' : '네이버'} 링크가 아직 설정되지 않았어요 (stockCatalog의 ${isToss ? 'tossUrl' : 'naverUrl'} 필드에 추가해주세요)`);
   }
 }
 
@@ -1903,16 +1910,14 @@ function openTargetSheet(key, sid){
   const content = buildTargetSheetContent(key, sid);
   if(!content) return;
   openTargetSheetLayer = { key, layer: 1 };
-  openSheet(content.title, content.bodyHtml, ()=>openDividendLink(key));
-  document.getElementById('sheetTitle').insertAdjacentHTML('beforeend', CHEVRON_SVG);
+  openSheet(content.title, content.bodyHtml);
 }
 
 function openTargetSheetNested(key, sid){
   const content = buildTargetSheetContent(key, sid);
   if(!content) return;
   openTargetSheetLayer = { key, layer: 2 };
-  openSheet2(content.title, content.bodyHtml, ()=>openDividendLink(key));
-  document.getElementById('sheetTitle2').insertAdjacentHTML('beforeend', CHEVRON_SVG);
+  openSheet2(content.title, content.bodyHtml);
 }
 
 async function applyGroupPrice(key, sid){
