@@ -1628,8 +1628,8 @@ function renderAssetTrend(){
         </svg>
       </div>
       <div class="trend-caption-row">
-        <span>${dates[0]}</span>
-        <span>${dates[dates.length-1]}</span>
+        <span>${fmtDateDot(dates[0])}</span>
+        <span>${fmtDateDot(dates[dates.length-1])}</span>
       </div>
       <div class="panel-caption mt-6">스냅샷 ${snaps.length}개 기록됨</div>
     </div>
@@ -1769,7 +1769,7 @@ function dividendFlatListHtmlForKey(key){
   if(records.length===0) return `<div class="empty-hint">기록 없음</div>`;
   return records.map(rec=>{
     const total = rec.accounts.reduce((s,a)=>s+a.amount,0);
-    const dateLabel = rec.date || rec.month;
+    const dateLabel = fmtDateDot(rec.date || rec.month);
     const keyEsc = key.replace(/'/g,"\\'");
     return `
       <div class="entry-row">
@@ -2175,7 +2175,7 @@ function entryListHtml(list, stockId, field){
   const sorted = [...list].sort((a,b)=> (b.date||'').localeCompare(a.date||''));
   return sorted.map(item=>`
     <div class="entry-row">
-      <span>${item.date||''} ${item.quantity||0}주${item.price ? ' x <span class="won-sign">₩</span>'+item.price.toLocaleString('ko-KR') : ''}</span>
+      <span>${fmtDateDot(item.date)} ${item.quantity||0}주${item.price ? ' x <span class="won-sign">₩</span>'+item.price.toLocaleString('ko-KR') : ''}</span>
       <span class="del-icon" onclick="deleteEntry('${stockId}','${field}','${item.id}')">🗑️</span>
     </div>
   `).join('');
@@ -2187,7 +2187,7 @@ function dividendListHtmlForStock(stock){
   const sorted = [...records].sort((a,b)=> (b.month||'').localeCompare(a.month||''));
   return sorted.map(item=>`
     <div class="entry-row">
-      <span>${item.month||''}${item.perShare ? ' · 주당 <span class="won-sign">₩</span>'+item.perShare.toLocaleString('ko-KR') : ''}</span>
+      <span>${fmtDateDot(item.month)}${item.perShare ? ' · 주당 <span class="won-sign">₩</span>'+item.perShare.toLocaleString('ko-KR') : ''}</span>
       <span><span class="amt num">${fmtWon(item.amount)}</span><span class="del" onclick="deleteStockDividend('${stock.id}','${item.month}')">삭제</span></span>
     </div>
   `).join('');
@@ -2252,7 +2252,7 @@ function syncDateDisplay(inputEl){
   const disp = document.getElementById(inputEl.id + '_display');
   if(!disp) return;
   if(inputEl.value){
-    disp.textContent = inputEl.value;
+    disp.textContent = fmtDateDot(inputEl.value);
     disp.classList.add('has-value');
   } else {
     disp.textContent = disp.dataset.placeholder || '';
@@ -2557,6 +2557,10 @@ async function deleteMonthRecord(key, month){
     openMonthDividendSheet(month);
   }
   showToast('이 종목의 해당 월 배당 기록을 전체 삭제했어요');
+}
+
+function fmtDateDot(v){
+  return (v==null ? '' : String(v)).replace(/-/g,'.');
 }
 
 function escapeHtml(str){
