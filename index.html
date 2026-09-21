@@ -2091,9 +2091,10 @@ async function createCatalogAndAdd(accountId){
 }
 
 function stockEmoji(name, ticker){
+  /*
   const n = (name||'') + ' ' + (ticker||'');
  const rules = [
-    /*
+    
      [/반도체|semiconductor/i, '⚡'],
     [/나스닥|nasdaq/i, '🚀'],
     [/s&?p\s?500|에스앤피/i, '🇺🇸'],
@@ -2104,10 +2105,11 @@ function stockEmoji(name, ticker){
     [/차이나|중국|china/i, '🇨🇳'],
     [/채권|bond/i, '📜'],
     [/은행|금융|financial|증권/i, '🏦'],
-*/
+
   ];
   for(const [re, emoji] of rules){ if(re.test(n)) return emoji; }
   return '📊';
+  */
 }
 
 function openStockDetailSheet(stockId){
