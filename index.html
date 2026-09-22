@@ -28,7 +28,7 @@
     --lime:#a3e635;
   }
   body.light-theme{
-    --bg:#ffffff;
+    --bg:#f6f5f2;
     --surface1:#ffffff;
     --surface2:#eef0f2;
     --border:#e0e3e7;
@@ -177,7 +177,6 @@
   .tax-account-owner{font-size:11px;color:var(--text3);margin-left:4px;}
   .switch-row{display:flex;align-items:center;gap:6px;cursor:pointer;}
   .switch-row input[type="checkbox"]{width:16px;height:16px;accent-color:var(--mint);cursor:pointer;}
-  .rate-tag{font-size:10.5px;font-weight:500;color:var(--text3);background:var(--surface2);padding:1px 6px;border-radius:5px;vertical-align:middle;}
 
   .trend-svg-wrap{
     position:relative;
@@ -2906,8 +2905,6 @@ function formatMoneyInput(el){
   el.value = raw ? Number(raw).toLocaleString('ko-KR') : '';
 }
 
-const GENERAL_ACCOUNT_TAX_RATE = 9.9; // ISA/일반 계좌 배당소득세(분리과세) 고정 세율
-
 function buildPensionCalcHtml(){
   const owners = DATA.owners || [];
   if(owners.length===0) return `<div class="empty-hint">등록된 계좌가 없어요</div>`;
@@ -2915,10 +2912,9 @@ function buildPensionCalcHtml(){
   const buildAccRow = (acc, marginClass)=>{
     const total = accountTotal(acc.id);
     const yieldPct = accountYieldOnCurrentPrice(acc.id);
-    const isPension = isPensionAccount(acc.id);
     return `
       <div class="${marginClass} pt-14">
-        <div class="fs-13 text-strong mb-4">${escapeHtml(acc.name)}${isPension ? '' : ' <span class="rate-tag">9.9% 고정</span>'}</div>
+        <div class="fs-13 text-strong mb-4">${escapeHtml(acc.name)}</div>
         <div class="form-row mb-0">
           <div class="field">
             <span class="field-label">평가금액</span>
@@ -2939,20 +2935,13 @@ function buildPensionCalcHtml(){
 
   const ownerSections = owners.map(owner=>{
     const pensionAccounts = accountsForOwner(owner.id).filter(a=>isPensionAccount(a.id));
-    const generalAccounts = accountsForOwner(owner.id).filter(a=>!isPensionAccount(a.id));
-    if(pensionAccounts.length===0 && generalAccounts.length===0) return '';
+    if(pensionAccounts.length===0) return '';
 
     const pensionRows = pensionAccounts.map((acc,idx)=> buildAccRow(acc, idx===0 ? 'mt-6' : 'mt-14')).join('');
-    const generalLabel = (pensionAccounts.length>0 && generalAccounts.length>0)
-      ? `<div class="mt-14 pt-14 divider-top fs-11-5 text-dim">일반·ISA 계좌 (9.9% 고정 세율)</div>`
-      : '';
-    const generalRows = generalAccounts.map((acc,idx)=> buildAccRow(acc, (pensionAccounts.length===0 && idx===0) ? 'mt-6' : 'mt-14')).join('');
 
     return `
       <div class="panel-title sub-title mt-20 mb-4">${escapeHtml(owner.name)}</div>
       ${pensionRows}
-      ${generalLabel}
-      ${generalRows}
       <div class="pension-sum pension-sum-owner mt-14">
         <div class="entry-row no-border-bottom pb-0">
           <span class="text-strong">${escapeHtml(owner.name)} 월 합계(세후)</span>
@@ -2980,8 +2969,8 @@ function buildPensionCalcHtml(){
         </select>
       </div>
     </div>
-    <div class="panel-caption mt-0">연금계좌는 선택한 세율(1,500만원 초과 시 16.5%), 일반·ISA 계좌는 9.9% 고정 세율로 계산해요. 평가금액·배당률은 현재 데이터 기준으로 자동 채워지며 직접 수정할 수 있어요. <span class="text-link-btn" onclick="openTaxAccountSheet()">계좌 분류 확인</span></div>
-    ${ownerSections}
+    <div class="panel-caption mt-0">연금계좌로 분류된 계좌만 대상이에요 · 평가금액·배당률은 현재 데이터 기준으로 자동 채워지며 직접 수정할 수 있어요. 계좌 주인별로 연 배당 합계가 1,500만원을 넘으면 그 사람만 선택한 세율 대신 16.5%가 자동 적용돼요. <span class="text-link-btn" onclick="openTaxAccountSheet()">계좌 분류 확인</span></div>
+    ${ownerSections || '<div class="empty-hint">연금계좌로 분류된 계좌가 없어요. 계좌 분류에서 지정해주세요.</div>'}
   `;
 }
 
@@ -2999,34 +2988,29 @@ function recalcPensionSheet(){
   let grandTotalMonthlyNet = 0;
 
   owners.forEach(owner=>{
-    const allAccounts = accountsForOwner(owner.id);
-    let pensionAnnual = 0;
-    let generalAnnual = 0;
-    const perAccount = allAccounts.map(acc=>{
+    const accounts = accountsForOwner(owner.id).filter(a=>isPensionAccount(a.id));
+    let ownerAnnual = 0;
+    const perAccount = accounts.map(acc=>{
       const totalInput = document.getElementById(`pension_total_${acc.id}`);
       const yieldInput = document.getElementById(`pension_yield_${acc.id}`);
       if(!totalInput || !yieldInput) return null;
       const total = parseFloat(totalInput.value.replace(/,/g,'')) || 0;
       const yieldPct = parseFloat(yieldInput.value) || 0;
       const annual = total * (yieldPct/100);
-      const isPension = isPensionAccount(acc.id);
-      if(isPension) pensionAnnual += annual; else generalAnnual += annual;
-      return { id: acc.id, annual, isPension };
+      ownerAnnual += annual;
+      return { id: acc.id, annual };
     }).filter(Boolean);
 
-    const overLimit = pensionAnnual > 15000000;
-    const pensionRate = overLimit ? 16.5 : selectedRate;
+    const overLimit = ownerAnnual > 15000000;
+    const effectiveRate = overLimit ? 16.5 : selectedRate;
 
     perAccount.forEach(a=>{
-      const rate = a.isPension ? pensionRate : GENERAL_ACCOUNT_TAX_RATE;
-      const monthlyNet = (a.annual * (1 - rate/100)) / 12;
+      const monthlyNet = (a.annual * (1 - effectiveRate/100)) / 12;
       const el = document.getElementById(`pension_result_${a.id}`);
       if(el) el.innerHTML = fmtWon(Math.round(monthlyNet));
     });
 
-    const pensionNetAnnual = pensionAnnual * (1 - pensionRate/100);
-    const generalNetAnnual = generalAnnual * (1 - GENERAL_ACCOUNT_TAX_RATE/100);
-    const ownerMonthlyNet = (pensionNetAnnual + generalNetAnnual) / 12;
+    const ownerMonthlyNet = (ownerAnnual * (1 - effectiveRate/100)) / 12;
     grandTotalMonthlyNet += ownerMonthlyNet;
 
     const ownerTotalEl = document.getElementById(`pensionOwnerTotal_${owner.id}`);
