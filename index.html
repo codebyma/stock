@@ -323,6 +323,17 @@
   .rebal-buy{background:var(--blue-dim);color:var(--blue);}
   .rebal-sell{background:var(--red-dim);color:var(--red);}
   .rebal-ok{background:var(--mint-dim);color:var(--mint);}
+  .stale-price-badge{
+    display:inline-block;
+    margin-left:6px;
+    font-size:10.5px;
+    font-weight:500;
+    color:var(--gold);
+    background:var(--gold-dim);
+    padding:1px 6px;
+    border-radius:5px;
+    vertical-align:middle;
+  }
 
   .section-title{
     font-size:22px;
@@ -1272,7 +1283,7 @@ function getOrCreateCatalog(ticker, name, initialPrice){
   if(!DATA.stockCatalog) DATA.stockCatalog = [];
   let cat = catalogByKey(key);
   if(!cat){
-    cat = { key, ticker: (ticker||'').trim(), name: name, currentPrice: initialPrice||0 };
+    cat = { key, ticker: (ticker||'').trim(), name: name, currentPrice: initialPrice||0, priceUpdatedAt: initialPrice ? new Date().toISOString().slice(0,10) : null };
     DATA.stockCatalog.push(cat);
     return { cat, isNew: true };
   }
@@ -1410,6 +1421,19 @@ function stockDividendTTM(stock){
   return recordsForStock(stock).filter(r=>isWithinLast12Months(r.month)).reduce((s,r)=>s+(r.amount||0),0);
 }
 // 기준2: 최근 12개월 배당 ÷ 총 투자원금 (=평균매입단가×수량) — 지금 페이스가 앞으로도 이어진다면의 수익률
+// 현재가를 마지막으로 언제 반영했는지 기준으로, 오래됐으면 살짝 알려준다
+const STALE_PRICE_DAYS = 14;
+function daysSincePriceUpdate(cat){
+  if(!cat || !cat.priceUpdatedAt) return null;
+  const days = Math.round((Date.now() - Date.parse(cat.priceUpdatedAt)) / 86400000);
+  return days >= 0 ? days : null;
+}
+function stalePriceBadgeHtml(cat){
+  const days = daysSincePriceUpdate(cat);
+  if(days === null || days < STALE_PRICE_DAYS) return '';
+  return `<span class="stale-price-badge">현재가 ${days}일째 그대로</span>`;
+}
+
 function stockYieldOnAvgPrice(stock){
   const cost = stockCostBasis(stock);
   if(!cost) return null;
@@ -2092,7 +2116,7 @@ function renderBreakdown(){
       <div class="breakdown-row cursor-pointer" onclick="openTargetSheet('${keyEsc}','${sid}')">
         <div class="breakdown-top">
           <div class="breakdown-name-block">
-            <div class="breakdown-name">${escapeHtml(item.name)}${item.ticker ? ' <span class="suffix-text text-dim">('+escapeHtml(item.ticker)+')</span>' : ''}</div>
+            <div class="breakdown-name">${escapeHtml(item.name)}${item.ticker ? ' <span class="suffix-text text-dim">('+escapeHtml(item.ticker)+')</span>' : ''}${stalePriceBadgeHtml(cat)}</div>
             <div class="breakdown-price-line">평가금액 ${fmtWon(item.value)} · 현재가 <span class="price-highlight"><span class="won-sign">₩</span>${currentPrice.toLocaleString('ko-KR')}</span></div>
             <div class="breakdown-price-line">총 ${item.quantity.toLocaleString('ko-KR')}주${hasTarget ? ' · 목표 '+target+'%' : ''}</div>
           </div>
@@ -2328,6 +2352,7 @@ async function applyGroupPrice(key, sid){
   const cat = catalogByKey(key);
   if(!cat){ showToast('종목 정보를 찾을 수 없어요'); return; }
   cat.currentPrice = num;
+  cat.priceUpdatedAt = new Date().toISOString().slice(0,10);
   const count = stocksMatchingKey(key).length;
   closeForm(`grpform_${sid}`);
   await saveData();
@@ -2436,7 +2461,7 @@ function openAccountSheet(accId){
     const plPct = stockPLPercent(st);
     return `
       <div class="acc-stock-row" onclick="openStockDetailSheet('${st.id}')">
-        <div class="acc-stock-name">${escapeHtml(cat.name)}${cat.ticker ? '<span class="acc-stock-ticker">('+escapeHtml(cat.ticker)+')</span>' : ''}</div>
+        <div class="acc-stock-name">${escapeHtml(cat.name)}${cat.ticker ? '<span class="acc-stock-ticker">('+escapeHtml(cat.ticker)+')</span>' : ''}${stalePriceBadgeHtml(cat)}</div>
         <div class="acc-stock-right">
           <div class="num">${fmtWon(stockTotal(st))}</div>
           <div class="num acc-stock-pl ${plClass(pl)}">${fmtPL(pl)}${plPct!==null ? ' ('+fmtPercent(plPct)+')' : ''}</div>
