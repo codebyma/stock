@@ -620,6 +620,19 @@
         "wife": 86319625,
         "ALL": 113625385
       }
+    },
+    {
+      "date": "2026-09-22",
+      "totals": {
+        "me": 27268430,
+        "wife": 86369580,
+        "ALL": 113638010
+      },
+      "costs": {
+        "me": 17867013,
+        "wife": 50688504,
+        "ALL": 68555517
+      }
     }
   ],
   "dividends": [
@@ -1068,5 +1081,10 @@
       "naverUrl": "https://m.stock.naver.com/domestic/stock/379800/analysis",
       "tossUrl": "https://tossinvest.com/_ul/kUSkeF"
     }
+  ],
+  "pensionAccountIds": [
+    "acc_aioddia",
+    "acc_1ynxc3d",
+    "acc_5ma36fu"
   ]
 }
