@@ -242,6 +242,7 @@
   .trend-legend span{display:inline-flex;align-items:center;gap:5px;}
   .lg-line{display:inline-block;width:14px;height:0;border-top:2px solid var(--mint);}
   .lg-dash{display:inline-block;width:14px;height:0;border-top:2px dashed var(--text3);}
+  .lg-dot{display:inline-block;width:14px;height:0;border-top:2px dotted var(--gold);}
   .snap-row{cursor:pointer;}
   .trend-caption-row{
     display:flex;
@@ -1370,6 +1371,19 @@ function isWithinLast12Months(monthStr){
   const upper = new Date(now.getFullYear(), now.getMonth(), 1);
   return target >= cutoff && target <= upper;
 }
+// month(YYYY-MM) 이전(포함) 배당을 현재 탭(currentOwner) 기준으로 누적
+function cumulativeDividendsUpTo(month, ownerId){
+  const accIds = new Set(accountsForOwner(ownerId).map(a=>a.id));
+  let sum = 0;
+  (DATA.dividends||[]).forEach(rec=>{
+    if(rec.month > month) return;
+    rec.accounts.forEach(a=>{
+      if(accIds.has(a.accountId)) sum += (a.amount||0);
+    });
+  });
+  return sum;
+}
+
 function stockDividendTTM(stock){
   return recordsForStock(stock).filter(r=>isWithinLast12Months(r.month)).reduce((s,r)=>s+(r.amount||0),0);
 }
@@ -1703,6 +1717,10 @@ function showTrendTip(i){
       <div class="trend-tip-row"><span>투자원금</span><span class="num">${fmtWon(cost)}</span></div>
       <div class="trend-tip-row"><span>평가손익</span><span class="num ${plClass(pl)}">${fmtPL(pl)}${pct!==null ? ' ('+fmtPercent(pct)+')' : ''}</span></div>`;
   }
+  if(c.totalReturnValues && c.totalReturnValues[i] !== undefined){
+    rows += `
+      <div class="trend-tip-row"><span>배당 포함 총수익</span><span class="num text-gold">${fmtWon(c.totalReturnValues[i])}</span></div>`;
+  }
   tip.innerHTML = rows;
   // 점과 겹치지 않도록 반대편 모서리에 띄운다
   tip.style.left = leftPct > 50 ? '4px' : 'auto';
@@ -1788,8 +1806,13 @@ function renderAssetTrend(){
   } else {
     const values = snaps.map(s=>s.totals[currentOwner]);
     const costs = snaps.map(s=> (s.costs && typeof s.costs[currentOwner] === 'number') ? s.costs[currentOwner] : null);
+    const hasDividendData = (DATA.dividends||[]).length > 0;
+    const totalReturnValues = hasDividendData
+      ? snaps.map(s=> s.totals[currentOwner] + cumulativeDividendsUpTo(s.date.slice(0,7), currentOwner))
+      : [];
+    const hasTotalReturn = hasDividendData && totalReturnValues.some((v,i)=> v !== values[i]);
     const w = 600, h = 140, pad = 8;
-    const all = values.concat(costs.filter(c=>c!==null));
+    const all = values.concat(costs.filter(c=>c!==null)).concat(totalReturnValues);
     const min = Math.min(...all);
     const max = Math.max(...all);
     const span = (max - min) || 1;
@@ -1800,7 +1823,8 @@ function renderAssetTrend(){
     const areaPoints = `${pad},${h-pad} ${polyPoints} ${w-pad},${h-pad}`;
     const costPts = costs.map((c,i)=> c===null ? null : `${xOf(i).toFixed(1)},${yOf(c).toFixed(1)}`).filter(Boolean);
     const hasCost = costPts.length >= 2;
-    trendChart = { snaps, costs, points, w, h };
+    const totalReturnPts = totalReturnValues.map((v,i)=>`${xOf(i).toFixed(1)},${yOf(v).toFixed(1)}`);
+    trendChart = { snaps, costs, totalReturnValues: hasTotalReturn ? totalReturnValues : null, points, w, h };
 
     const first = values[0];
     const firstDelta = values[values.length-1] - first;
@@ -1811,12 +1835,18 @@ function renderAssetTrend(){
     periodHtml = `<div class="trend-first-delta num">${fmtPL(firstDelta)}${firstDeltaPct!==null ? ' ('+fmtPercent(firstDeltaPct)+')' : ''} · ${firstLabel}</div>`;
     minmaxText = `최고 ${fmtWon(maxV)}<br>최저 ${fmtWon(minV)}`;
 
+    // 기간 전체 흐름이 마이너스면 선·영역을 빨간 계열로, 아니면 민트 계열로
+    const isDown = firstDelta < 0;
+    const lineColor = isDown ? 'var(--red)' : 'var(--mint)';
+    const areaColor = isDown ? 'var(--red-dim)' : 'var(--mint-dim)';
+
     chartHtml = `
       <div class="trend-svg-wrap" id="trendChartWrap">
         <svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}" preserveAspectRatio="none">
-          <polygon points="${areaPoints}" fill="var(--mint-dim)" opacity="0.6"></polygon>
+          <polygon points="${areaPoints}" fill="${areaColor}" opacity="0.6"></polygon>
           ${hasCost ? `<polyline points="${costPts.join(' ')}" fill="none" stroke="var(--text3)" stroke-width="1.5" stroke-dasharray="4 3" stroke-linejoin="round" vector-effect="non-scaling-stroke"></polyline>` : ''}
-          <polyline points="${polyPoints}" fill="none" stroke="var(--mint)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"></polyline>
+          ${hasTotalReturn ? `<polyline points="${totalReturnPts.join(' ')}" fill="none" stroke="var(--gold)" stroke-width="1.5" stroke-dasharray="1 4" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"></polyline>` : ''}
+          <polyline points="${polyPoints}" fill="none" stroke="${lineColor}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"></polyline>
         </svg>
         <div class="trend-guide" id="trendGuide"></div>
         <div class="trend-dot" id="trendDot"></div>
@@ -1826,7 +1856,7 @@ function renderAssetTrend(){
         <span>${fmtDateDot(snaps[0].date)}</span>
         <span>${fmtDateDot(snaps[snaps.length-1].date)}</span>
       </div>
-      ${hasCost ? `<div class="trend-legend"><span><i class="lg-line"></i>평가금액</span><span><i class="lg-dash"></i>투자원금</span></div>` : ''}
+      ${hasCost || hasTotalReturn ? `<div class="trend-legend"><span><i class="lg-line"></i>평가금액</span>${hasCost ? `<span><i class="lg-dash"></i>투자원금</span>` : ''}${hasTotalReturn ? `<span><i class="lg-dot"></i>배당 포함 총수익</span>` : ''}</div>` : ''}
     `;
   }
 
