@@ -1694,9 +1694,10 @@ function showTrendTip(i){
   const c = trendChart;
   if(!c || !c.points[i]) return;
   const p = c.points[i];
-  const snap = c.snaps[i];
-  const v = snap.totals[currentOwner];
-  const cost = c.costs[i];
+  const isPreview = !!p.isPreview;
+  const snap = isPreview ? null : c.snaps[i];
+  const v = isPreview ? c.previewValue : snap.totals[currentOwner];
+  const cost = isPreview ? c.previewCost : c.costs[i];
   const leftPct = p.x / c.w * 100;
   const topPct = p.y / c.h * 100;
   const guide = document.getElementById('trendGuide');
@@ -1708,16 +1709,16 @@ function showTrendTip(i){
   dot.style.left = leftPct + '%';
   dot.style.top = topPct + '%';
   dot.style.display = 'block';
-  let rows = `<div class="trend-tip-date">${fmtDateDot(snap.date)}</div>
+  let rows = `<div class="trend-tip-date">${isPreview ? '오늘 (실시간 · 미저장)' : fmtDateDot(snap.date)}</div>
     <div class="trend-tip-row"><span>평가금액</span><span class="num">${fmtWon(v)}</span></div>`;
-  if(cost !== null){
+  if(cost !== null && cost !== undefined){
     const pl = v - cost;
     const pct = cost ? (pl / cost) * 100 : null;
     rows += `
       <div class="trend-tip-row"><span>투자원금</span><span class="num">${fmtWon(cost)}</span></div>
       <div class="trend-tip-row"><span>평가손익</span><span class="num ${plClass(pl)}">${fmtPL(pl)}${pct!==null ? ' ('+fmtPercent(pct)+')' : ''}</span></div>`;
   }
-  if(c.totalReturnValues && c.totalReturnValues[i] !== undefined){
+  if(!isPreview && c.totalReturnValues && c.totalReturnValues[i] !== undefined){
     rows += `
       <div class="trend-tip-row"><span>배당 포함 총수익</span><span class="num text-gold">${fmtWon(c.totalReturnValues[i])}</span></div>`;
   }
@@ -1811,20 +1812,32 @@ function renderAssetTrend(){
       ? snaps.map(s=> s.totals[currentOwner] + cumulativeDividendsUpTo(s.date.slice(0,7), currentOwner))
       : [];
     const hasTotalReturn = hasDividendData && totalReturnValues.some((v,i)=> v !== values[i]);
+
+    // 오늘 값 미리보기: 마지막 기록이 오늘이 아니면, 지금 보유 현황 기준 실시간 값을 점선으로 이어서 보여준다(저장은 하지 않음)
+    const todayStr = new Date().toISOString().slice(0,10);
+    const lastSnapDate = snaps[snaps.length-1].date;
+    const previewValue = lastSnapDate < todayStr ? ownerTotal(currentOwner) : null;
+    const hasPreview = previewValue !== null && previewValue !== values[values.length-1];
+    const previewCost = hasPreview ? ownerCostBasis(currentOwner) : null;
+
     const w = 600, h = 140, pad = 8;
-    const all = values.concat(costs.filter(c=>c!==null)).concat(totalReturnValues);
+    const all = values.concat(costs.filter(c=>c!==null)).concat(totalReturnValues).concat(hasPreview ? [previewValue] : []);
     const min = Math.min(...all);
     const max = Math.max(...all);
     const span = (max - min) || 1;
-    const xOf = i => pad + (i/(values.length-1))*(w-2*pad);
+    const countAll = values.length + (hasPreview ? 1 : 0);
+    const xOf = i => pad + (i/(countAll-1))*(w-2*pad);
     const yOf = v => h-pad - ((v-min)/span)*(h-2*pad);
     const points = values.map((v,i)=>({ x: xOf(i), y: yOf(v) }));
     const polyPoints = points.map(p=>`${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
-    const areaPoints = `${pad},${h-pad} ${polyPoints} ${w-pad},${h-pad}`;
+    const areaPoints = `${pad},${h-pad} ${polyPoints} ${xOf(values.length-1)},${h-pad}`;
     const costPts = costs.map((c,i)=> c===null ? null : `${xOf(i).toFixed(1)},${yOf(c).toFixed(1)}`).filter(Boolean);
     const hasCost = costPts.length >= 2;
     const totalReturnPts = totalReturnValues.map((v,i)=>`${xOf(i).toFixed(1)},${yOf(v).toFixed(1)}`);
-    trendChart = { snaps, costs, totalReturnValues: hasTotalReturn ? totalReturnValues : null, points, w, h };
+    const previewPoint = hasPreview ? { x: xOf(values.length), y: yOf(previewValue) } : null;
+    const previewLinePts = hasPreview ? `${points[points.length-1].x.toFixed(1)},${points[points.length-1].y.toFixed(1)} ${previewPoint.x.toFixed(1)},${previewPoint.y.toFixed(1)}` : '';
+    const allPoints = hasPreview ? points.concat([{ x: previewPoint.x, y: previewPoint.y, isPreview: true }]) : points;
+    trendChart = { snaps, costs, totalReturnValues: hasTotalReturn ? totalReturnValues : null, points: allPoints, previewValue, previewCost, w, h };
 
     const first = values[0];
     const firstDelta = values[values.length-1] - first;
@@ -1847,6 +1860,8 @@ function renderAssetTrend(){
           ${hasCost ? `<polyline points="${costPts.join(' ')}" fill="none" stroke="var(--text3)" stroke-width="1.5" stroke-dasharray="4 3" stroke-linejoin="round" vector-effect="non-scaling-stroke"></polyline>` : ''}
           <polyline points="${polyPoints}" fill="none" stroke="${lineColor}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"></polyline>
           ${hasTotalReturn ? `<polyline points="${totalReturnPts.join(' ')}" fill="none" stroke="var(--gold)" stroke-width="1.8" stroke-dasharray="1 3.5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"></polyline>` : ''}
+          ${hasPreview ? `<polyline points="${previewLinePts}" fill="none" stroke="${lineColor}" stroke-width="2.5" stroke-dasharray="1 5" stroke-linecap="round" vector-effect="non-scaling-stroke"></polyline>
+          <circle cx="${previewPoint.x.toFixed(1)}" cy="${previewPoint.y.toFixed(1)}" r="3.5" fill="var(--bg)" stroke="${lineColor}" stroke-width="2" vector-effect="non-scaling-stroke"></circle>` : ''}
         </svg>
         <div class="trend-guide" id="trendGuide"></div>
         <div class="trend-dot" id="trendDot"></div>
@@ -1854,7 +1869,7 @@ function renderAssetTrend(){
       </div>
       <div class="trend-caption-row">
         <span>${fmtDateDot(snaps[0].date)}</span>
-        <span>${fmtDateDot(snaps[snaps.length-1].date)}</span>
+        <span>${hasPreview ? '오늘(실시간)' : fmtDateDot(snaps[snaps.length-1].date)}</span>
       </div>
       ${hasCost || hasTotalReturn ? `<div class="trend-legend"><span><i class="lg-line"></i>평가금액</span>${hasCost ? `<span><i class="lg-dash"></i>투자원금</span>` : ''}${hasTotalReturn ? `<span><i class="lg-dot"></i>배당 포함 총수익</span>` : ''}</div>` : ''}
     `;
