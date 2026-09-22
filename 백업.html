@@ -1,0 +1,3306 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>주식 현황</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0f1115;
+    --surface1:#171a20;
+    --surface2:#1e232b;
+    --border:#2a3038;
+    --border-strong:#3a4149;
+    --text1:#edf0f3;
+    --text2:#9aa4b2;
+    --text3:#5f6773;
+    --mint:#4ade9a;
+    --mint-dim:#1f3a2c;
+    --gold:#e8b04b;
+    --gold-dim:#3a2f18;
+    --blue:#5b9bd5;
+    --blue-dim:#1c2c3a;
+    --red:#e2635a;
+    --red-dim:#3a1e1c;
+    --lime:#a3e635;
+  }
+  body.light-theme{
+    --bg:#f6f5f2;
+    --surface1:#ffffff;
+    --surface2:#eef0f2;
+    --border:#e0e3e7;
+    --border-strong:#c8ccd2;
+    --text1:#1b1f24;
+    --text2:#5b6470;
+    --text3:#8b93a0;
+    --mint:#178a5c;
+    --mint-dim:#dff3ea;
+    --gold:#a8720f;
+    --gold-dim:#faf0da;
+    --blue:#2f6fb0;
+    --blue-dim:#e5f0fa;
+    --red:#c33a2f;
+    --red-dim:#fbe7e5;
+    --lime:#65a30d;
+  }
+  html{
+    -webkit-text-size-adjust:100%;
+    text-size-adjust:100%;
+  }
+  *{box-sizing:border-box;touch-action:manipulation;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text1);
+    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Segoe UI",sans-serif;
+    -webkit-font-smoothing:antialiased;
+    -webkit-text-size-adjust:100%;
+    text-size-adjust:100%;
+    transition:background .15s, color .15s;
+    padding-bottom:calc(60px + env(safe-area-inset-bottom));
+    overflow-x:hidden;
+  }
+  .num{font-variant-numeric:tabular-nums;white-space:nowrap;font-family:'Roboto',sans-serif;letter-spacing:-0.4px;}
+  .won-sign{font-size:1em;margin-right:1px;}
+  .owner-tabs{
+    display:flex;
+    gap:8px;
+    padding:16px 20px 0;
+  }
+  .owner-tab{
+    flex:1;
+    text-align:center;
+    padding:10px 0;
+    border-radius:10px;
+    border:1px solid var(--border);
+    background:var(--surface1);
+    color:var(--text2);
+    font-size:14px;
+    font-weight:500;
+    cursor:pointer;
+  }
+  .owner-tab.active{
+    background:var(--mint-dim);
+    border-color:var(--mint);
+    color:var(--mint);
+  }
+  .summary{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    padding:16px 20px 4px;
+  }
+  .metric{
+    background:var(--surface1);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:14px 14px;
+  }
+  .metric .label{font-size:12px;color:var(--text2);margin-bottom:6px;}
+  .metric .value{font-size:19px;font-weight:500;}
+  .metric.none{display:none;}
+
+  main{padding:20px;}
+
+  .section-divider-gray{
+    height:8px;
+    background:var(--border-strong);
+  }
+
+  .panel-wrap{padding:0 20px;}
+  .panel-title{
+    font-size:22px;
+    font-weight:700;
+    color:var(--text1);
+    margin:22px 0 4px;
+  }
+  .panel-caption{font-size:11.5px;color:var(--text3);margin-bottom:10px;}
+  .panel-empty{font-size:12.5px;color:var(--text3);padding:16px 0;}
+
+  .div-chart-scroll{overflow-x:auto;padding-bottom:6px;}
+  .div-chart{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    height:110px;
+    min-width:max-content;
+    padding:0 2px 2px;
+  }
+  .div-bar-col{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    flex-shrink:0;
+    justify-content:flex-end;
+    height:100%;
+    cursor:pointer;
+  }
+  .div-bar-amount{
+    font-size:9px;
+    color:var(--text1);
+    margin-bottom:6px;
+    white-space:nowrap;
+  }
+  .div-bar{
+    width:16px;
+    height:var(--h, 2px);
+    background:var(--gold);
+    border-radius:3px 3px 0 0;
+    min-height:2px;
+  }
+  .div-bar-label{
+    font-size:10px;
+    color:var(--text3);
+    margin-top:6px;
+    white-space:nowrap;
+  }
+  .div-bar-col.current .div-bar{background:var(--mint);}
+  .div-bar-col.current .div-bar-label{color:var(--text1);font-weight:600;}
+  .div-bar-col.current .div-bar-amount{color:var(--text1);font-weight:600;}
+
+  .trend-svg-wrap{
+    position:relative;
+    width:100%;
+    height:140px;
+    touch-action:pan-y;
+    user-select:none;
+    -webkit-user-select:none;
+  }
+  .trend-svg-wrap svg{display:block;}
+  .range-tabs{display:flex;gap:6px;margin:10px 0 8px;}
+  .range-tab{
+    flex:1;
+    padding:6px 0;
+    border-radius:8px;
+    border:1px solid var(--border);
+    background:var(--surface1);
+    color:var(--text2);
+    font-size:12px;
+    font-weight:500;
+    cursor:pointer;
+  }
+  .range-tab.active{
+    background:var(--mint-dim);
+    border-color:var(--mint);
+    color:var(--mint);
+  }
+  .trend-guide{
+    display:none;
+    position:absolute;
+    top:0;
+    bottom:0;
+    width:1px;
+    background:var(--border-strong);
+    pointer-events:none;
+  }
+  .trend-dot{
+    display:none;
+    position:absolute;
+    width:10px;
+    height:10px;
+    border-radius:50%;
+    background:var(--bg, #0f1115);
+    border:2px solid var(--mint);
+    transform:translate(-50%,-50%);
+    box-sizing:border-box;
+    pointer-events:none;
+  }
+  .trend-tip{
+    display:none;
+    position:absolute;
+    top:4px;
+    z-index:2;
+    background:var(--surface2);
+    border:1px solid var(--border-strong);
+    border-radius:8px;
+    padding:6px 9px;
+    font-size:11.5px;
+    color:var(--text1);
+    pointer-events:none;
+    min-width:150px;
+  }
+  .trend-tip-date{color:var(--text2);margin-bottom:3px;}
+  .trend-tip-row{display:flex;justify-content:space-between;gap:12px;line-height:1.5;}
+  .trend-tip-row > span:first-child{color:var(--text2);}
+  .trend-minmax{
+    text-align:center;
+    font-size:11.5px;
+    color:var(--text3);
+    margin-top:8px;
+  }
+  .trend-minmax .num{color:var(--text2);}
+  .trend-legend{
+    display:flex;
+    gap:12px;
+    font-size:11px;
+    color:var(--text3);
+    margin-top:6px;
+  }
+  .trend-legend span{display:inline-flex;align-items:center;gap:5px;}
+  .lg-line{display:inline-block;width:14px;height:0;border-top:2px solid var(--mint);}
+  .lg-dash{display:inline-block;width:14px;height:0;border-top:2px dashed var(--text3);}
+  .lg-dot{display:inline-block;width:14px;height:0;border-top:2px dotted var(--gold);}
+  .snap-row{cursor:pointer;}
+  .trend-caption-row{
+    display:flex;
+    justify-content:space-between;
+    font-size:11px;
+    color:var(--text2);
+    margin-top:4px;
+  }
+  .trend-latest{
+    font-size:18px;
+    font-weight:600;
+    color:var(--text1);
+    margin-bottom:2px;
+  }
+  .trend-latest-delta{font-size:12px;margin-bottom:2px;}
+  .trend-first-delta{font-size:11px;color:var(--text3);margin-bottom:8px;}
+
+  .breakdown-wrap{padding:0 20px;}
+  .breakdown-card{
+    padding:0;
+  }
+  .breakdown-title{
+    font-size:22px;
+    font-weight:700;
+    color:var(--text1);
+    margin:22px 0 10px;
+    cursor:pointer;
+  }
+  .breakdown-row{
+    padding:14px 0;
+  }
+  .breakdown-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:10px;
+    margin-bottom:8px;
+  }
+  .breakdown-name-block{min-width:0;flex:1;}
+  .breakdown-name{font-weight:400;color:var(--text1);font-size:16px;}
+  .breakdown-price-line{font-size:11.5px;color:var(--text2);margin-top:3px;}
+  .breakdown-name + .breakdown-price-line{margin-top:7px;}
+  .price-highlight{color:var(--mint);font-weight:400;}
+  .breakdown-right{display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0;}
+  .breakdown-ratio{font-size:14px;font-weight:600;color:var(--text1);font-family:'Roboto',sans-serif;}
+  .breakdown-pl{font-size:12px;line-height:1.3;font-family:'Roboto',sans-serif;}
+  .breakdown-bar-track{
+    position:relative;
+    height:6px;
+    background:var(--surface2);
+    border-radius:3px;
+  }
+  .breakdown-bar-fill{
+    height:100%;
+    width:var(--w, 0%);
+    background:var(--mint);
+    border-radius:3px;
+  }
+  .breakdown-bar-target{
+    position:absolute;
+    left:var(--tw, 0%);
+    top:-3px;
+    bottom:-3px;
+    width:2px;
+    margin-left:-1px;
+    background:var(--text1);
+    opacity:0.85;
+    border-radius:1px;
+  }
+  .rebal-badge{
+    display:inline-block;
+    margin-top:8px;
+    font-size:11.5px;
+    padding:3px 8px;
+    border-radius:6px;
+    font-weight:500;
+  }
+  .rebal-buy{background:var(--blue-dim);color:var(--blue);}
+  .rebal-sell{background:var(--red-dim);color:var(--red);}
+  .rebal-ok{background:var(--mint-dim);color:var(--mint);}
+  .stale-price-badge{
+    display:inline-block;
+    margin-left:6px;
+    font-size:10.5px;
+    font-weight:500;
+    color:var(--gold);
+    background:var(--gold-dim);
+    padding:1px 6px;
+    border-radius:5px;
+    vertical-align:middle;
+  }
+
+  .section-title{
+    font-size:22px;
+    font-weight:700;
+    color:var(--text1);
+    margin:22px 0 10px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .add-btn{
+    background:none;
+    border:1px solid var(--border-strong);
+    color:var(--text1);
+    border-radius:8px;
+    padding:6px 12px;
+    font-size:13px;
+    cursor:pointer;
+  }
+  .add-btn:active{transform:scale(0.97);}
+
+  .account-card{
+    margin:0 -20px;
+    margin:0 0 0 0;
+    padding:0;
+    border-bottom: 1px dashed var(--border);
+  }
+  /* .account-card:last-child{border-bottom:none;} */
+  .account-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:18px 20px;
+    padding:18px 0;
+    cursor:pointer;
+  }
+  .account-name{font-size:16px;font-weight:400;color:var(--text1);}
+  .account-total{font-size:12px;color:var(--text3);margin-top:3px;}
+  .account-body{
+    display:none;
+    padding:2px 20px 20px;
+    padding:2px 0 20px;
+  }
+  .account-card.open .account-body{display:block;}
+
+  .stock-row{
+    cursor:pointer;
+    padding:12px 0 14px 0;
+  }
+  .stock-row+.stock-row {
+    margin-top:32px;
+  }
+  .stock-card-head{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:10px;
+  }
+  .stock-card-title{flex:1;min-width:0;}
+  .stock-card-name{font-size:16px;font-weight:400;color:var(--text1);}
+  .stock-card-ticker{font-size:11px;color:var(--text3);font-weight:400;margin-left:4px;}
+  .stock-stat-grid{
+    display:flex;
+    flex-wrap:wrap;
+    gap:7px 16px;
+    padding:0;
+  }
+  .stock-stat-grid.px-2{padding:0 2px;}
+  .stock-stat{font-size:13px;flex:auto;min-width:45%;}
+  .stock-stat:nth-child(odd){text-align:left;}
+  .stock-stat:nth-child(even){text-align:right;}
+  .stock-stat-label{color:var(--text2);margin-right:6px;}
+  .stock-stat-value{color:var(--text1);}
+  .stat-rows{display:flex;flex-direction:column;gap:7px;}
+  .stat-rows.px-2{padding:0 2px;}
+  .stat-row{display:flex;justify-content:space-between;gap:4px;}
+  .stat-row .stock-stat{flex:none;min-width:0;}
+  .stock-stat-value.text-red{color:var(--red);}
+  .stock-stat-value.text-blue{color:var(--blue);}
+  .stock-stat-value.price-highlight{color:var(--mint);}
+
+  .entry-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    font-size:12.5px;
+    padding:4px 0;
+    border-bottom:1px solid var(--border);
+    color:var(--text2);
+  }
+  .row-chevron{
+    color:var(--text3);
+    margin-left:2px;
+    flex-shrink:0;
+  }
+  .row-right{
+    display:flex;
+    align-items:center;
+  }
+  .entry-row:last-child{border-bottom:none;}
+  .entry-row .amt{color:var(--text1);}
+  .entry-row .del{
+    color:var(--red);
+    cursor:pointer;
+    margin-left:8px;
+    font-size:10.5px;
+    border:1px solid var(--red);
+    border-radius:2px;
+    padding:2px 6px;
+    display:inline-block;
+  }
+  .entry-row .del-icon{
+    cursor:pointer;
+    margin-left:8px;
+    font-size:11px;
+    line-height:1;
+  }
+  .empty-hint{font-size:12px;color:var(--text3);padding:6px 0;}
+
+  .yield-grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:6px;
+    margin:6px 0 4px;
+  }
+  .yield-card{
+    background:var(--surface2);
+    border-radius:8px;
+    padding:8px 6px;
+    text-align:center;
+    cursor:pointer;
+    position:relative;
+  }
+  .yield-card:active{background:var(--border);}
+  .yield-label{font-size:9.5px;color:var(--text2);line-height:1.35;margin-bottom:5px;}
+  .yield-value{font-size:14px;font-weight:600;color:var(--gold);}
+  .yield-tooltip{
+    position:fixed;
+    max-width:230px;
+    background:var(--surface2);
+    border:1px solid var(--border-strong);
+    color:var(--text1);
+    padding:10px 12px;
+    border-radius:10px;
+    font-size:11.5px;
+    line-height:1.55;
+    text-align:left;
+    z-index:300;
+    box-shadow:0 6px 20px rgba(0,0,0,0.35);
+    opacity:0;
+    transform:translateY(4px);
+    transition:opacity .12s ease, transform .12s ease;
+  }
+  .yield-tooltip.show{opacity:1;transform:translateY(0);}
+  .yield-tooltip-title{font-weight:600;color:var(--gold);margin-bottom:4px;font-size:11.5px;}
+  .yield-tooltip-arrow{
+    position:absolute;
+    width:9px;height:9px;
+    margin-left:-4.5px;
+    background:var(--surface2);
+    border:1px solid var(--border-strong);
+    transform:rotate(45deg);
+  }
+  .yield-tooltip-arrow.arrow-down{bottom:-5.5px;border-top:none;border-left:none;}
+  .yield-tooltip-arrow.arrow-up{top:-5.5px;border-bottom:none;border-right:none;}
+
+  .mini-add{
+    background:none;
+    border:1px dashed var(--border-strong);
+    color:var(--text2);
+    border-radius:7px;
+    padding:5px 10px;
+    font-size:11.5px;
+    cursor:pointer;
+  }
+  .action-btn-prominent{
+    flex:1;
+    min-width:110px;
+    background:var(--surface2);
+    border:1.5px solid var(--mint);
+    color:var(--mint);
+    border-radius:4px;
+    padding:8px 10px;
+    font-size:12px;
+    font-weight:600;
+    text-align:center;
+    cursor:pointer;
+  }
+  .action-btn-prominent:active{transform:scale(0.98);}
+  .text-link-btn{
+    background:none;
+    border:none;
+    color:var(--text2);
+    font-size:13px;
+    font-weight:500;
+    text-decoration:underline;
+    text-underline-offset:3px;
+    cursor:pointer;
+    padding:4px 6px;
+  }
+  .cta-btn{
+    flex:1;
+background: var(--surface2);
+    border: 1px solid var(--mint);
+    color: var(--mint);
+    border-radius:4px;
+    padding:10px 12px;
+    font-size:16px;
+    font-weight:700;
+    cursor:pointer;
+    text-align:center;
+  }
+
+  .form-panel{
+    background:var(--surface1);
+    border-top:1px dotted var(--border-strong);
+    border-bottom:1px dotted var(--border-strong);
+    padding:12px 0;
+    margin:10px 0;
+    display:none;
+  }
+  .form-panel.open{display:block;}
+  #githubSettingsForm, #accountForm{background:none;}
+  .title-info-trigger{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    cursor:pointer;
+  }
+  .form-row{
+    display:flex;
+    gap:14px;
+    margin-bottom:12px;
+  }
+  .form-row .field{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    flex:1;
+    min-width:0;
+  }
+  .field-label{
+    font-size:11px;
+    color:var(--text2);
+  }
+  .form-row input, .form-row select{
+    flex:1;
+    background:var(--surface2);
+    border:1px solid var(--border-strong);
+    color:var(--text1);
+    border-radius:7px;
+    padding:0 10px;
+    height:42px;
+    box-sizing:border-box;
+    font-size:16px;
+    min-width:0;
+    width:100%;
+    line-height:42px;
+    -webkit-appearance:none;
+    appearance:none;
+    -moz-appearance:textfield;
+  }
+  .form-row input[type="number"]::-webkit-outer-spin-button,
+  .form-row input[type="number"]::-webkit-inner-spin-button{
+    -webkit-appearance:none;
+    margin:0;
+  }
+  .date-display-wrap{
+    position:relative;
+    background:var(--surface2);
+    border:1px solid var(--border-strong);
+    border-radius:7px;
+    height:42px;
+    box-sizing:border-box;
+    display:flex;
+    align-items:center;
+    padding:0 10px;
+  }
+  .date-display-text{
+    font-size:16px;
+    color:var(--text3);
+    pointer-events:none;
+    white-space:nowrap;
+  }
+  .date-display-text.has-value{color:var(--text1);}
+  .date-native-hidden{
+    position:absolute;
+    top:0;
+    left:0;
+    right:0;
+    bottom:0;
+    width:100%;
+    height:100%;
+    margin:0;
+    padding:0;
+    border:none;
+    opacity:0;
+    cursor:pointer;
+  }
+  .form-row .field{overflow:hidden;}
+  .form-row .field input, .form-row .field select{flex:none;height:42px;}
+  .form-row input::placeholder{color:var(--text3);}
+  .form-actions{display:flex;gap:8px;justify-content:flex-end;}
+  .btn-primary{
+    background:var(--mint-dim);
+    border:1px solid var(--mint);
+    color:var(--mint);
+    border-radius:7px;
+    padding:7px 14px;
+    font-size:13px;
+    cursor:pointer;
+  }
+  .btn-ghost{
+    background:none;
+    border:1px solid var(--border-strong);
+    color:var(--text2);
+    border-radius:7px;
+    padding:7px 14px;
+    font-size:13px;
+    cursor:pointer;
+  }
+
+  .empty-state{
+    text-align:center;
+    padding:40px 20px;
+    color:var(--text3);
+    font-size:13px;
+  }
+  .json-panel{
+    border-radius:12px;
+    display:none;
+  }
+  .json-panel.open{display:block;}
+  .json-panel textarea{
+    width:100%;
+    min-height:220px;
+    background:var(--surface2);
+    border:1px solid var(--border-strong);
+    color:var(--text1);
+    border-radius:8px;
+    padding:10px;
+    font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+    font-size:12px;
+    line-height:1.5;
+    resize:vertical;
+  }
+  .json-actions{
+    display:flex;
+    gap:8px;
+    margin-top:10px;
+    flex-wrap:wrap;
+  }
+  .json-error{
+    color:var(--red);
+    font-size:12px;
+    margin-top:6px;
+    display:none;
+  }
+  .json-error.show{display:block;}
+  .save-status{
+    font-size:11px;
+    color:var(--text3);
+    padding:24px 20px 0;
+  }
+  .toast{
+    position:fixed;
+    bottom:calc(20px + env(safe-area-inset-bottom));left:50%;
+    transform:translateX(-50%);
+    background:var(--surface2);
+    border:1px solid var(--border-strong);
+    color:var(--text1);
+    padding:10px 18px;
+    border-radius:100px;
+    width:max-content;
+    max-width:90vw;
+    box-sizing:border-box;
+    text-align:center;
+    font-size:13px;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .2s;
+    z-index:50;
+  }
+  .toast.show{opacity:1;}
+
+  .sheet-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.55);
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .2s ease;
+    z-index:200;
+  }
+  .sheet-overlay.open{opacity:1;pointer-events:auto;}
+  .bottom-sheet{
+    position:fixed;
+    left:0;
+    right:0;
+    bottom:0;
+    max-height:75vh;
+    display:flex;
+    flex-direction:column;
+    background:var(--surface1);
+    border-radius:16px 16px 0 0;
+    transform:translateY(100%);
+    transition:transform .25s ease;
+    z-index:201;
+    padding:20px 20px calc(20px + env(safe-area-inset-bottom));
+    box-shadow:0 -8px 24px rgba(0,0,0,0.3);
+  }
+  .bottom-sheet.open{transform:translateY(0);}
+  .sheet-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:12px;
+    font-size:15px;
+    font-weight:500;
+    color:var(--text1);
+  }
+  .sheet-title-wrap{
+    display:flex;
+    align-items:center;
+    gap:4px;
+    min-width:0;
+  }
+  .sheet-back-btn{
+    background:none;
+    border:none;
+    color:var(--text2);
+    padding:0;
+    margin-left:-4px;
+    cursor:pointer;
+    display:inline-flex;
+    align-items:center;
+  }
+  .acc-stock-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+    padding:14px 0;
+    border-bottom:1px dashed var(--border-strong);
+    cursor:pointer;
+  }
+  .acc-stock-row:last-child{border-bottom:none;}
+  .acc-stock-name{
+    font-size:14px;
+    font-weight:600;
+    color:var(--text1);
+    min-width:0;
+  }
+  .acc-stock-ticker{
+    font-size:11.5px;
+    font-weight:400;
+    color:var(--text3);
+    margin-left:4px;
+  }
+  .acc-stock-right{
+    margin-left:auto;
+    text-align:right;
+    flex-shrink:0;
+    font-size:14px;
+    color:var(--text1);
+  }
+  .acc-stock-pl{font-size:12px;margin-top:2px;}
+  .sheet-close-btn{
+    background:none;
+    border:none;
+    color:var(--text2);
+    font-size:24px;
+    line-height:1;
+    padding:0 4px;
+    cursor:pointer;
+  }
+  .sheet-body{
+    overflow-y:auto;
+    scrollbar-width:none;
+    -ms-overflow-style:none;
+  }
+  .sheet-body::-webkit-scrollbar{display:none;}
+  .sheet-body .entry-row{border-bottom:none;}
+
+  .sheet-overlay2{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.55);
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .2s ease;
+    z-index:210;
+  }
+  .sheet-overlay2.open{opacity:1;pointer-events:auto;}
+  .bottom-sheet2{
+    position:fixed;
+    left:0;
+    right:0;
+    bottom:0;
+    max-height:75vh;
+    display:flex;
+    flex-direction:column;
+    background:var(--surface1);
+    border-radius:16px 16px 0 0;
+    transform:translateY(100%);
+    transition:transform .25s ease;
+    z-index:211;
+    padding:20px 20px calc(20px + env(safe-area-inset-bottom));
+    box-shadow:0 -8px 24px rgba(0,0,0,0.4);
+  }
+  .bottom-sheet2.open{transform:translateY(0);}
+
+  /* ===== 공통 컴포넌트 (반복되는 레이아웃 패턴 통일) ===== */
+  .header-actions{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .button-row{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .button-row.center{justify-content:center;}
+  .section-divider-gray.spaced-top{margin:40px 0 0;}
+  .section-divider-gray.flush-top{margin:20px -20px 0;}
+  .panel-title.title-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  .panel-title.sub-title{font-size:14px;margin:0 0 8px;}
+  .panel-caption.warning{color:var(--red);margin-bottom:8px;}
+  .action-btn-prominent.full-width{width:100%;}
+  .text-link-btn.danger{color:var(--red);}
+  .stock-stat-value.text-gold{color:var(--gold);}
+  .metric.full-row{grid-column:1 / -1;}
+  .value-sub{font-size:13px;font-weight:400;margin-top:2px;}
+  .suffix-text{font-weight:400;font-size:12px;}
+  .hint-text{font-size:11.5px;color:var(--text3);padding:2px 4px 2px;}
+  .stat-footnote{font-size:11px;color:var(--text2);margin:6px 0 2px;}
+  .divider-top{border-top:1px solid var(--border);}
+  .pension-sum{
+    padding:12px 14px;
+    border-radius:10px;
+    border:1px solid transparent;
+  }
+  .pension-sum .entry-row{padding-top:0 !important;padding-bottom:0 !important;}
+  .pension-owner-divider{
+    margin:28px 0 0;
+    border-top:1px dotted var(--border-strong);
+  }
+  .pension-sum-owner{
+    background:var(--blue-dim);
+    border-color:var(--blue);
+  }
+  .pension-sum-total{
+    background:var(--mint-dim);
+    border-color:var(--mint);
+  }
+  .amt-lg{font-size:13.5px;}
+  .amt-md{font-size:14px;}
+  .account-suffix-wrap{text-align:right;flex-shrink:0;}
+  .account-total-value{font-size:17px;color:var(--text1);}
+  .account-pl-line{font-size:13px;}
+  .account-row-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;}
+
+  /* ===== 유틸리티 클래스 (자주 반복되는 단일 속성 — 항상 이 파일의 마지막에 위치해 컴포넌트 클래스보다 우선 적용됨) ===== */
+  /* !important를 붙인 이유: .panel-title.sub-title 처럼 클래스 2개가 합쳐진 규칙은
+     명시도가 더 높아서, 유틸리티가 나중에 나와도 밀려버리는 문제가 반복적으로 있었음.
+     이 유틸리티들은 "항상 이긴다"는 게 존재 이유라 !important로 명시도 문제를 원천 차단. */
+  .hidden{display:none !important;}
+  .no-wrap{white-space:nowrap !important;}
+  .full-width{width:100% !important;}
+  .text-right{text-align:right !important;}
+  .text-left{text-align:left !important;}
+  .cursor-pointer{cursor:pointer !important;}
+  .no-border-bottom{border-bottom:none !important;}
+
+  .text-dim{color:var(--text2) !important;}
+  .text-faint{color:var(--text3) !important;}
+  .text-strong{color:var(--text1) !important;}
+  .text-red{color:var(--red) !important;}
+  .text-blue{color:var(--blue) !important;}
+  .text-gold{color:var(--gold) !important;}
+  .text-mint{color:var(--mint) !important;}
+
+  .fs-11{font-size:11px !important;}
+  .fs-11-5{font-size:11.5px !important;}
+  .fs-12{font-size:12px !important;}
+  .fs-13{font-size:13px !important;}
+  .fs-14{font-size:14px !important;}
+  .fs-16{font-size:16px !important;}
+  .fs-24{font-size:24px !important;}
+  .fw-500{font-weight:500 !important;}
+  .fw-400{font-weight:400 !important;}
+
+  .mt-0{margin-top:0 !important;}
+  .mt-2{margin-top:2px !important;}
+  .mt-4{margin-top:4px !important;}
+  .mt-6{margin-top:6px !important;}
+  .mt-8{margin-top:8px !important;}
+  .mt-12{margin-top:12px !important;}
+  .mt-14{margin-top:14px !important;}
+  .mt-18{margin-top:18px !important;}
+  .mt-20{margin-top:20px !important;}
+  .mt-40{margin-top:40px !important;}
+
+  .mb-0{margin-bottom:0 !important;}
+  .mb-4{margin-bottom:4px !important;}
+  .mb-6{margin-bottom:6px !important;}
+  .mb-8{margin-bottom:8px !important;}
+  .mb-12{margin-bottom:12px !important;}
+  .mb-16{margin-bottom:16px !important;}
+
+  .scroll-locked{overflow:hidden;}
+  .body-scroll-locked{
+    position:fixed;
+    left:0;
+    right:0;
+    width:100%;
+  }
+  .pb-40{padding-bottom:40px !important;}
+  .pt-14{padding-top:14px !important;}
+  .pb-0{padding-bottom:0 !important;}
+  .pb-2{padding-bottom:2px !important;}
+  .pt-0{padding-top:0 !important;}
+  .p-0{padding:0 !important;}
+</style>
+</head>
+<body>
+
+<div class="save-status" id="saveStatus">저장된 데이터 불러오는 중...</div>
+
+<div class="owner-tabs" id="ownerTabs"></div>
+
+<div class="summary" id="summary"></div>
+
+<div id="dividendCalendarSection"></div>
+<div id="assetTrendSection"></div>
+<div id="breakdownSection"></div>
+
+<main>
+  <div class="section-divider-gray flush-top"></div>
+  <div class="section-title mt-40">
+    <span id="accountsLabel">계좌</span>
+    <button class="add-btn" id="addAccountBtn">계좌 추가</button>
+  </div>
+  <div class="form-panel" id="accountForm">
+    <div class="form-row hidden" id="accountOwnerRow">
+      <select id="newAccountOwner"></select>
+    </div>
+    <div class="form-row">
+      <input type="text" id="newAccountName" placeholder="계좌 이름 (예: 미래에셋 연금저축)">
+    </div>
+    <div class="form-actions">
+      <button class="btn-ghost" onclick="closeForm('accountForm')">취소</button>
+      <button class="btn-primary" onclick="submitAccount()">추가</button>
+    </div>
+  </div>
+
+  <div id="accountList"></div>
+</main>
+
+<div class="section-divider-gray spaced-top"></div>
+<div class="panel-wrap">
+  <div class="header-actions mt-40">
+    <button class="add-btn no-wrap" id="reloadJsonBtn">stock.json 새로고침</button>
+    <button class="add-btn no-wrap" id="toggleJsonBtn">JSON 보기</button>
+    <button class="add-btn no-wrap" id="themeToggleBtn">라이트 모드</button>
+  </div>
+  <div class="panel-title mt-20">JSON 편집</div>
+  <div class="json-panel" id="jsonPanel">
+    <div class="fs-12 text-dim mb-8">
+      stock.json 파일로 내보내서 보관해두세요. 데이터가 사라지면 그 파일을 다시 가져오면 복원됩니다. 아래 텍스트를 직접 고친 뒤 '적용'을 눌러도 됩니다.
+    </div>
+    <textarea id="jsonTextarea" spellcheck="false"></textarea>
+    <div class="json-error" id="jsonError">JSON 형식이 올바르지 않습니다. 콤마, 괄호를 확인해주세요.</div>
+    <div class="json-actions">
+      <button class="btn-primary" onclick="exportJsonFile()">stock.json 내보내기</button>
+      <button class="btn-primary" onclick="triggerImportFile()">stock.json 가져오기</button>
+    </div>
+    <div class="json-actions">
+      <button class="btn-ghost" onclick="applyJson()">텍스트 적용하고 저장</button>
+      <button class="btn-ghost" onclick="copyJson()">복사(클립보드)</button>
+      <button class="btn-ghost" onclick="refreshJsonView()">현재 데이터로 새로고침</button>
+    </div>
+    <input type="file" id="importFileInput" accept="application/json,.json" class="hidden">
+  </div>
+</div>
+
+<div class="section-divider-gray spaced-top"></div>
+<div class="panel-wrap pb-40">
+  <div class="panel-title title-row mt-40">
+    <span class="title-info-trigger" onclick="showGithubSaveInfo(event)">GitHub 저장<svg class="row-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg></span>
+    <button class="add-btn no-wrap" id="githubSettingsToggle">저장 설정</button>
+  </div>
+  <div class="form-panel" id="githubSettingsForm">
+    <div class="form-row">
+      <input type="text" id="gh_repo" placeholder="저장소 (예: codeby/codeby.github.io)">
+    </div>
+    <div class="form-row">
+      <input type="text" id="gh_path" placeholder="파일 경로 (예: stock/stock.json)">
+    </div>
+    <div class="form-row">
+      <input type="password" id="gh_token" placeholder="Personal Access Token">
+    </div>
+    <div class="panel-caption warning">
+      ⚠️ 이 저장소의 Contents 권한만 있는 Fine-grained 토큰을 만들어서 쓰세요. 누구와도 공유하지 마세요. 토큰은 이 브라우저에만 저장되고 stock.json 파일 안에는 절대 포함되지 않아요.
+    </div>
+    <div class="form-actions">
+      <button class="btn-ghost" onclick="closeForm('githubSettingsForm')">닫기</button>
+      <button class="btn-primary" onclick="saveGithubSettings()">설정 저장</button>
+    </div>
+  </div>
+
+  <button class="action-btn-prominent full-width mt-12" onclick="pushToGithub()">GitHub에 저장</button>
+  <div id="githubSaveStatus" class="panel-caption mt-8"></div>
+</div>
+
+<div class="sheet-overlay" id="sheetOverlay" onclick="closeSheet()"></div>
+<div class="bottom-sheet" id="bottomSheet">
+  <div class="sheet-header">
+    <span class="sheet-title-wrap">
+      <button class="sheet-back-btn hidden" id="sheetBackBtn" onclick="sheetBack()" aria-label="뒤로"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 6 9 12 15 18"></polyline></svg></button>
+      <span id="sheetTitle"></span>
+    </span>
+    <button class="sheet-close-btn" onclick="closeSheet()" aria-label="닫기">&times;</button>
+  </div>
+  <div class="sheet-body" id="sheetBody"></div>
+</div>
+
+<div class="sheet-overlay2" id="sheetOverlay2" onclick="closeSheet2()"></div>
+<div class="bottom-sheet2" id="bottomSheet2">
+  <div class="sheet-header">
+    <span id="sheetTitle2"></span>
+    <button class="sheet-close-btn" onclick="closeSheet2()" aria-label="닫기">&times;</button>
+  </div>
+  <div class="sheet-body" id="sheetBody2"></div>
+</div>
+
+<datalist id="stockCatalogTickers"></datalist>
+<datalist id="stockCatalogNames"></datalist>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let DATA = { owners: [], accounts: [], stocks: [] };
+const CHEVRON_SVG = '<svg class="row-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"></polyline></svg>';
+let currentOwner = null;
+let openStocks = new Set();
+let openTxSections = new Set();
+let breakdownOpen = true;
+
+const STORAGE_KEY = 'portfolio-data';
+const hasWindowStorage = (typeof window !== 'undefined') && window.storage && typeof window.storage.get === 'function';
+let dataSource = null; // 'server-json' | 'window-storage' | 'new'
+
+function uid(prefix){ return prefix + '_' + Math.random().toString(36).slice(2,9); }
+function fmtWon(n){ return '<span class="won-sign">₩</span>' + (n||0).toLocaleString('ko-KR'); }
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 1600);
+}
+
+function setSaveStatus(msg){
+  const el = document.getElementById('saveStatus');
+  if(el) el.textContent = msg;
+}
+
+function isValidPortfolio(obj){
+  return !!(obj && obj.owners && obj.accounts && obj.stocks);
+}
+
+async function autoSaveTodaySnapshotIfNeeded(){
+  ensureDataShape();
+  const today = new Date().toISOString().slice(0,10);
+  const existing = DATA.snapshots.find(s=>s.date===today);
+  if(existing && existing.costs) return;
+  upsertSnapshot();
+  await saveData();
+  // 오늘 기록이 이미 있었다면(투자원금만 보강) 알림 없이 조용히 갱신
+  if(!existing) showToast('오늘 자산 스냅샷을 자동으로 저장했어요');
+}
+
+async function finishLoad(){
+  currentOwner = DATA.owners.length > 1 ? 'ALL' : (DATA.owners.length ? DATA.owners[0].id : null);
+  await autoSaveTodaySnapshotIfNeeded();
+  render();
+}
+
+async function loadData(){
+  // 1순위: 같은 경로의 stock.json (서버에 올린 정적 파일)
+  try{
+    const res = await fetch('./stock.json', { cache:'no-store' });
+    if(res.ok){
+      const parsed = await res.json();
+      if(isValidPortfolio(parsed)){
+        DATA = parsed;
+        dataSource = 'server-json';
+        const priceUpdateNote = DATA.lastPriceUpdate ? (' · 시세 갱신: ' + DATA.lastPriceUpdate) : '';
+        setSaveStatus('./stock.json 불러옴 · ' + new Date().toLocaleTimeString('ko-KR') + priceUpdateNote + ' · 자동저장 안 됨, 변경 후 내보내기 필요');
+        await finishLoad();
+        return;
+      }
+    }
+  }catch(e){
+    // 정적 서버가 아니거나(file:// 등) stock.json이 아직 없는 경우 — 다음 단계로
+  }
+
+  // 2순위: window.storage (미리보기 환경 등에서만 존재)
+  if(hasWindowStorage){
+    try{
+      const res = await window.storage.get(STORAGE_KEY, false);
+      if(res && res.value){
+        DATA = JSON.parse(res.value);
+        dataSource = 'window-storage';
+        setSaveStatus('마지막 저장 데이터를 불러왔습니다 · ' + new Date().toLocaleTimeString('ko-KR'));
+        await finishLoad();
+        return;
+      }
+    }catch(e){ /* 무시하고 아래로 */ }
+  }
+
+  // 3순위: 새 데이터
+  DATA = defaultData();
+  dataSource = 'new';
+  setSaveStatus('새 데이터로 시작합니다 · stock.json을 서버에 올리면 자동으로 불러와요');
+  await finishLoad();
+}
+
+function defaultData(){
+  return {
+    owners: [
+      { id:'me', name:'나' },
+      { id:'wife', name:'와이프' }
+    ],
+    accounts: [],
+    stockCatalog: [],
+    stocks: [],
+    targets: {},
+    snapshots: [],
+    dividends: []
+  };
+}
+
+function migrateStockCatalog(){
+  if(!Array.isArray(DATA.stockCatalog)) DATA.stockCatalog = [];
+  (DATA.stocks||[]).forEach(s=>{
+    if(s.key) return; // 이미 마이그레이션됨
+    const key = makeKeyFrom(s.ticker, s.name);
+    let cat = catalogByKey(key);
+    if(!cat){
+      cat = { key, ticker: s.ticker||'', name: s.name||'(이름없음)', currentPrice: s.currentPrice||0 };
+      DATA.stockCatalog.push(cat);
+    }
+    s.key = key;
+    delete s.name;
+    delete s.ticker;
+    delete s.currentPrice;
+  });
+}
+
+function ensureDataShape(){
+  if(!DATA.targets) DATA.targets = {};
+  if(!Array.isArray(DATA.snapshots)) DATA.snapshots = [];
+  if(!Array.isArray(DATA.dividends)) DATA.dividends = [];
+  migrateStockCatalog();
+}
+
+async function saveData(){
+  if(hasWindowStorage){
+    try{
+      await window.storage.set(STORAGE_KEY, JSON.stringify(DATA), false);
+    }catch(e){ /* 무시 */ }
+  }
+  if(dataSource === 'server-json'){
+    setSaveStatus('임시 반영됨 (브라우저 안에서만) · ' + new Date().toLocaleTimeString('ko-KR') + ' · stock.json 내보내서 서버에 다시 올려야 저장돼요');
+  } else {
+    setSaveStatus('저장됨 · ' + new Date().toLocaleTimeString('ko-KR'));
+  }
+}
+
+function render(){
+  ensureDataShape();
+  renderOwnerTabs();
+  renderSummary();
+  renderDividendCalendar();
+  renderAssetTrend();
+  renderBreakdown();
+  renderAccounts();
+  renderCatalogDatalists();
+}
+
+function renderCatalogDatalists(){
+  const tickerList = document.getElementById('stockCatalogTickers');
+  const nameList = document.getElementById('stockCatalogNames');
+  if(!tickerList || !nameList) return;
+  const cats = DATA.stockCatalog || [];
+  tickerList.innerHTML = cats.filter(c=>c.ticker).map(c=>`<option value="${escapeHtml(c.ticker)}">${escapeHtml(c.name)}</option>`).join('');
+  nameList.innerHTML = cats.map(c=>`<option value="${escapeHtml(c.name)}"></option>`).join('');
+}
+
+function renderOwnerTabs(){
+  const el = document.getElementById('ownerTabs');
+  el.innerHTML = '';
+  if(DATA.owners.length > 1){
+    const allBtn = document.createElement('div');
+    allBtn.className = 'owner-tab' + (currentOwner==='ALL' ? ' active' : '');
+    allBtn.textContent = '전체';
+    allBtn.onclick = ()=>{ currentOwner = 'ALL'; render(); };
+    el.appendChild(allBtn);
+  }
+  DATA.owners.forEach(o=>{
+    const btn = document.createElement('div');
+    btn.className = 'owner-tab' + (o.id===currentOwner ? ' active' : '');
+    btn.textContent = o.name;
+    btn.onclick = ()=>{ currentOwner = o.id; render(); };
+    el.appendChild(btn);
+  });
+}
+
+function accountsForOwner(ownerId){
+  if(ownerId==='ALL') return DATA.accounts;
+  return DATA.accounts.filter(a=>a.ownerId===ownerId);
+}
+function stocksForAccount(accountId){
+  return DATA.stocks.filter(s=>s.accountId===accountId);
+}
+function stocksForOwner(ownerId){
+  const accIds = accountsForOwner(ownerId).map(a=>a.id);
+  return DATA.stocks.filter(s=>accIds.includes(s.accountId));
+}
+function catalogByKey(key){
+  return (DATA.stockCatalog||[]).find(c=>c.key===key);
+}
+function catalogFor(stock){
+  return catalogByKey(stock.key) || { key: stock.key, name:'(알 수 없는 종목)', ticker:'', currentPrice:0 };
+}
+function makeKeyFrom(ticker, name){
+  return (ticker && ticker.trim()) ? ticker.trim().toUpperCase() : ('name:'+name);
+}
+function getOrCreateCatalog(ticker, name, initialPrice){
+  const key = makeKeyFrom(ticker, name);
+  if(!DATA.stockCatalog) DATA.stockCatalog = [];
+  let cat = catalogByKey(key);
+  if(!cat){
+    cat = { key, ticker: (ticker||'').trim(), name: name, currentPrice: initialPrice||0, priceUpdatedAt: initialPrice ? new Date().toISOString().slice(0,10) : null };
+    DATA.stockCatalog.push(cat);
+    return { cat, isNew: true };
+  }
+  return { cat, isNew: false };
+}
+function stockTotal(stock){
+  return (stock.quantity || 0) * (catalogFor(stock).currentPrice || 0);
+}
+function stockCostBasis(stock){
+  const buyTotal = (stock.buys||[]).reduce((s,b)=>s+(b.amount||0),0);
+  const sellTotal = (stock.sells||[]).reduce((s,b)=>s+(b.amount||0),0);
+  return buyTotal - sellTotal;
+}
+function stockPL(stock){
+  return stockTotal(stock) - stockCostBasis(stock);
+}
+function stockPLPercent(stock){
+  const cost = stockCostBasis(stock);
+  if(!cost) return null;
+  return (stockPL(stock) / cost) * 100;
+}
+function stockKey(stock){
+  return stock.key || makeKeyFrom(stock.ticker, stock.name);
+}
+// 특정 계좌(종목 1건)가 기준일(dateStr, YYYY-MM-DD) 시점에 실제로 보유했던 수량을
+// 매수/매도 내역의 날짜를 기준으로 다시 계산. 배당·매수·매도를 어떤 순서로 입력해도
+// 항상 그 날짜 기준의 정확한 보유수량이 나오도록 하기 위한 함수.
+function quantityAsOfDate(stock, dateStr){
+  if(!dateStr) return stock.quantity || 0;
+  const bought = (stock.buys||[]).filter(b=>b.date && b.date <= dateStr).reduce((s,b)=>s+(b.quantity||0),0);
+  const sold = (stock.sells||[]).filter(b=>b.date && b.date <= dateStr).reduce((s,b)=>s+(b.quantity||0),0);
+  return Math.max(0, bought - sold);
+}
+// 이 종목(계좌)의 매수/매도 내역이 바뀔 때마다, 이미 등록돼있는 배당 기록들의
+// 수량·금액을 그 배당일 기준으로 다시 계산해서 맞춰준다.
+// → 배당을 먼저 입력하고 매수/매도를 나중에 입력해도(또는 그 반대여도) 항상 정확해짐
+function recalcDividendQuantitiesForStock(stock){
+  if(!DATA.dividends || !DATA.dividends.length) return;
+  const key = stockKey(stock);
+  DATA.dividends.forEach(rec=>{
+    if(rec.key !== key) return;
+    const asOf = rec.date || (rec.month ? rec.month+'-28' : '');
+    const qty = quantityAsOfDate(stock, asOf);
+    const idx = rec.accounts.findIndex(a=>a.accountId===stock.accountId);
+    if(qty<=0){
+      if(idx>=0) rec.accounts.splice(idx,1);
+    } else {
+      const entry = { accountId: stock.accountId, quantity: qty, amount: qty * (rec.perShare||0) };
+      if(idx>=0) rec.accounts[idx] = entry;
+      else rec.accounts.push(entry);
+    }
+  });
+  DATA.dividends = DATA.dividends.filter(rec=> rec.key!==key || rec.accounts.length>0);
+}
+function findDividendRecord(key, month){
+  return (DATA.dividends||[]).find(d=>d.key===key && d.month===month);
+}
+// 같은 종목의 여러 계좌에 한 번에 등록(일괄 입력)
+function upsertDividendGroupBulk(key, date, name, ticker, perShare, stockList){
+  const month = date.slice(0,7);
+  if(!DATA.dividends) DATA.dividends = [];
+  let rec = findDividendRecord(key, month);
+  if(!rec){
+    rec = { id: uid('divrec'), key, name, ticker, month, date, perShare, accounts: [] };
+    DATA.dividends.push(rec);
+  } else {
+    rec.date = date;
+    rec.perShare = perShare;
+  }
+  stockList.forEach(s=>{
+    if(s.quantity<=0) return;
+    const amount = s.quantity * perShare;
+    const idx = rec.accounts.findIndex(a=>a.accountId===s.accountId);
+    if(idx>=0) rec.accounts[idx] = { accountId:s.accountId, quantity:s.quantity, amount };
+    else rec.accounts.push({ accountId:s.accountId, quantity:s.quantity, amount });
+  });
+  return rec;
+}
+function deleteDividendRecord(key, month){
+  DATA.dividends = (DATA.dividends||[]).filter(d=>!(d.key===key && d.month===month));
+}
+function removeAccountFromDividendRecord(key, month, accountId){
+  const rec = findDividendRecord(key, month);
+  if(!rec) return;
+  rec.accounts = rec.accounts.filter(a=>a.accountId!==accountId);
+  if(rec.accounts.length===0) deleteDividendRecord(key, month);
+}
+function recordsForKey(key){
+  return (DATA.dividends||[]).filter(d=>d.key===key).sort((a,b)=>b.month.localeCompare(a.month));
+}
+function recordsForStock(stock){
+  const key = stockKey(stock);
+  return (DATA.dividends||[])
+    .filter(rec=>rec.key===key)
+    .map(rec=>{
+      const acc = rec.accounts.find(a=>a.accountId===stock.accountId);
+      if(!acc) return null;
+      return { month:rec.month, perShare:rec.perShare, quantity:acc.quantity, amount:acc.amount };
+    })
+    .filter(Boolean);
+}
+function recordsForOwner(ownerId){
+  const accIds = accountsForOwner(ownerId).map(a=>a.id);
+  return (DATA.dividends||[]).map(rec=>{
+    const accounts = rec.accounts.filter(a=>accIds.includes(a.accountId));
+    const total = accounts.reduce((s,a)=>s+a.amount,0);
+    return { ...rec, accounts, total };
+  }).filter(rec=>rec.accounts.length>0);
+}
+function isWithinLast12Months(monthStr){
+  if(!monthStr) return false;
+  const parts = monthStr.split('-').map(Number);
+  const y = parts[0], m = parts[1];
+  if(!y || !m) return false;
+  const target = new Date(y, m-1, 1);
+  const now = new Date();
+  const cutoff = new Date(now.getFullYear(), now.getMonth()-11, 1);
+  const upper = new Date(now.getFullYear(), now.getMonth(), 1);
+  return target >= cutoff && target <= upper;
+}
+// month(YYYY-MM) 이전(포함) 배당을 현재 탭(currentOwner) 기준으로 누적
+function cumulativeDividendsUpTo(month, ownerId){
+  const accIds = new Set(accountsForOwner(ownerId).map(a=>a.id));
+  let sum = 0;
+  (DATA.dividends||[]).forEach(rec=>{
+    if(rec.month > month) return;
+    rec.accounts.forEach(a=>{
+      if(accIds.has(a.accountId)) sum += (a.amount||0);
+    });
+  });
+  return sum;
+}
+
+function stockDividendTTM(stock){
+  return recordsForStock(stock).filter(r=>isWithinLast12Months(r.month)).reduce((s,r)=>s+(r.amount||0),0);
+}
+// 기준2: 최근 12개월 배당 ÷ 총 투자원금 (=평균매입단가×수량) — 지금 페이스가 앞으로도 이어진다면의 수익률
+// 현재가를 마지막으로 언제 반영했는지 기준으로, 오래됐으면 살짝 알려준다
+const STALE_PRICE_DAYS = 14;
+function daysSincePriceUpdate(cat){
+  if(!cat || !cat.priceUpdatedAt) return null;
+  const days = Math.round((Date.now() - Date.parse(cat.priceUpdatedAt)) / 86400000);
+  return days >= 0 ? days : null;
+}
+function stalePriceBadgeHtml(cat){
+  const days = daysSincePriceUpdate(cat);
+  if(days === null || days < STALE_PRICE_DAYS) return '';
+  return `<span class="stale-price-badge">현재가 ${days}일째 그대로</span>`;
+}
+
+function stockYieldOnAvgPrice(stock){
+  const cost = stockCostBasis(stock);
+  if(!cost) return null;
+  return (stockDividendTTM(stock) / cost) * 100;
+}
+// 기준3: 최근 12개월 배당 ÷ 현재 평가금액 — 지금 이 가격에 새로 산다면의 수익률(시장 비교용)
+function stockYieldOnCurrentPrice(stock){
+  const mv = stockTotal(stock);
+  if(!mv) return null;
+  return (stockDividendTTM(stock) / mv) * 100;
+}
+const YIELD_TOOLTIP_INFO = {
+  2: { title:'최근 12개월 · 평균매입가 기준', desc:'내가 산 가격 대비 지금 얼마나 받고 있는지 보는, 내 투자 성과 지표예요. 최근 12개월 배당금 ÷ 총 투자원금(평균매입가 × 수량)으로 계산해요.' },
+  3: { title:'최근 12개월 · 현재가 기준', desc:'지금 이 가격에 사면 얼마를 기대할 수 있는지 보는 지표예요. 최근 12개월 배당금 ÷ 현재 평가금액으로 계산하며, 증권사에서 보여주는 배당수익률과 같은 방식이에요.' }
+};
+
+let tooltipAnchorEl = null;
+
+function positionTooltip(anchorEl, titleHtml, bodyHtml){
+  closeYieldTooltip();
+  tooltipAnchorEl = anchorEl;
+  const rect = anchorEl.getBoundingClientRect();
+  const tip = document.createElement('div');
+  tip.className = 'yield-tooltip';
+  tip.id = 'yieldTooltip';
+  tip.innerHTML = `<div class="yield-tooltip-title">${titleHtml}</div><div>${bodyHtml}</div>`;
+  document.body.appendChild(tip);
+
+  const tipRect = tip.getBoundingClientRect();
+  const margin = 10;
+  let left = rect.left + rect.width/2 - tipRect.width/2;
+  left = Math.max(margin, Math.min(left, window.innerWidth - tipRect.width - margin));
+
+  let top = rect.top - tipRect.height - margin;
+  let arrowCls = 'arrow-down';
+  if(top < margin){
+    top = rect.bottom + margin;
+    arrowCls = 'arrow-up';
+  }
+  tip.style.left = left + 'px';
+  tip.style.top = top + 'px';
+
+  const arrow = document.createElement('div');
+  arrow.className = 'yield-tooltip-arrow ' + arrowCls;
+  const arrowLeft = Math.max(12, Math.min(rect.left + rect.width/2 - left, tipRect.width - 12));
+  arrow.style.left = arrowLeft + 'px';
+  tip.appendChild(arrow);
+
+  requestAnimationFrame(()=> tip.classList.add('show'));
+  setTimeout(()=>{
+    document.addEventListener('click', closeYieldTooltip, { once:true });
+    document.addEventListener('scroll', closeYieldTooltip, { once:true, capture:true });
+  }, 0);
+}
+
+function toggleTooltip(anchorEl, titleHtml, bodyHtml){
+  const wasOpenOnSameAnchor = !!document.getElementById('yieldTooltip') && tooltipAnchorEl === anchorEl;
+  closeYieldTooltip();
+  if(wasOpenOnSameAnchor) return;
+  positionTooltip(anchorEl, titleHtml, bodyHtml);
+}
+
+function showYieldTooltip(evt, type){
+  evt.stopPropagation();
+  const info = YIELD_TOOLTIP_INFO[type];
+  if(!info) return;
+  toggleTooltip(evt.currentTarget, info.title, info.desc);
+}
+
+function showStockDividendYieldTooltip(evt, stockId){
+  evt.stopPropagation();
+  const stock = DATA.stocks.find(s=>s.id===stockId);
+  if(!stock) return;
+  const ttm = stockDividendTTM(stock);
+  const cost = stockCostBasis(stock);
+  const yieldVal = stockYieldOnAvgPrice(stock);
+  const body = `최근 12개월 배당금 ${fmtWon(ttm)} ÷ 총 투자원금 ${fmtWon(cost)} = ${fmtPctPlain(yieldVal)}<br>지금의 배당 페이스가 앞으로도 이어진다고 가정했을 때의 연간 수익률이에요.`;
+  toggleTooltip(evt.currentTarget, '배당률 계산', body);
+}
+
+function closeYieldTooltip(){
+  const el = document.getElementById('yieldTooltip');
+  if(el) el.remove();
+  tooltipAnchorEl = null;
+}
+
+function ownerAvgYield(ownerId, fn){
+  const yields = stocksForOwner(ownerId).map(fn).filter(y=>y!==null);
+  if(yields.length===0) return null;
+  return yields.reduce((a,b)=>a+b,0) / yields.length;
+}
+function accountTotal(accountId){
+  return stocksForAccount(accountId).reduce((sum,s)=>sum+stockTotal(s),0);
+}
+function accountCostBasis(accountId){
+  return stocksForAccount(accountId).reduce((sum,s)=>sum+stockCostBasis(s),0);
+}
+function accountDividendTTM(accountId){
+  return stocksForAccount(accountId).reduce((sum,s)=>sum+stockDividendTTM(s),0);
+}
+function accountYieldOnCurrentPrice(accountId){
+  const total = accountTotal(accountId);
+  if(!total) return 0;
+  return (accountDividendTTM(accountId) / total) * 100;
+}
+function ownerTotal(ownerId){
+  return accountsForOwner(ownerId).reduce((sum,a)=>sum+accountTotal(a.id),0);
+}
+function ownerCostBasis(ownerId){
+  return accountsForOwner(ownerId).reduce((sum,a)=>sum+accountCostBasis(a.id),0);
+}
+// 수익 금액: 부호 없이 금액만 (증감은 색과 퍼센트로 구분)
+function fmtPL(n){
+  return '<span class="won-sign">₩</span>' + Math.abs(n).toLocaleString('ko-KR');
+}
+function fmtPercent(n){
+  if(n===null) return '';
+  const sign = n > 0 ? '+' : (n < 0 ? '-' : '');
+  return sign + Math.abs(n).toFixed(2) + '%';
+}
+function fmtPctPlain(n){
+  if(n===null) return '-';
+  return n.toFixed(2) + '%';
+}
+function plClass(n){
+  return n > 0 ? 'text-red' : (n < 0 ? 'text-blue' : '');
+}
+function currentMonthDividend(ownerId){
+  const ym = new Date().toISOString().slice(0,7);
+  return recordsForOwner(ownerId).filter(r=>r.month===ym).reduce((s,r)=>s+r.total,0);
+}
+function yearDividend(ownerId){
+  const year = new Date().getFullYear().toString();
+  return recordsForOwner(ownerId).filter(r=>(r.month||'').startsWith(year)).reduce((s,r)=>s+r.total,0);
+}
+
+function renderSummary(){
+  const el = document.getElementById('summary');
+  const total = ownerTotal(currentOwner);
+  const cost = ownerCostBasis(currentOwner);
+  const pl = total - cost;
+  const plPct = cost ? (pl/cost)*100 : null;
+  const monthDiv = currentMonthDividend(currentOwner);
+  const yearDiv = yearDividend(currentOwner);
+  const avgYield2 = ownerAvgYield(currentOwner, stockYieldOnAvgPrice);
+  const avgYield3 = ownerAvgYield(currentOwner, stockYieldOnCurrentPrice);
+  el.innerHTML = `
+    <div class="metric">
+      <div class="label">총 평가금액</div>
+      <div class="value text-mint num">${fmtWon(total)}</div>
+    </div>
+    <div class="metric">
+      <div class="label">평가손익</div>
+      <div class="value ${plClass(pl)} num">${fmtPL(pl)}${plPct!==null ? '<div class="value-sub">('+fmtPercent(plPct)+')</div>' : ''}</div>
+    </div>
+    <div class="metric">
+      <div class="label">총 투자원금</div>
+      <div class="value num">${fmtWon(cost)}</div>
+    </div>
+   <div class="metric none">
+      <div class="label">보유 계좌 수</div>
+      <div class="value num">${accountsForOwner(currentOwner).length}개</div>
+    </div>
+    <div class="metric none">
+      <div class="label">이번 달 배당</div>
+      <div class="value text-gold num">${fmtWon(monthDiv)}</div>
+    </div>
+    <div class="metric">
+      <div class="label">올해 누적 배당</div>
+      <div class="value text-gold num">${fmtWon(yearDiv)}</div>
+    </div>
+    <div class="metric full-row">
+      <div class="label mb-8">배당률 평균</div>
+      <div class="yield-grid">
+        <div class="yield-card" onclick="showYieldTooltip(event,2)">
+          <div class="yield-label">최근 12개월<br>평균매입가 기준</div>
+          <div class="yield-value num">${fmtPctPlain(avgYield2)}</div>
+        </div>
+        <div class="yield-card" onclick="showYieldTooltip(event,3)">
+          <div class="yield-label">최근 12개월<br>현재가 기준</div>
+          <div class="yield-value num">${fmtPctPlain(avgYield3)}</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ===== 월별 배당 캘린더 =====
+function monthlyDividendSeries(ownerId, monthsBack){
+  const now = new Date();
+  const series = [];
+  for(let i=monthsBack-1;i>=0;i--){
+    const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
+    const ym = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+    series.push({ month: ym, label: (d.getMonth()+1)+'월', amount: 0, isCurrent: i===0 });
+  }
+  const map = {};
+  series.forEach(s=> map[s.month]=s);
+  recordsForOwner(ownerId).forEach(rec=>{
+    if(map[rec.month]) map[rec.month].amount += rec.total;
+  });
+  return series;
+}
+
+function renderDividendCalendar(){
+  const el = document.getElementById('dividendCalendarSection');
+  const pensionCalcBtnHtml = `<button class="add-btn" onclick="openPensionCalcSheet()">연금 배당 계산기</button>`;
+  const series = monthlyDividendSeries(currentOwner, 12);
+  const total = series.reduce((s,m)=>s+m.amount,0);
+  const maxAmt = Math.max(...series.map(m=>m.amount), 1);
+
+  if(total===0){
+    el.innerHTML = `
+      <div class="panel-wrap">
+        <div class="panel-title title-row">
+          <span>월별 배당</span>
+          ${pensionCalcBtnHtml}
+        </div>
+        <div class="panel-empty">아직 기록된 배당이 없어요. 종목 상세에서 배당을 추가하면 여기 그래프로 나타나요.</div>
+      </div>
+    `;
+    return;
+  }
+
+  const bars = series.map(m=>{
+    const barPx = m.amount>0 ? Math.max(4, Math.round((m.amount/maxAmt)*90)) : 2;
+    const amountLabel = m.amount>0 ? Math.floor(m.amount/10000)+'만' : '';
+    return `
+      <div class="div-bar-col${m.isCurrent ? ' current' : ''}" onclick="openMonthDividendSheet('${m.month}')">
+        <div class="div-bar-amount num">${amountLabel}</div>
+        <div class="div-bar" style="--h:${barPx}px;"></div>
+        <div class="div-bar-label">${m.label}</div>
+      </div>
+    `;
+  }).join('');
+
+  el.innerHTML = `
+    <div class="panel-wrap">
+      <div class="panel-title title-row">
+          <span>월별 배당</span>
+          ${pensionCalcBtnHtml}
+        </div>
+      <div class="fs-14 mb-8"><span class="text-dim">최근 12개월</span> <span class="text-mint">${fmtWon(total)}</span></div>
+      <div class="div-chart-scroll" id="divChartScroll">
+        <div class="div-chart">${bars}</div>
+      </div>
+    </div>
+  `;
+  const scrollEl = document.getElementById('divChartScroll');
+  if(scrollEl){
+    requestAnimationFrame(()=>{
+      requestAnimationFrame(()=>{
+        scrollEl.scrollLeft = scrollEl.scrollWidth;
+      });
+    });
+  }
+}
+
+function upsertSnapshot(){
+  ensureDataShape();
+  const today = new Date().toISOString().slice(0,10);
+  const totals = {};
+  const costs = {};
+  DATA.owners.forEach(o=>{ totals[o.id] = ownerTotal(o.id); costs[o.id] = ownerCostBasis(o.id); });
+  totals['ALL'] = ownerTotal('ALL');
+  costs['ALL'] = ownerCostBasis('ALL');
+  const idx = DATA.snapshots.findIndex(s=>s.date===today);
+  if(idx>=0) DATA.snapshots[idx] = { date: today, totals, costs };
+  else DATA.snapshots.push({ date: today, totals, costs });
+  DATA.snapshots.sort((a,b)=>a.date.localeCompare(b.date));
+}
+
+async function saveSnapshotNow(){
+  upsertSnapshot();
+  await saveData();
+  render();
+  showToast('오늘 자산 스냅샷을 저장했어요');
+}
+
+let trendRange = 'all';
+let trendChart = null;
+const TREND_RANGES = [
+  { key:'1m', label:'1개월', days:30 },
+  { key:'3m', label:'3개월', days:91 },
+  { key:'6m', label:'6개월', days:182 },
+  { key:'1y', label:'1년', days:365 },
+  { key:'all', label:'전체', days:0 },
+];
+
+function setTrendRange(key){
+  trendRange = key;
+  renderAssetTrend();
+}
+
+function hideTrendTip(){
+  ['trendGuide','trendDot','trendTip'].forEach(id=>{
+    const e = document.getElementById(id);
+    if(e) e.style.display = 'none';
+  });
+}
+
+function showTrendTip(i){
+  const c = trendChart;
+  if(!c || !c.points[i]) return;
+  const p = c.points[i];
+  const snap = c.snaps[i];
+  const v = snap.totals[currentOwner];
+  const cost = c.costs[i];
+  const leftPct = p.x / c.w * 100;
+  const topPct = p.y / c.h * 100;
+  const guide = document.getElementById('trendGuide');
+  const dot = document.getElementById('trendDot');
+  const tip = document.getElementById('trendTip');
+  if(!guide || !dot || !tip) return;
+  guide.style.left = leftPct + '%';
+  guide.style.display = 'block';
+  dot.style.left = leftPct + '%';
+  dot.style.top = topPct + '%';
+  dot.style.display = 'block';
+  let rows = `<div class="trend-tip-date">${fmtDateDot(snap.date)}</div>
+    <div class="trend-tip-row"><span>평가금액</span><span class="num">${fmtWon(v)}</span></div>`;
+  if(cost !== null){
+    const pl = v - cost;
+    const pct = cost ? (pl / cost) * 100 : null;
+    rows += `
+      <div class="trend-tip-row"><span>투자원금</span><span class="num">${fmtWon(cost)}</span></div>
+      <div class="trend-tip-row"><span>평가손익</span><span class="num ${plClass(pl)}">${fmtPL(pl)}${pct!==null ? ' ('+fmtPercent(pct)+')' : ''}</span></div>`;
+  }
+  if(c.totalReturnValues && c.totalReturnValues[i] !== undefined){
+    rows += `
+      <div class="trend-tip-row"><span>배당 포함 총수익</span><span class="num text-gold">${fmtWon(c.totalReturnValues[i])}</span></div>`;
+  }
+  tip.innerHTML = rows;
+  // 점과 겹치지 않도록 반대편 모서리에 띄운다
+  tip.style.left = leftPct > 50 ? '4px' : 'auto';
+  tip.style.right = leftPct > 50 ? 'auto' : '4px';
+  tip.style.display = 'block';
+}
+
+function bindTrendChartEvents(){
+  const wrap = document.getElementById('trendChartWrap');
+  if(!wrap || !trendChart) return;
+  const pick = (ev)=>{
+    const rect = wrap.getBoundingClientRect();
+    const vx = Math.min(1, Math.max(0, (ev.clientX - rect.left) / rect.width)) * trendChart.w;
+    let best = 0, bestDist = Infinity;
+    trendChart.points.forEach((pt, i)=>{
+      const d = Math.abs(pt.x - vx);
+      if(d < bestDist){ bestDist = d; best = i; }
+    });
+    showTrendTip(best);
+  };
+  wrap.onpointerdown = pick;
+  wrap.onpointermove = pick;
+  wrap.onpointerleave = (ev)=>{ if(ev.pointerType === 'mouse') hideTrendTip(); };
+  if(!window._trendOutsideBound){
+    window._trendOutsideBound = true;
+    document.addEventListener('pointerdown', (ev)=>{
+      if(!ev.target.closest || !ev.target.closest('#trendChartWrap')) hideTrendTip();
+    });
+  }
+}
+
+function renderAssetTrend(){
+  const el = document.getElementById('assetTrendSection');
+  const allSnaps = (DATA.snapshots||[]).filter(s=> s.totals && typeof s.totals[currentOwner] === 'number');
+
+  const saveBtnHtml = `<button class="add-btn" onclick="saveSnapshotNow()">오늘 스냅샷 저장</button>`;
+  const manageHtml = `<div class="button-row center mt-12"><button class="text-link-btn" onclick="openSnapshotSheet()">스냅샷 기록 관리</button></div>`;
+
+  if(allSnaps.length < 2){
+    trendChart = null;
+    el.innerHTML = `
+      <div class="section-divider-gray spaced-top"></div>
+      <div class="panel-wrap">
+        <div class="panel-title title-row mt-40">
+          <span>자산 추이</span>
+          ${saveBtnHtml}
+        </div>
+        <div class="panel-empty">스냅샷을 2번 이상 저장하면(예: 매주 한 번씩) 여기에 자산 변화 그래프가 나타나요. 현재가를 업데이트한 날 눌러두시면 좋아요.</div>
+        ${manageHtml}
+      </div>
+    `;
+    return;
+  }
+
+  // 헤드라인: 항상 전체 기록 기준 최신값과 직전 스냅샷 대비
+  const allDates = allSnaps.map(s=>s.date);
+  const allVals = allSnaps.map(s=>s.totals[currentOwner]);
+  const last = allVals[allVals.length-1];
+  const prev = allVals[allVals.length-2];
+  const delta = last - prev;
+  const deltaPct = prev ? (delta/prev)*100 : null;
+  const gapDays = Math.round((Date.parse(allDates[allDates.length-1]) - Date.parse(allDates[allDates.length-2])) / 86400000);
+  const prevLabel = Number.isFinite(gapDays) && gapDays > 0 ? `${gapDays}일 전 기록 대비` : '직전 기록 대비';
+
+  // 기간 필터
+  const rng = TREND_RANGES.find(r=>r.key===trendRange) || TREND_RANGES[TREND_RANGES.length-1];
+  let snaps = allSnaps;
+  if(rng.days){
+    const cutoff = new Date(Date.now() - rng.days*86400000).toISOString().slice(0,10);
+    snaps = allSnaps.filter(s=>s.date >= cutoff);
+  }
+  const rangeTabsHtml = `<div class="range-tabs">${TREND_RANGES.map(r=>
+    `<button class="range-tab${r.key===rng.key ? ' active' : ''}" onclick="setTrendRange('${r.key}')">${r.label}</button>`
+  ).join('')}</div>`;
+
+  let periodHtml = '';
+  let chartHtml = '';
+  let minmaxText = '';
+  trendChart = null;
+
+  if(snaps.length < 2){
+    chartHtml = `<div class="panel-empty">이 기간에는 기록이 부족해요. 더 긴 기간을 선택해 보세요.</div>`;
+  } else {
+    const values = snaps.map(s=>s.totals[currentOwner]);
+    const costs = snaps.map(s=> (s.costs && typeof s.costs[currentOwner] === 'number') ? s.costs[currentOwner] : null);
+    const hasDividendData = (DATA.dividends||[]).length > 0;
+    const totalReturnValues = hasDividendData
+      ? snaps.map(s=> s.totals[currentOwner] + cumulativeDividendsUpTo(s.date.slice(0,7), currentOwner))
+      : [];
+    const hasTotalReturn = hasDividendData && totalReturnValues.some((v,i)=> v !== values[i]);
+
+    const w = 600, h = 140, pad = 8;
+    const all = values.concat(costs.filter(c=>c!==null)).concat(totalReturnValues);
+    const min = Math.min(...all);
+    const max = Math.max(...all);
+    const span = (max - min) || 1;
+    const xOf = i => pad + (i/(values.length-1))*(w-2*pad);
+    const yOf = v => h-pad - ((v-min)/span)*(h-2*pad);
+    const points = values.map((v,i)=>({ x: xOf(i), y: yOf(v) }));
+    const polyPoints = points.map(p=>`${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+    const areaPoints = `${pad},${h-pad} ${polyPoints} ${w-pad},${h-pad}`;
+    const costPts = costs.map((c,i)=> c===null ? null : `${xOf(i).toFixed(1)},${yOf(c).toFixed(1)}`).filter(Boolean);
+    const hasCost = costPts.length >= 2;
+    const totalReturnPts = totalReturnValues.map((v,i)=>`${xOf(i).toFixed(1)},${yOf(v).toFixed(1)}`);
+    trendChart = { snaps, costs, totalReturnValues: hasTotalReturn ? totalReturnValues : null, points, w, h };
+
+    const first = values[0];
+    const firstDelta = values[values.length-1] - first;
+    const firstDeltaPct = first ? (firstDelta/first)*100 : null;
+    const firstLabel = rng.key==='all' ? '첫 기록 대비' : `${rng.label} 내 첫 기록 대비`;
+    const maxV = Math.max(...values);
+    const minV = Math.min(...values);
+    periodHtml = `<div class="trend-first-delta num">${fmtPL(firstDelta)}${firstDeltaPct!==null ? ' ('+fmtPercent(firstDeltaPct)+')' : ''} · ${firstLabel}</div>`;
+    minmaxText = `최고 ${fmtWon(maxV)}<br>최저 ${fmtWon(minV)}`;
+
+    // 기간 전체 흐름이 마이너스면 선·영역을 빨간 계열로, 아니면 민트 계열로
+    const isDown = firstDelta < 0;
+    const lineColor = isDown ? 'var(--red)' : 'var(--mint)';
+    const areaColor = isDown ? 'var(--red-dim)' : 'var(--mint-dim)';
+
+    chartHtml = `
+      <div class="trend-svg-wrap" id="trendChartWrap">
+        <svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}" preserveAspectRatio="none">
+          <polygon points="${areaPoints}" fill="${areaColor}" opacity="0.6"></polygon>
+          ${hasCost ? `<polyline points="${costPts.join(' ')}" fill="none" stroke="var(--text3)" stroke-width="1.5" stroke-dasharray="4 3" stroke-linejoin="round" vector-effect="non-scaling-stroke"></polyline>` : ''}
+          <polyline points="${polyPoints}" fill="none" stroke="${lineColor}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"></polyline>
+          ${hasTotalReturn ? `<polyline points="${totalReturnPts.join(' ')}" fill="none" stroke="var(--gold)" stroke-width="1.8" stroke-dasharray="1 3.5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"></polyline>` : ''}
+        </svg>
+        <div class="trend-guide" id="trendGuide"></div>
+        <div class="trend-dot" id="trendDot"></div>
+        <div class="trend-tip" id="trendTip"></div>
+      </div>
+      <div class="trend-caption-row">
+        <span>${fmtDateDot(snaps[0].date)}</span>
+        <span>${fmtDateDot(snaps[snaps.length-1].date)}</span>
+      </div>
+      ${hasCost || hasTotalReturn ? `<div class="trend-legend"><span><i class="lg-line"></i>평가금액</span>${hasCost ? `<span><i class="lg-dash"></i>투자원금</span>` : ''}${hasTotalReturn ? `<span><i class="lg-dot"></i>배당 포함 총수익</span>` : ''}</div>` : ''}
+    `;
+  }
+
+  el.innerHTML = `
+    <div class="section-divider-gray spaced-top"></div>
+    <div class="panel-wrap">
+      <div class="panel-title title-row mt-40">
+        <span>자산 추이</span>
+        ${saveBtnHtml}
+      </div>
+      <span class="title-info-trigger" id="trendLatestTrigger" onclick="toggleTrendMinmax(event)"><span class="trend-latest num">${fmtWon(last)}</span><svg class="row-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left:-3px;margin-top:-2px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg></span>
+      <div class="trend-latest-delta num ${plClass(delta)}">${fmtPL(delta)}${deltaPct!==null ? ' ('+fmtPercent(deltaPct)+')' : ''} · ${prevLabel}</div>
+      ${periodHtml}
+      ${rangeTabsHtml}
+      ${chartHtml}
+      ${manageHtml}
+    </div>
+  `;
+  bindTrendChartEvents();
+  const trigEl = document.getElementById('trendLatestTrigger');
+  if(trigEl) trigEl.dataset.minmax = minmaxText;
+}
+
+function toggleTrendMinmax(evt){
+  evt.stopPropagation();
+  const text = evt.currentTarget.dataset.minmax;
+  if(!text) return;
+  toggleTooltip(evt.currentTarget, '기간 최고·최저', text);
+}
+
+// ===== 스냅샷 기록 관리 (추가·수정·삭제) =====
+function parseMoneyField(id){
+  const el = document.getElementById(id);
+  return el ? (parseInt(el.value.replace(/[^0-9]/g,''), 10) || 0) : 0;
+}
+
+function buildSnapshotSheetHtml(){
+  const ownerName = currentOwner==='ALL' ? '전체' : ((DATA.owners||[]).find(o=>o.id===currentOwner)||{}).name || '';
+  const snaps = (DATA.snapshots||[])
+    .filter(s=> s.totals && typeof s.totals[currentOwner] === 'number')
+    .sort((a,b)=>b.date.localeCompare(a.date));
+  const rows = snaps.map((sn,i)=>{
+    const v = sn.totals[currentOwner];
+    const prev = snaps[i+1]; // 배열이 최신순이라 다음 항목이 직전(더 과거) 기록
+    const prevV = prev ? prev.totals[currentOwner] : null;
+    const pct = (prevV !== null && prevV !== 0) ? ((v - prevV) / prevV) * 100 : null;
+    const pctHtml = pct !== null ? ` <span class="num ${plClass(pct)}">(${fmtPercent(pct)})</span>` : '';
+    return `
+      <div class="entry-row snap-row" onclick="prefillSnapshotForm('${sn.date}')">
+        <span>${fmtDateDot(sn.date)}</span>
+        <span>
+          <span class="amt num">${fmtWon(v)}</span>${pctHtml}
+          <span class="del-icon" onclick="event.stopPropagation();deleteSnapshot('${sn.date}')">🗑️</span>
+        </span>
+      </div>`;
+  }).join('');
+  return `
+    <div class="panel-caption">${escapeHtml(ownerName)} 기준으로 표시·저장돼요. 이미 있는 날짜로 저장하면 그 날짜의 값이 수정되고, 아래 기록을 누르면 값이 채워져요.</div>
+    <div class="form-row">
+      <div class="field">
+        <span class="field-label">날짜</span>
+        <div class="date-display-wrap">
+          <span class="date-display-text" id="snap_date_display" data-placeholder="날짜 선택">날짜 선택</span>
+          <input type="date" id="snap_date" class="date-native-hidden" onchange="syncDateDisplay(this)">
+        </div>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="field">
+        <span class="field-label">평가금액</span>
+        <input type="text" inputmode="numeric" placeholder="예: 5,000,000" id="snap_value" oninput="formatMoneyInput(this)">
+      </div>
+      <div class="field">
+        <span class="field-label">투자원금</span>
+        <input type="text" inputmode="numeric" placeholder="선택 (예: 4,500,000)" id="snap_cost" oninput="formatMoneyInput(this)">
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn-primary" onclick="submitSnapshotForm()">저장</button>
+    </div>
+    <div class="panel-title mt-20 fs-16">기록 ${snaps.length}개</div>
+    ${rows || '<div class="empty-hint">아직 기록이 없어요</div>'}
+  `;
+}
+
+function openSnapshotSheet(){
+  openSheet('스냅샷 기록', buildSnapshotSheetHtml());
+}
+
+function prefillSnapshotForm(date){
+  const sn = (DATA.snapshots||[]).find(x=>x.date===date);
+  if(!sn) return;
+  const dateEl = document.getElementById('snap_date');
+  dateEl.value = date;
+  syncDateDisplay(dateEl);
+  const v = sn.totals[currentOwner];
+  document.getElementById('snap_value').value = typeof v === 'number' ? Math.round(v).toLocaleString('ko-KR') : '';
+  const c = sn.costs && sn.costs[currentOwner];
+  document.getElementById('snap_cost').value = typeof c === 'number' ? Math.round(c).toLocaleString('ko-KR') : '';
+  document.getElementById('sheetBody').scrollTop = 0;
+}
+
+async function submitSnapshotForm(){
+  const date = document.getElementById('snap_date').value;
+  const value = parseMoneyField('snap_value');
+  const cost = parseMoneyField('snap_cost');
+  const today = new Date().toISOString().slice(0,10);
+  if(!date){ showToast('날짜를 선택해주세요'); return; }
+  if(date > today){ showToast('오늘 이후 날짜는 기록할 수 없어요'); return; }
+  if(!value){ showToast('평가금액을 입력해주세요'); return; }
+  ensureDataShape();
+  let sn = DATA.snapshots.find(x=>x.date===date);
+  if(!sn){
+    sn = { date, totals: {} };
+    DATA.snapshots.push(sn);
+  }
+  sn.totals[currentOwner] = value;
+  if(cost){
+    sn.costs = sn.costs || {};
+    sn.costs[currentOwner] = cost;
+  } else if(sn.costs){
+    delete sn.costs[currentOwner];
+  }
+  DATA.snapshots.sort((a,b)=>a.date.localeCompare(b.date));
+  await saveData();
+  render();
+  openSnapshotSheet();
+  showToast('스냅샷을 저장했어요');
+}
+
+async function deleteSnapshot(date){
+  if(!confirm(`${fmtDateDot(date)} 스냅샷을 삭제할까요? (모든 탭에서 이 날짜 기록이 사라져요)`)) return;
+  DATA.snapshots = DATA.snapshots.filter(x=>x.date!==date);
+  await saveData();
+  render();
+  openSnapshotSheet();
+  showToast('스냅샷을 삭제했어요');
+}
+
+
+function allItemsBreakdown(){
+  const map = {};
+  DATA.stocks.forEach(s=>{
+    const key = s.key;
+    if(!map[key]){
+      const cat = catalogFor(s);
+      map[key] = { key, name: cat.name, ticker: cat.ticker||'', value:0, cost:0, count:0, quantity:0 };
+    }
+    map[key].value += stockTotal(s);
+    map[key].cost += stockCostBasis(s);
+    map[key].count += 1;
+    map[key].quantity += (s.quantity||0);
+  });
+  return Object.values(map);
+}
+
+function stocksMatchingKey(key){
+  return DATA.stocks.filter(s=>s.key===key);
+}
+
+function safeId(str){
+  return str.replace(/[^a-zA-Z0-9_-]/g, '_');
+}
+
+function renderBreakdown(){
+  const el = document.getElementById('breakdownSection');
+  const items = allItemsBreakdown();
+  const grandTotal = items.reduce((s,i)=>s+i.value,0);
+
+  if(items.length===0){
+    el.innerHTML = '';
+    return;
+  }
+
+  const sorted = [...items].sort((a,b)=> b.value - a.value);
+
+  const targetSum = sorted.reduce((s,item)=>{
+    const t = DATA.targets[item.key];
+    return s + (typeof t === 'number' ? t : 0);
+  }, 0);
+
+  const rows = sorted.map(item=>{
+    const pl = item.value - item.cost;
+    const plPct = item.cost ? (pl/item.cost)*100 : null;
+    const ratio = grandTotal ? (item.value/grandTotal)*100 : 0;
+    const sid = safeId(item.key);
+    const keyEsc = item.key.replace(/'/g,"\\'");
+    const target = DATA.targets[item.key];
+    const hasTarget = typeof target === 'number' && !isNaN(target);
+
+    const cat = catalogByKey(item.key);
+    const currentPrice = cat ? (cat.currentPrice||0) : 0;
+
+    // 리밸런싱 제안: 지금 총 평가금액을 그대로 두고 목표비율에 맞추려면 얼마를 사고팔아야 하는지
+    let rebalHtml = '';
+    if(hasTarget && grandTotal){
+      const targetValue = grandTotal * (target/100);
+      const diff = targetValue - item.value;
+      const diffRatioPts = Math.abs(target - ratio);
+      if(diffRatioPts < 1){
+        rebalHtml = `<div class="rebal-badge rebal-ok">목표 비중에 근접해요</div>`;
+      } else if(diff > 0){
+        rebalHtml = `<div class="rebal-badge rebal-buy">매수 ${fmtWon(diff)} 검토</div>`;
+      } else {
+        rebalHtml = `<div class="rebal-badge rebal-sell">매도 ${fmtWon(-diff)} 검토</div>`;
+      }
+    }
+
+    return `
+      <div class="breakdown-row cursor-pointer" onclick="openTargetSheet('${keyEsc}','${sid}')">
+        <div class="breakdown-top">
+          <div class="breakdown-name-block">
+            <div class="breakdown-name">${escapeHtml(item.name)}${item.ticker ? ' <span class="suffix-text text-dim">('+escapeHtml(item.ticker)+')</span>' : ''}${stalePriceBadgeHtml(cat)}</div>
+            <div class="breakdown-price-line">평가금액 ${fmtWon(item.value)} · 현재가 <span class="price-highlight"><span class="won-sign">₩</span>${currentPrice.toLocaleString('ko-KR')}</span></div>
+            <div class="breakdown-price-line">총 ${item.quantity.toLocaleString('ko-KR')}주${hasTarget ? ' · 목표 '+target+'%' : ''}</div>
+          </div>
+          <div class="breakdown-right">
+            <span class="breakdown-ratio num">${ratio.toFixed(2)}%</span>
+            <div class="breakdown-pl num ${plClass(pl)}">${fmtPL(pl)}${plPct!==null ? ' ('+fmtPercent(plPct)+')' : ''}</div>
+          </div>
+        </div>
+        <div class="breakdown-bar-track">
+          <div class="breakdown-bar-fill" style="--w:${ratio}%;"></div>
+          ${hasTarget ? `<div class="breakdown-bar-target" style="--tw:${Math.min(100,Math.max(0,target))}%;"></div>` : ''}
+        </div>
+        ${rebalHtml}
+      </div>
+    `;
+  }).join('');
+
+  const targetSumHint = targetSum > 0
+    ? `<div class="hint-text">입력된 목표비율 합계: ${targetSum.toFixed(2)}%${Math.abs(targetSum-100) > 0.01 ? ' (100%가 되도록 맞추면 더 정확해요)' : ' ✓'}</div>
+       <div class="hint-text mt-4">매수·매도 금액은 지금 총 평가금액을 유지한 채 목표비율에 맞추는 기준으로 계산돼요. 목표비율 차이가 1%p 미만이면 근접한 것으로 봐요.</div>`
+    : '';
+
+  el.innerHTML = `
+    <div class="section-divider-gray spaced-top"></div>
+    <div class="breakdown-wrap">
+      <div class="breakdown-title mt-40" id="breakdownToggle">전체 포트폴리오 비율</div>
+      ${breakdownOpen ? `<div class="breakdown-card">${rows}</div>${targetSumHint}` : ''}
+    </div>
+  `;
+  document.getElementById('breakdownToggle').onclick = ()=>{
+    breakdownOpen = !breakdownOpen;
+    renderBreakdown();
+  };
+}
+
+function dividendTotalForKey(key){
+  return recordsForKey(key).reduce((s,r)=>s+r.accounts.reduce((s2,a)=>s2+a.amount,0),0);
+}
+function dividendTTMForKey(key){
+  return recordsForKey(key).filter(r=>isWithinLast12Months(r.month)).reduce((s,r)=>s+r.accounts.reduce((s2,a)=>s2+a.amount,0),0);
+}
+
+function holdingsListHtmlForKey(key){
+  const stocks = stocksMatchingKey(key);
+  if(stocks.length===0) return `<div class="empty-hint">보유 계좌 없음</div>`;
+  return stocks.map(s=>{
+    const acc = DATA.accounts.find(a=>a.id===s.accountId);
+    const owner = acc ? DATA.owners.find(o=>o.id===acc.ownerId) : null;
+    const pl = stockPL(s);
+    const plPct = stockPLPercent(s);
+    return `
+      <div class="entry-row cursor-pointer" onclick="openStockDetailFromBreakdown('${s.id}')">
+        <span>${acc ? escapeHtml(acc.name) : '(알 수 없는 계좌)'}${owner ? '('+escapeHtml(owner.name)+')' : ''} · ${(s.quantity||0).toLocaleString('ko-KR')}주</span>
+        <span class="row-right">
+          <span class="amt num">${fmtWon(stockTotal(s))}${plPct!==null ? ' <span class="'+plClass(pl)+'">('+fmtPercent(plPct)+')</span>' : ''}</span>
+          ${CHEVRON_SVG}
+        </span>
+      </div>
+    `;
+  }).join('');
+}
+
+// 포트폴리오 모음 > 종목 상세(보유현황)에서 계좌 항목을 누르면:
+// 기존에 열려있던 시트(보유현황/목표관리)는 그대로 유지한 채, 그 위에 2단계 시트로
+// 매수/매도 입력이 가능한 종목 상세를 띄운다. 닫으면 자동으로 원래 시트가 다시 보인다.
+function openStockDetailFromBreakdown(stockId){
+  const stock = DATA.stocks.find(s=>s.id===stockId);
+  if(!stock) return;
+  const cat = catalogFor(stock);
+  openSheet2(cat.name, buildStockDetailHtml(stock));
+}
+
+function dividendFlatListHtmlForKey(key){
+  const records = recordsForKey(key);
+  if(records.length===0) return `<div class="empty-hint">기록 없음</div>`;
+  return records.map(rec=>{
+    const total = rec.accounts.reduce((s,a)=>s+a.amount,0);
+    const dateLabel = fmtDateDot(rec.date || rec.month);
+    const keyEsc = key.replace(/'/g,"\\'");
+    return `
+      <div class="entry-row">
+        <span>${dateLabel}${rec.perShare ? ' · 주당 <span class="won-sign">₩</span>'+rec.perShare.toLocaleString('ko-KR') : ''}</span>
+        <span><span class="amt num">${fmtWon(total)}</span><span class="del-icon" onclick="deleteKeyDividendRecord('${keyEsc}','${rec.month}')">🗑️</span></span>
+      </div>
+    `;
+  }).join('');
+}
+
+function openKeyDividendSheet(key){
+  openSheet2('배당현황', dividendFlatListHtmlForKey(key));
+}
+
+let openTargetSheetLayer = { key: null, layer: null };
+
+async function deleteKeyDividendRecord(key, month){
+  deleteDividendRecord(key, month);
+  await saveData();
+  render();
+  if(document.getElementById('bottomSheet2').classList.contains('open')){
+    document.getElementById('sheetBody2').innerHTML = dividendFlatListHtmlForKey(key);
+  }
+  refreshOpenTargetSheet();
+  showToast('배당 기록을 삭제했어요');
+}
+
+function refreshOpenTargetSheet(){
+  const { key, layer } = openTargetSheetLayer;
+  if(!key) return;
+  const sid = safeId(key);
+  if(layer===1 && document.getElementById('bottomSheet').classList.contains('open')){
+    openTargetSheet(key, sid);
+  } else if(layer===2 && document.getElementById('bottomSheet2').classList.contains('open')){
+    openTargetSheetNested(key, sid);
+  }
+}
+
+function buildTargetSheetContent(key, sid){
+  const items = allItemsBreakdown();
+  const item = items.find(i=>i.key===key);
+  if(!item) return;
+
+  const keyEsc = key.replace(/'/g,"\\'");
+
+  const divTotal = dividendTotalForKey(key);
+  const divTTM = dividendTTMForKey(key);
+  const y2 = item.cost ? (divTTM/item.cost)*100 : null;
+  const y3 = item.value ? (divTTM/item.value)*100 : null;
+  const keyPL = item.value - item.cost;
+  const keyPLPct = item.cost ? (keyPL/item.cost)*100 : null;
+
+  const bodyHtml = `
+    <div class="stat-rows mb-16">
+      <div class="stat-row">
+        <div class="stock-stat"><span class="stock-stat-label">평가금액</span><span class="stock-stat-value num">${fmtWon(item.value)}</span></div>
+        <div class="stock-stat"><span class="stock-stat-label">평가손익</span><span class="stock-stat-value num ${plClass(keyPL)}">${fmtPL(keyPL)}${keyPLPct!==null ? ' ('+fmtPercent(keyPLPct)+')' : ''}</span></div>
+      </div>
+      <div class="stat-row">
+        <div class="stock-stat"><span class="stock-stat-label">투자원금</span><span class="stock-stat-value num">${fmtWon(item.cost)}</span></div>
+        <div class="stock-stat"><span class="stock-stat-label">보유수량</span><span class="stock-stat-value num">${item.quantity.toLocaleString('ko-KR')}주</span></div>
+      </div>
+    </div>
+    <div class="panel-title sub-title">보유현황</div>
+    ${holdingsListHtmlForKey(key)}
+
+    <div class="mt-20 pt-14 divider-top">
+      <div class="panel-title sub-title title-row cursor-pointer" onclick="openKeyDividendSheet('${keyEsc}')"><span>배당현황</span>${CHEVRON_SVG}</div>
+      <div class="yield-grid">
+        <div class="yield-card" onclick="showYieldTooltip(event,2)">
+          <div class="yield-label">최근 12개월<br>평균매입가 기준</div>
+          <div class="yield-value num">${fmtPctPlain(y2)}</div>
+        </div>
+        <div class="yield-card" onclick="showYieldTooltip(event,3)">
+          <div class="yield-label">최근 12개월<br>현재가 기준</div>
+          <div class="yield-value num">${fmtPctPlain(y3)}</div>
+        </div>
+      </div>
+      <div class="stat-footnote">누적 배당 ${fmtWon(divTotal)} · 최근 12개월 ${fmtWon(divTTM)}</div>
+    </div>
+
+    <div class="form-panel" id="grpform_${sid}">
+      <div class="form-row">
+        <div class="field">
+          <span class="field-label">새 현재가 (주당)</span>
+          <input type="number" inputmode="decimal" placeholder="예: 25000" id="grpprice_${sid}">
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn-ghost" onclick="closeForm('grpform_${sid}')">취소</button>
+        <button class="btn-primary" onclick="applyGroupPrice('${keyEsc}','${sid}')">전체 계좌에 반영</button>
+      </div>
+    </div>
+    <div class="form-panel" id="divgrpform_${sid}">
+      <div class="form-row">
+        <div class="field">
+          <span class="field-label">배당일</span>
+          <div class="date-display-wrap">
+            <span class="date-display-text" id="divgrp_date_${sid}_display" data-placeholder="날짜 선택">날짜 선택</span>
+            <input type="date" id="divgrp_date_${sid}" class="date-native-hidden" onchange="syncDateDisplay(this)">
+          </div>
+        </div>
+        <div class="field">
+          <span class="field-label">주당 배당금</span>
+          <input type="number" inputmode="decimal" placeholder="예: 500" id="divgrp_amount_${sid}">
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn-ghost" onclick="closeForm('divgrpform_${sid}')">취소</button>
+        <button class="btn-primary" onclick="applyGroupDividend('${keyEsc}','${sid}')">전체 계좌에 반영</button>
+      </div>
+    </div>
+    <div class="button-row center mt-18">
+      <button class="text-link-btn" onclick="openStockLink('${keyEsc}','toss')">토스</button>
+      <button class="text-link-btn" onclick="openStockLink('${keyEsc}','naver')">네이버</button>
+    </div>
+    <div class="button-row mt-12">
+      <button class="cta-btn" onclick="openGroupPriceForm('${keyEsc}','${sid}')">현재가</button>
+      <button class="cta-btn" onclick="openGroupDividendForm('${keyEsc}','${sid}')">배당</button>
+    </div>
+  `;
+  return { title: item.name, bodyHtml };
+}
+
+// 종목 링크: 토스는 stockCatalog의 tossUrl, 네이버는 naverUrl(기존 dividendUrl도 인식)
+function openStockLink(key, type){
+  const cat = catalogByKey(key);
+  const isToss = type === 'toss';
+  const url = cat ? (isToss ? cat.tossUrl : (cat.naverUrl || cat.dividendUrl)) : '';
+  if(url){
+    window.open(url, '_blank', 'noopener');
+  } else {
+    showToast(`${isToss ? '토스' : '네이버'} 링크가 아직 설정되지 않았어요 (stockCatalog의 ${isToss ? 'tossUrl' : 'naverUrl'} 필드에 추가해주세요)`);
+  }
+}
+
+function openTargetSheet(key, sid){
+  const content = buildTargetSheetContent(key, sid);
+  if(!content) return;
+  openTargetSheetLayer = { key, layer: 1 };
+  openSheet(content.title, content.bodyHtml);
+}
+
+function openTargetSheetNested(key, sid){
+  const content = buildTargetSheetContent(key, sid);
+  if(!content) return;
+  openTargetSheetLayer = { key, layer: 2 };
+  openSheet2(content.title, content.bodyHtml);
+}
+
+async function applyGroupPrice(key, sid){
+  const input = document.getElementById(`grpprice_${sid}`);
+  const num = parseFloat(input.value);
+  if(isNaN(num)){ showToast('숫자를 입력해주세요'); return; }
+  const cat = catalogByKey(key);
+  if(!cat){ showToast('종목 정보를 찾을 수 없어요'); return; }
+  cat.currentPrice = num;
+  cat.priceUpdatedAt = new Date().toISOString().slice(0,10);
+  const count = stocksMatchingKey(key).length;
+  closeForm(`grpform_${sid}`);
+  await saveData();
+  render();
+  refreshOpenTargetSheet();
+  showToast(`현재가를 반영했어요 (${count}개 계좌에 자동 적용)`);
+}
+
+function openGroupPriceForm(key, sid){
+  const panel = document.getElementById(`grpform_${sid}`);
+  const willOpen = !panel.classList.contains('open');
+  closeForm(`divgrpform_${sid}`);
+  panel.classList.toggle('open', willOpen);
+  if(willOpen){
+    const input = document.getElementById(`grpprice_${sid}`);
+    input.value = '';
+    input.focus();
+    scrollToId(`grpform_${sid}`);
+  }
+}
+
+function openGroupDividendForm(key, sid){
+  const panel = document.getElementById(`divgrpform_${sid}`);
+  const willOpen = !panel.classList.contains('open');
+  closeForm(`grpform_${sid}`);
+  panel.classList.toggle('open', willOpen);
+  if(willOpen){
+    document.getElementById(`divgrp_amount_${sid}`).value = '';
+    scrollToId(`divgrpform_${sid}`);
+  }
+}
+
+async function applyGroupDividend(key, sid){
+  const date = document.getElementById(`divgrp_date_${sid}`).value;
+  const perShare = parseFloat(document.getElementById(`divgrp_amount_${sid}`).value) || 0;
+  if(!date){ showToast('배당일을 선택해주세요'); return; }
+  if(!perShare){ showToast('주당 배당금을 입력해주세요'); return; }
+  const cat = catalogByKey(key);
+  const stockList = stocksMatchingKey(key).map(s=>({ accountId:s.accountId, quantity:quantityAsOfDate(s, date) }));
+  const rec = upsertDividendGroupBulk(key, date, cat ? cat.name : '', cat ? cat.ticker : '', perShare, stockList);
+  const total = rec.accounts.reduce((s,a)=>s+a.amount,0);
+  closeForm(`divgrpform_${sid}`);
+  await saveData();
+  render();
+  refreshOpenTargetSheet();
+  showToast(`${rec.accounts.length}개 계좌에 총 ₩${total.toLocaleString('ko-KR')} 반영했어요`);
+}
+
+function renderAccounts(){
+  const list = document.getElementById('accountList');
+  const isAll = currentOwner === 'ALL';
+  document.getElementById('accountsLabel').textContent = isAll ? '전체 계좌' : '계좌';
+  // 전체 보기에서는 계좌를 넣을 주인을 고를 수 있게 한다
+  document.getElementById('accountOwnerRow').classList.toggle('hidden', !isAll);
+  const ownerSel = document.getElementById('newAccountOwner');
+  const ownerOptions = (DATA.owners||[]).map(o=>`<option value="${o.id}">${escapeHtml(o.name)}</option>`).join('');
+  if(ownerSel.innerHTML !== ownerOptions){
+    const prev = ownerSel.value;
+    ownerSel.innerHTML = ownerOptions;
+    if(prev && (DATA.owners||[]).some(o=>o.id===prev)) ownerSel.value = prev;
+  }
+  const accounts = accountsForOwner(currentOwner);
+  if(accounts.length===0){
+    list.innerHTML = `<div class="empty-state">아직 등록된 계좌가 없습니다.<br>위 '계좌 추가' 버튼으로 시작해보세요.</div>`;
+    return;
+  }
+  list.innerHTML = '';
+  accounts.forEach(acc=>{
+    const ownerName = isAll ? (DATA.owners.find(o=>o.id===acc.ownerId)||{}).name : null;
+    const accTotal = accountTotal(acc.id);
+    const accCost = accountCostBasis(acc.id);
+    const accPL = accTotal - accCost;
+    const accPLPct = accCost ? (accPL/accCost)*100 : null;
+    const card = document.createElement('div');
+    card.className = 'account-card';
+    card.id = `acccard_${acc.id}`;
+    card.innerHTML = `
+      <div class="account-head" data-acc="${acc.id}">
+        <div>
+          <div class="account-name">${escapeHtml(acc.name)}${ownerName ? ' <span class="suffix-text text-dim">('+escapeHtml(ownerName)+')</span>' : ''}</div>
+        </div>
+        <div class="account-suffix-wrap">
+          <div class="account-total num account-total-value">${fmtWon(accTotal)}</div>
+          <div class="account-pl-line">
+            <span class="num ${plClass(accPL)}">${fmtPL(accPL)}</span>${accPLPct!==null ? ' <span class="num '+plClass(accPL)+'">('+fmtPercent(accPLPct)+')</span>' : ''}
+          </div>
+        </div>
+      </div>
+    `;
+    card.querySelector('.account-head').onclick = ()=> openAccountSheet(acc.id);
+    list.appendChild(card);
+  });
+}
+
+// 계좌를 누르면 바텀시트 1개로 종목 목록을 보여준다. 종목을 누르면 새 시트를 쌓지 않고
+// 같은 시트 안에서 종목 상세로 화면만 바뀌고, 헤더 왼쪽 ‹ 로 계좌 목록으로 돌아온다.
+function openAccountSheet(accId){
+  const acc = DATA.accounts.find(a=>a.id===accId);
+  if(!acc) return;
+  const owner = (DATA.owners||[]).find(o=>o.id===acc.ownerId);
+  const title = acc.name + (currentOwner==='ALL' && owner ? ` (${owner.name})` : '');
+  const stocks = stocksForAccount(acc.id);
+  const rows = stocks.map(st=>{
+    const cat = catalogFor(st);
+    const pl = stockPL(st);
+    const plPct = stockPLPercent(st);
+    return `
+      <div class="acc-stock-row" onclick="openStockDetailSheet('${st.id}')">
+        <div class="acc-stock-name">${escapeHtml(cat.name)}${cat.ticker ? '<span class="acc-stock-ticker">('+escapeHtml(cat.ticker)+')</span>' : ''}${stalePriceBadgeHtml(cat)}</div>
+        <div class="acc-stock-right">
+          <div class="num">${fmtWon(stockTotal(st))}</div>
+          <div class="num acc-stock-pl ${plClass(pl)}">${fmtPL(pl)}${plPct!==null ? ' ('+fmtPercent(plPct)+')' : ''}</div>
+        </div>
+        ${CHEVRON_SVG}
+      </div>
+    `;
+  }).join('');
+  openSheet(title, `
+    <div class="account-row-head">
+      <span class="empty-hint p-0">종목 ${stocks.length}개</span>
+      <button class="mini-add" onclick="openStockPickerSheet('${acc.id}')">+ 종목 추가</button>
+    </div>
+    ${rows || '<div class="empty-hint">아직 등록된 종목이 없어요</div>'}
+  `);
+}
+
+function openStockPickerSheet(accountId){
+  const cats = [...(DATA.stockCatalog||[])].sort((a,b)=>a.name.localeCompare(b.name));
+  const rows = cats.map(c=>{
+    const keyEsc = c.key.replace(/'/g,"\\'");
+    return `
+      <div class="entry-row cursor-pointer" onclick="addHoldingFromCatalog('${accountId}','${keyEsc}')">
+        <span>${escapeHtml(c.name)}${c.ticker ? ' <span class="text-faint">('+escapeHtml(c.ticker)+')</span>' : ''}</span>
+        <span class="amt num"><span class="won-sign">₩</span>${(c.currentPrice||0).toLocaleString('ko-KR')}</span>
+      </div>
+    `;
+  }).join('');
+
+  const bodyHtml = `
+    ${cats.length ? rows : '<div class="empty-hint">아직 등록된 종목이 없어요. 아래에서 새로 등록해보세요.</div>'}
+    <div class="mt-14 pt-14 divider-top">
+      <div class="panel-caption mt-0 mb-8">목록에 없는 종목이면 새로 등록하세요 (현재가·수량·매수내역은 등록 후에 채우면 돼요)</div>
+      <div class="form-row">
+        <input type="text" placeholder="종목명 (예: 뱅가드 S&P500)" id="newcat_name_${accountId}" list="stockCatalogNames">
+        <input type="text" placeholder="티커 (선택)" id="newcat_ticker_${accountId}" list="stockCatalogTickers">
+      </div>
+      <div class="form-actions">
+        <button class="btn-primary" onclick="createCatalogAndAdd('${accountId}')">새 종목으로 추가</button>
+      </div>
+    </div>
+  `;
+  openSheet('종목 선택', bodyHtml, null, ()=>openAccountSheet(accountId));
+}
+
+async function addHoldingFromCatalog(accountId, key){
+  const cat = catalogByKey(key);
+  if(!cat) return;
+  const newStock = { id: uid('stk'), accountId, key, quantity:0, buys:[], sells:[] };
+  DATA.stocks.push(newStock);
+  await saveData();
+  render();
+  showToast(`${cat.name} 추가됨 · 매수 내역을 등록해주세요`);
+  openStockDetailSheet(newStock.id);
+}
+
+async function createCatalogAndAdd(accountId){
+  const name = document.getElementById(`newcat_name_${accountId}`).value.trim();
+  const ticker = document.getElementById(`newcat_ticker_${accountId}`).value.trim();
+  if(!name){ showToast('종목명을 입력해주세요'); return; }
+  const { cat } = getOrCreateCatalog(ticker, name, 0);
+  const newStock = { id: uid('stk'), accountId, key: cat.key, quantity:0, buys:[], sells:[] };
+  DATA.stocks.push(newStock);
+  await saveData();
+  render();
+  showToast(`${cat.name} 새로 등록됨 · 현재가와 매수 내역을 등록해주세요`);
+  openStockDetailSheet(newStock.id);
+}
+
+function openStockDetailSheet(stockId){
+  const stock = DATA.stocks.find(s=>s.id===stockId);
+  if(!stock) return;
+  const cat = catalogFor(stock);
+  // const title = cat.name + (cat.ticker ? ` (${cat.ticker})` : '');
+  const title = cat.name;
+  const accId = stock.accountId;
+  openSheet(title, buildStockDetailHtml(stock), null, ()=>openAccountSheet(accId));
+}
+
+// 두 시트(1단계/2단계) 중 실제로 이 종목의 상세(매수/매도 폼)를 보여주고 있는 쪽만
+// 골라서 새로고침한다. buyform_${stockId} 마커로 판단하므로, 같은 시트가
+// 매수내역/매도내역 같은 다른 화면을 보여주고 있을 때는 건드리지 않는다.
+function refreshStockDetailSheetIfOpen(stockId){
+  const stock = DATA.stocks.find(s=>s.id===stockId);
+  if(!stock) return;
+  [['bottomSheet','sheetBody'], ['bottomSheet2','sheetBody2']].forEach(([sheetId, bodyId])=>{
+    const sheetEl = document.getElementById(sheetId);
+    const bodyEl = document.getElementById(bodyId);
+    if(sheetEl.classList.contains('open') && bodyEl.querySelector(`#buyform_${stockId}`)){
+      bodyEl.innerHTML = buildStockDetailHtml(stock);
+    }
+  });
+}
+
+function buildStockDetailHtml(stock){
+  const keyEsc = stock.key.replace(/'/g,"\\'");
+  const hasBuys = stock.buys && stock.buys.length>0;
+  const hasSells = stock.sells && stock.sells.length>0;
+  const value = stockTotal(stock);
+  const cost = stockCostBasis(stock);
+  const pl = stockPL(stock);
+  const plPct = stockPLPercent(stock);
+  const qty = stock.quantity || 0;
+  const price = catalogFor(stock).currentPrice || 0;
+  const avgPrice = qty ? Math.round(cost / qty) : 0;
+  const divMonths = [...new Set(recordsForStock(stock).map(r=>parseInt(r.month.split('-')[1],10)))].sort((a,b)=>a-b);
+  const divMonthsStr = divMonths.length ? divMonths.join(', ') : '-';
+  const divYield = stockYieldOnAvgPrice(stock);
+  const divTTM = stockDividendTTM(stock);
+  return `
+    <div class="stat-rows mb-16">
+      <div class="stat-row">
+        <div class="stock-stat"><span class="stock-stat-label">평가금액</span><span class="stock-stat-value num">${fmtWon(value)}</span></div>
+        <div class="stock-stat"><span class="stock-stat-label">평가손익</span><span class="stock-stat-value num ${plClass(pl)}">${fmtPL(pl)}${plPct!==null ? ' ('+fmtPercent(plPct)+')' : ''}</span></div>
+      </div>
+      <div class="stat-row">
+        <div class="stock-stat"><span class="stock-stat-label">투자원금</span><span class="stock-stat-value num">${fmtWon(cost)}</span></div>
+        <div class="stock-stat"><span class="stock-stat-label">보유수량</span><span class="stock-stat-value num">${(stock.quantity||0).toLocaleString('ko-KR')}주</span></div>
+      </div>
+      <div class="stat-row">
+        <div class="stock-stat"><span class="stock-stat-label">평균단가</span><span class="stock-stat-value num"><span class="won-sign">₩</span>${avgPrice.toLocaleString('ko-KR')}</span></div>
+        <div class="stock-stat"><span class="stock-stat-label">현재가</span><span class="stock-stat-value num price-highlight"><span class="won-sign">₩</span>${price.toLocaleString('ko-KR')}</span></div>
+      </div>
+      <div class="stat-row">
+        <div class="stock-stat"><span class="stock-stat-label">배당월</span><span class="stock-stat-value">${divMonthsStr}</span></div>
+        <div class="stock-stat"><span class="stock-stat-label">배당률</span><span class="stock-stat-value num text-gold cursor-pointer" onclick="showStockDividendYieldTooltip(event,'${stock.id}')">${fmtPctPlain(divYield)}${divTTM ? ' ('+fmtWon(divTTM)+')' : ''}</span></div>
+      </div>
+    </div>
+     ${hasBuys ? `
+     <div class="panel-title sub-title mb-4">매수</div>
+     ${entryListHtml(stock.buys, stock.id, 'buys')}
+     ` : ''}
+    <div class="form-panel" id="buyform_${stock.id}">
+        ${txFormHtml(stock.id,'buys')}
+      </div>
+    ${hasSells ? `
+    <div class="panel-title sub-title ${hasBuys ? 'mt-12 ' : ''}mb-4">매도</div>
+     ${entryListHtml(stock.sells, stock.id, 'sells')}
+     ` : ''}
+      <div class="form-panel" id="sellform_${stock.id}">
+        ${txFormHtml(stock.id,'sells')}
+      </div>
+    <div class="button-row center mt-18">
+      <button class="text-link-btn" onclick="openTargetSheetNested('${keyEsc}','${safeId(stock.key)}')">종목 상세</button>
+      <button class="text-link-btn danger" onclick="deleteStock('${stock.id}')">종목 삭제</button>
+    </div>
+
+    <div class="button-row mt-12">
+      <button class="cta-btn" onclick="toggleForm('buyform_${stock.id}')">매수</button>
+      <button class="cta-btn" onclick="toggleForm('sellform_${stock.id}')">매도</button>
+    </div>
+  `;
+}
+
+function entryListHtml(list, stockId, field){
+  if(!list || list.length===0) return `<div class="empty-hint text-dim">기록 없음</div>`;
+  const sorted = [...list].sort((a,b)=> (b.date||'').localeCompare(a.date||''));
+  return sorted.map(item=>`
+    <div class="entry-row">
+      <span>${fmtDateDot(item.date)}${item.price ? ' · 주당 <span class="won-sign">₩</span>'+item.price.toLocaleString('ko-KR') : ''} · ${item.quantity||0}주</span>
+      <span class="del-icon" onclick="deleteEntry('${stockId}','${field}','${item.id}')">🗑️</span>
+    </div>
+  `).join('');
+}
+
+function dividendListHtmlForStock(stock){
+  const records = recordsForStock(stock);
+  if(records.length===0) return `<div class="empty-hint">기록 없음</div>`;
+  const sorted = [...records].sort((a,b)=> (b.month||'').localeCompare(a.month||''));
+  return sorted.map(item=>`
+    <div class="entry-row">
+      <span>${fmtDateDot(item.month)}${item.perShare ? ' · 주당 <span class="won-sign">₩</span>'+item.perShare.toLocaleString('ko-KR') : ''}</span>
+      <span><span class="amt num">${fmtWon(item.amount)}</span><span class="del" onclick="deleteStockDividend('${stock.id}','${item.month}')">삭제</span></span>
+    </div>
+  `).join('');
+}
+
+function txFormHtml(stockId, field){
+  const formId = (field==='buys' ? 'buyform_' : 'sellform_') + stockId;
+  const dateLabel = field==='buys' ? '매수일' : '매도일';
+  return `
+    <div class="form-row">
+      <div class="field">
+        <span class="field-label">${dateLabel}</span>
+        <div class="date-display-wrap">
+          <span class="date-display-text" id="${field}_date_${stockId}_display" data-placeholder="날짜 선택">날짜 선택</span>
+          <input type="date" id="${field}_date_${stockId}" class="date-native-hidden" onchange="syncDateDisplay(this)">
+        </div>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="field">
+        <span class="field-label">수량</span>
+        <input type="number" inputmode="decimal" placeholder="예: 10" id="${field}_qty_${stockId}">
+      </div>
+      <div class="field">
+        <span class="field-label">주당 단가</span>
+        <input type="number" inputmode="decimal" placeholder="예: 20000" id="${field}_price_${stockId}">
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn-ghost" onclick="closeForm('${formId}')">취소</button>
+      <button class="btn-primary" onclick="submitTx('${stockId}','${field}')">추가</button>
+    </div>
+  `;
+}
+
+function scrollToId(id){
+  requestAnimationFrame(()=>{
+    requestAnimationFrame(()=>{
+      const el = document.getElementById(id);
+      if(!el) return;
+      const sheetBody2 = document.getElementById('sheetBody2');
+      const sheetBody = document.getElementById('sheetBody');
+      const container = (sheetBody2 && sheetBody2.contains(el)) ? sheetBody2
+        : (sheetBody && sheetBody.contains(el)) ? sheetBody
+        : null;
+      if(container){
+        const cRect = container.getBoundingClientRect();
+        const eRect = el.getBoundingClientRect();
+        const delta = eRect.top - cRect.top - (cRect.height * 0.15);
+        container.scrollBy({ top: delta, behavior:'smooth' });
+        return;
+      }
+      const rect = el.getBoundingClientRect();
+      const targetY = window.innerHeight * 0.5;
+      const delta = rect.top - targetY;
+      window.scrollBy({ top: delta, behavior:'smooth' });
+    });
+  });
+}
+
+function syncDateDisplay(inputEl){
+  const disp = document.getElementById(inputEl.id + '_display');
+  if(!disp) return;
+  if(inputEl.value){
+    disp.textContent = fmtDateDot(inputEl.value);
+    disp.classList.add('has-value');
+  } else {
+    disp.textContent = disp.dataset.placeholder || '';
+    disp.classList.remove('has-value');
+  }
+}
+
+function toggleForm(id){
+  const el = document.getElementById(id);
+  const willOpen = !el.classList.contains('open');
+  el.classList.toggle('open');
+  if(willOpen) scrollToId(id);
+}
+function closeForm(id){
+  document.getElementById(id).classList.remove('open');
+}
+let openSheetCount = 0;
+function lockBodyScroll(){
+  openSheetCount++;
+  if(openSheetCount===1){
+    const scrollY = window.scrollY || window.pageYOffset || 0;
+    document.body.dataset.scrollY = scrollY;
+    document.documentElement.classList.add('scroll-locked');
+    document.body.classList.add('body-scroll-locked');
+    document.body.style.top = `-${scrollY}px`;
+  }
+}
+function unlockBodyScroll(){
+  openSheetCount = Math.max(0, openSheetCount-1);
+  if(openSheetCount===0){
+    const y = parseInt(document.body.dataset.scrollY || '0', 10);
+    document.documentElement.classList.remove('scroll-locked');
+    document.body.classList.remove('body-scroll-locked');
+    document.body.style.top = '';
+    window.scrollTo(0, y);
+  }
+}
+
+let sheetBackFn = null;
+function sheetBack(){
+  if(sheetBackFn) sheetBackFn();
+}
+function openSheet(title, bodyHtml, onTitleClick, backFn){
+  const sheetEl = document.getElementById('bottomSheet');
+  const wasOpen = sheetEl.classList.contains('open');
+  const titleEl = document.getElementById('sheetTitle');
+  titleEl.textContent = title;
+  titleEl.classList.toggle('cursor-pointer', !!onTitleClick);
+  titleEl.onclick = onTitleClick || null;
+  sheetBackFn = backFn || null;
+  document.getElementById('sheetBackBtn').classList.toggle('hidden', !backFn);
+  closeYieldTooltip();
+  const bodyEl = document.getElementById('sheetBody');
+  bodyEl.innerHTML = bodyHtml;
+  bodyEl.scrollTop = 0;
+  document.getElementById('sheetOverlay').classList.add('open');
+  sheetEl.classList.add('open');
+  if(!wasOpen) lockBodyScroll();
+}
+function closeSheet(){
+  const wasOpen = document.getElementById('bottomSheet').classList.contains('open');
+  sheetBackFn = null;
+  document.getElementById('sheetBackBtn').classList.add('hidden');
+  document.getElementById('sheetOverlay').classList.remove('open');
+  document.getElementById('bottomSheet').classList.remove('open');
+  if(openTargetSheetLayer.layer===1) openTargetSheetLayer = { key:null, layer:null };
+  if(wasOpen) unlockBodyScroll();
+  closeYieldTooltip();
+  closeSheet2();
+}
+function openSheet2(title, bodyHtml, onTitleClick){
+  const sheetEl = document.getElementById('bottomSheet2');
+  const wasOpen = sheetEl.classList.contains('open');
+  const titleEl = document.getElementById('sheetTitle2');
+  titleEl.textContent = title;
+  titleEl.classList.toggle('cursor-pointer', !!onTitleClick);
+  titleEl.onclick = onTitleClick || null;
+  document.getElementById('sheetBody2').innerHTML = bodyHtml;
+  document.getElementById('sheetOverlay2').classList.add('open');
+  sheetEl.classList.add('open');
+  if(!wasOpen) lockBodyScroll();
+}
+function closeSheet2(){
+  const wasOpen = document.getElementById('bottomSheet2').classList.contains('open');
+  document.getElementById('sheetOverlay2').classList.remove('open');
+  document.getElementById('bottomSheet2').classList.remove('open');
+  if(openTargetSheetLayer.layer===2) openTargetSheetLayer = { key:null, layer:null };
+  if(wasOpen) unlockBodyScroll();
+  closeYieldTooltip();
+}
+async function deleteStockDividend(stockId, month){
+  const stock = DATA.stocks.find(s=>s.id===stockId);
+  if(!stock) return;
+  removeAccountFromDividendRecord(stock.key, month, stock.accountId);
+  await saveData();
+  render();
+  if(document.getElementById('bottomSheet2').classList.contains('open')){
+    document.getElementById('sheetBody2').innerHTML = dividendListHtmlForStock(stock);
+  }
+  refreshStockDetailSheetIfOpen(stockId);
+  showToast('배당 기록을 삭제했어요');
+}
+
+function formatMoneyInput(el){
+  const raw = el.value.replace(/[^0-9]/g,'');
+  el.value = raw ? Number(raw).toLocaleString('ko-KR') : '';
+}
+
+function buildPensionCalcHtml(){
+  const owners = DATA.owners || [];
+  if(owners.length===0) return `<div class="empty-hint">등록된 계좌가 없어요</div>`;
+  const ownerSections = owners.map(owner=>{
+    const accounts = accountsForOwner(owner.id);
+    if(accounts.length===0) return '';
+    const accRows = accounts.map((acc, idx)=>{
+      const total = accountTotal(acc.id);
+      const yieldPct = accountYieldOnCurrentPrice(acc.id);
+      return `
+        <div class="${idx===0 ? 'mt-6' : 'mt-14'} pt-14">
+          <div class="fs-13 text-strong mb-4">${escapeHtml(acc.name)}</div>
+          <div class="form-row mb-0">
+            <div class="field">
+              <span class="field-label">평가금액</span>
+              <input type="text" inputmode="numeric" id="pension_total_${acc.id}" value="${Math.round(total).toLocaleString('ko-KR')}" oninput="formatMoneyInput(this);recalcPensionSheet()">
+            </div>
+            <div class="field">
+              <span class="field-label">배당률(%)</span>
+              <input type="number" inputmode="decimal" step="0.01" id="pension_yield_${acc.id}" value="${yieldPct.toFixed(2)}" oninput="recalcPensionSheet()">
+            </div>
+          </div>
+          <div class="entry-row no-border-bottom pb-0">
+            <span class="text-dim">월 예상 배당(세후)</span>
+            <span class="amt num" id="pension_result_${acc.id}">₩0</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    return `
+      <div class="panel-title sub-title mt-20 mb-4">${escapeHtml(owner.name)}</div>
+      ${accRows}
+      <div class="pension-sum pension-sum-owner mt-14">
+        <div class="entry-row no-border-bottom pb-0">
+          <span class="text-strong">${escapeHtml(owner.name)} 월 합계(세후)</span>
+          <span class="amt num fs-16" id="pensionOwnerTotal_${owner.id}">₩0</span>
+        </div>
+        <div class="fs-11-5 text-red mt-8 hidden" id="pensionOwnerOverLimit_${owner.id}">${escapeHtml(owner.name)}님의 연 배당 합계가 1,500만원을 초과해 16.5% 세율 적용</div>
+      </div>
+    `;
+  }).filter(Boolean).join('<div class="pension-owner-divider"></div>');
+
+  return `
+    <div class="pension-sum pension-sum-total mb-16">
+      <div class="entry-row no-border-bottom pb-0">
+        <span class="text-strong">전체 합계(세후)</span>
+        <span class="amt num fs-16" id="pensionTotalResult">₩0</span>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="field">
+        <span class="field-label">연금소득세율</span>
+        <select id="pensionTaxRate" onchange="recalcPensionSheet()">
+          <option value="3.3">3.3%</option>
+          <option value="4.4">4.4%</option>
+          <option value="5.5" selected>5.5%</option>
+        </select>
+      </div>
+    </div>
+    <div class="panel-caption mt-0">계좌별 평가금액·배당률은 현재 데이터 기준으로 자동 채워지며, 직접 수정할 수 있어요. 계좌 주인별로 연 배당 합계가 1,500만원을 넘으면 그 사람만 선택한 세율 대신 16.5%가 자동 적용돼요.</div>
+    ${ownerSections}
+  `;
+}
+
+function openPensionCalcSheet(){
+  openSheet('연금 배당 계산기', buildPensionCalcHtml());
+  recalcPensionSheet();
+}
+
+function recalcPensionSheet(){
+  const owners = DATA.owners || [];
+  const taxSelect = document.getElementById('pensionTaxRate');
+  if(!taxSelect) return;
+  const selectedRate = parseFloat(taxSelect.value) || 5.5;
+
+  let grandTotalMonthlyNet = 0;
+
+  owners.forEach(owner=>{
+    const accounts = accountsForOwner(owner.id);
+    let ownerAnnual = 0;
+    const perAccount = accounts.map(acc=>{
+      const totalInput = document.getElementById(`pension_total_${acc.id}`);
+      const yieldInput = document.getElementById(`pension_yield_${acc.id}`);
+      if(!totalInput || !yieldInput) return null;
+      const total = parseFloat(totalInput.value.replace(/,/g,'')) || 0;
+      const yieldPct = parseFloat(yieldInput.value) || 0;
+      const annual = total * (yieldPct/100);
+      ownerAnnual += annual;
+      return { id: acc.id, annual };
+    }).filter(Boolean);
+
+    const overLimit = ownerAnnual > 15000000;
+    const effectiveRate = overLimit ? 16.5 : selectedRate;
+
+    perAccount.forEach(a=>{
+      const monthlyNet = (a.annual * (1 - effectiveRate/100)) / 12;
+      const el = document.getElementById(`pension_result_${a.id}`);
+      if(el) el.innerHTML = fmtWon(Math.round(monthlyNet));
+    });
+
+    const ownerMonthlyNet = (ownerAnnual * (1 - effectiveRate/100)) / 12;
+    grandTotalMonthlyNet += ownerMonthlyNet;
+
+    const ownerTotalEl = document.getElementById(`pensionOwnerTotal_${owner.id}`);
+    if(ownerTotalEl) ownerTotalEl.innerHTML = fmtWon(Math.round(ownerMonthlyNet));
+
+    const noteEl = document.getElementById(`pensionOwnerOverLimit_${owner.id}`);
+    if(noteEl) noteEl.classList.toggle('hidden', !overLimit);
+  });
+
+  const totalEl = document.getElementById('pensionTotalResult');
+  if(totalEl) totalEl.innerHTML = fmtWon(Math.round(grandTotalMonthlyNet));
+}
+
+function openMonthDividendSheet(month){
+  const records = recordsForOwner(currentOwner).filter(r=>r.month===month);
+
+  const [y,m] = month.split('-');
+  const title = `${y}년 ${parseInt(m,10)}월 배당`;
+
+  if(records.length===0){
+    openSheet(title, `<div class="empty-hint">이 달엔 받은 배당이 없어요</div>`);
+    return;
+  }
+
+  const sorted = [...records].sort((a,b)=> b.total - a.total);
+  const total = sorted.reduce((s,r)=>s+r.total,0);
+
+  const groupsHtml = sorted.map((rec)=>{
+    const totalQty = rec.accounts.reduce((s,a)=>s+(a.quantity||0),0);
+    const keyEsc = rec.key.replace(/'/g,"\\'");
+    let dayLabel = '';
+    if(rec.date){
+      const parts = rec.date.split('-');
+      if(parts.length===3) dayLabel = `${parseInt(parts[1],10)}월 ${parseInt(parts[2],10)}일 · `;
+    }
+    return `
+      <div class="mb-12">
+        <div class="cursor-pointer" onclick="openDividendAccountDetail('${keyEsc}','${month}')">
+          <div class="entry-row text-strong no-border-bottom pb-0">
+            <span class="amt-lg">${escapeHtml(rec.name)}</span>
+            <span class="row-right">
+              <span class="amt num amt-md">${fmtWon(rec.total)}</span>
+              ${CHEVRON_SVG}
+            </span>
+          </div>
+          <div class="entry-row fs-11-5 text-dim pt-0 mt-2">
+            <span>${dayLabel}<span class="num">${totalQty.toLocaleString('ko-KR')}</span>주${rec.perShare ? ' · 주당 <span class="won-sign">₩</span><span class="num">'+rec.perShare.toLocaleString('ko-KR')+'</span>' : ''}</span>
+            <span></span>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  const bodyHtml = `
+    <div class="mb-16">
+      <div class="num fs-24 text-gold text-left fw-500">${fmtWon(total)}</div>
+    </div>
+    ${groupsHtml}
+  `;
+  openSheet(title, bodyHtml);
+}
+
+function openDividendAccountDetail(key, month){
+  const rec = findDividendRecord(key, month);
+  if(!rec){ return; }
+  const keyEsc = key.replace(/'/g,"\\'");
+  const accountRows = rec.accounts.map(a=>{
+    const acc = DATA.accounts.find(x=>x.id===a.accountId);
+    const owner = acc ? DATA.owners.find(o=>o.id===acc.ownerId) : null;
+    return `
+      <div class="entry-row">
+        <span>${acc ? escapeHtml(acc.name) : '(알 수 없는 계좌)'}${owner ? '('+escapeHtml(owner.name)+')' : ''} · ${(a.quantity||0).toLocaleString('ko-KR')}주</span>
+        <span class="amt num">${fmtWon(a.amount)}</span>
+      </div>
+    `;
+  }).join('');
+  const bodyHtml = `
+    ${accountRows}
+    <div class="button-row center mt-18">
+      <button class="text-link-btn danger" onclick="deleteMonthRecord('${keyEsc}','${month}');closeSheet2();">이 기록 삭제</button>
+    </div>
+  `;
+  openSheet2(`${rec.name} 상세내역`, bodyHtml);
+}
+
+async function deleteMonthRecord(key, month){
+  deleteDividendRecord(key, month);
+  await saveData();
+  render();
+  if(document.getElementById('bottomSheet').classList.contains('open')){
+    openMonthDividendSheet(month);
+  }
+  showToast('이 종목의 해당 월 배당 기록을 전체 삭제했어요');
+}
+
+function fmtDateDot(v){
+  return (v==null ? '' : String(v)).replace(/-/g,'.');
+}
+
+function escapeHtml(str){
+  const d = document.createElement('div');
+  d.textContent = str || '';
+  return d.innerHTML;
+}
+
+document.getElementById('addAccountBtn').onclick = ()=>{
+  toggleForm('accountForm');
+};
+
+async function submitAccount(){
+  const nameEl = document.getElementById('newAccountName');
+  const name = nameEl.value.trim();
+  if(!name){ showToast('계좌 이름을 입력해주세요'); return; }
+  const ownerId = currentOwner==='ALL' ? document.getElementById('newAccountOwner').value : currentOwner;
+  if(!ownerId){ showToast('계좌 주인을 선택해주세요'); return; }
+  DATA.accounts.push({ id: uid('acc'), ownerId, name });
+  nameEl.value = '';
+  closeForm('accountForm');
+  await saveData();
+  render();
+  showToast('계좌가 추가되었습니다');
+}
+
+async function submitTx(stockId, field){
+  const date = document.getElementById(`${field}_date_${stockId}`).value;
+  const qty = parseFloat(document.getElementById(`${field}_qty_${stockId}`).value) || 0;
+  const price = parseFloat(document.getElementById(`${field}_price_${stockId}`).value) || 0;
+  if(!date){ showToast('날짜를 입력해주세요'); return; }
+  if(!qty || !price){ showToast('수량과 단가를 입력해주세요'); return; }
+  const amt = qty * price;
+  const stock = DATA.stocks.find(s=>s.id===stockId);
+  if(!stock[field]) stock[field] = [];
+  stock[field].push({ id: uid('tx'), date, quantity: qty, price: price, amount: amt });
+  if(field==='buys'){
+    stock.quantity = (stock.quantity||0) + qty;
+  } else if(field==='sells'){
+    stock.quantity = Math.max(0, (stock.quantity||0) - qty);
+  }
+  recalcDividendQuantitiesForStock(stock);
+  await saveData();
+  render();
+  refreshStockDetailSheetIfOpen(stockId);
+  showToast(`${qty}주 × ₩${price.toLocaleString('ko-KR')} = ₩${amt.toLocaleString('ko-KR')} 반영했어요`);
+}
+
+async function deleteEntry(stockId, field, entryId){
+  const stock = DATA.stocks.find(s=>s.id===stockId);
+  const entry = (stock[field]||[]).find(e=>e.id===entryId);
+  stock[field] = (stock[field]||[]).filter(e=>e.id!==entryId);
+  if(entry && field==='buys'){
+    stock.quantity = Math.max(0, (stock.quantity||0) - entry.quantity);
+  } else if(entry && field==='sells'){
+    stock.quantity = (stock.quantity||0) + entry.quantity;
+  }
+  recalcDividendQuantitiesForStock(stock);
+  await saveData();
+  render();
+  refreshStockDetailSheetIfOpen(stockId);
+  showToast('삭제하고 보유수량도 되돌렸어요');
+}
+
+async function deleteStock(stockId){
+  const stock = DATA.stocks.find(s=>s.id===stockId);
+  const accIdOfStock = stock ? stock.accountId : null;
+  if(stock){
+    (DATA.dividends||[]).forEach(rec=>{
+      if(rec.key===stock.key){
+        rec.accounts = rec.accounts.filter(a=>a.accountId!==stock.accountId);
+      }
+    });
+    DATA.dividends = (DATA.dividends||[]).filter(rec=>rec.accounts.length>0);
+  }
+  DATA.stocks = DATA.stocks.filter(s=>s.id!==stockId);
+  openStocks.delete(stockId);
+  await saveData();
+  render();
+  // 계좌 시트 안에서 열었던 상세면 계좌 목록으로 돌아가고, 그 외(포트폴리오 모음 등)는 기존처럼 닫는다
+  if(accIdOfStock && !document.getElementById('bottomSheet2').classList.contains('open') && sheetBackFn){
+    openAccountSheet(accIdOfStock);
+  } else {
+    closeSheet();
+  }
+  showToast('종목이 삭제되었습니다');
+}
+
+document.getElementById('toggleJsonBtn').onclick = ()=>{
+  const panel = document.getElementById('jsonPanel');
+  panel.classList.toggle('open');
+  if(panel.classList.contains('open')) refreshJsonView();
+};
+
+document.getElementById('reloadJsonBtn').onclick = async ()=>{
+  setSaveStatus('stock.json 다시 불러오는 중...');
+  await loadData();
+  showToast('stock.json을 다시 불러왔어요');
+};
+
+let isLightTheme = false;
+function applyTheme(){
+  document.body.classList.toggle('light-theme', isLightTheme);
+  const btn = document.getElementById('themeToggleBtn');
+  if(btn) btn.textContent = isLightTheme ? '다크 모드' : '라이트 모드';
+}
+async function loadThemePref(){
+  if(hasWindowStorage){
+    try{
+      const res = await window.storage.get('theme-pref', false);
+      if(res && res.value === 'light') isLightTheme = true;
+    }catch(e){ /* 저장된 값 없음 */ }
+  }
+  applyTheme();
+}
+document.getElementById('themeToggleBtn').onclick = async ()=>{
+  isLightTheme = !isLightTheme;
+  applyTheme();
+  if(hasWindowStorage){
+    try{ await window.storage.set('theme-pref', isLightTheme ? 'light' : 'dark', false); }catch(e){}
+  }
+};
+loadThemePref();
+
+function loadGithubSettings(){
+  return {
+    repo: localStorage.getItem('gh_repo') || '',
+    path: localStorage.getItem('gh_path') || '',
+    token: localStorage.getItem('gh_token') || ''
+  };
+}
+
+function saveGithubSettings(){
+  const repo = document.getElementById('gh_repo').value.trim();
+  const path = document.getElementById('gh_path').value.trim();
+  const token = document.getElementById('gh_token').value.trim();
+  if(!repo || !path || !token){ showToast('모든 항목을 입력해주세요'); return; }
+  try{
+    localStorage.setItem('gh_repo', repo);
+    localStorage.setItem('gh_path', path);
+    localStorage.setItem('gh_token', token);
+  }catch(e){
+    showToast('이 브라우저에 설정을 저장할 수 없어요');
+    return;
+  }
+  closeForm('githubSettingsForm');
+  showToast('GitHub 저장 설정을 저장했어요');
+}
+
+function utf8ToBase64(str){
+  return btoa(unescape(encodeURIComponent(str)));
+}
+
+function showGithubSaveInfo(evt){
+  evt.stopPropagation();
+  toggleTooltip(evt.currentTarget, 'GitHub 저장', '현재 데이터를 GitHub 저장소의 stock.json에 바로 커밋해요. 최초 1회만 위의 "저장 설정"을 입력하면, 이후엔 이 브라우저에서 버튼 한 번으로 저장돼요.');
+}
+
+async function pushToGithub(){
+  const { repo, path, token } = loadGithubSettings();
+  const statusEl = document.getElementById('githubSaveStatus');
+  if(!repo || !path || !token){
+    showToast('먼저 "저장 설정"에서 저장소/경로/토큰을 입력해주세요');
+    document.getElementById('githubSettingsForm').classList.add('open');
+    return;
+  }
+  statusEl.textContent = 'GitHub에 저장하는 중...';
+  try{
+    const apiUrl = `https://api.github.com/repos/${repo}/contents/${path}`;
+    const getRes = await fetch(apiUrl, {
+      headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github+json' }
+    });
+    let sha;
+    if(getRes.ok){
+      const getData = await getRes.json();
+      sha = getData.sha;
+    } else if(getRes.status !== 404){
+      throw new Error(`파일 조회 실패 (${getRes.status})`);
+    }
+    const content = utf8ToBase64(JSON.stringify(DATA, null, 2));
+    const putRes = await fetch(apiUrl, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `token ${token}`,
+        'Accept': 'application/vnd.github+json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        message: 'chore: stock.json 업데이트 (앱에서 자동 저장)',
+        content,
+        sha
+      })
+    });
+    if(!putRes.ok){
+      const err = await putRes.json().catch(()=>({}));
+      throw new Error(err.message || `저장 실패 (${putRes.status})`);
+    }
+    statusEl.textContent = '저장 완료 · ' + new Date().toLocaleTimeString('ko-KR');
+    showToast('GitHub에 저장했어요');
+  }catch(e){
+    statusEl.textContent = '저장 실패: ' + e.message;
+    showToast('GitHub 저장에 실패했어요');
+  }
+}
+
+document.getElementById('githubSettingsToggle').onclick = ()=>{
+  const settings = loadGithubSettings();
+  document.getElementById('gh_repo').value = settings.repo;
+  document.getElementById('gh_path').value = settings.path;
+  document.getElementById('gh_token').value = settings.token;
+  toggleForm('githubSettingsForm');
+};
+
+function refreshJsonView(){
+  document.getElementById('jsonTextarea').value = JSON.stringify(DATA, null, 2);
+  document.getElementById('jsonError').classList.remove('show');
+}
+
+async function applyParsedData(parsed, successMsg){
+  if(!parsed || !parsed.owners || !parsed.accounts || !parsed.stocks){
+    document.getElementById('jsonError').textContent = 'owners, accounts, stocks 세 항목이 모두 있어야 합니다.';
+    document.getElementById('jsonError').classList.add('show');
+    return false;
+  }
+  document.getElementById('jsonError').classList.remove('show');
+  DATA = parsed;
+  if(!DATA.owners.find(o=>o.id===currentOwner) && currentOwner!=='ALL'){
+    currentOwner = DATA.owners.length ? DATA.owners[0].id : null;
+  }
+  await saveData();
+  render();
+  showToast(successMsg || '데이터를 적용했습니다');
+  return true;
+}
+
+async function applyJson(){
+  const raw = document.getElementById('jsonTextarea').value;
+  let parsed;
+  try{
+    parsed = JSON.parse(raw);
+  }catch(e){
+    document.getElementById('jsonError').classList.add('show');
+    return;
+  }
+  await applyParsedData(parsed, 'JSON 데이터가 적용되었습니다');
+}
+
+function copyJson(){
+  const text = document.getElementById('jsonTextarea').value || JSON.stringify(DATA, null, 2);
+  navigator.clipboard.writeText(text).then(()=>{
+    showToast('클립보드에 복사되었습니다');
+  }).catch(()=>{
+    showToast('복사에 실패했습니다. 직접 선택해 복사해주세요');
+  });
+}
+
+function exportJsonFile(){
+  const text = JSON.stringify(DATA, null, 2);
+  const blob = new Blob([text], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'stock.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('stock.json 파일을 내보냈어요');
+}
+
+function triggerImportFile(){
+  document.getElementById('importFileInput').click();
+}
+
+document.getElementById('importFileInput').addEventListener('change', function(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = async function(evt){
+    let parsed;
+    try{
+      parsed = JSON.parse(evt.target.result);
+    }catch(err){
+      showToast('올바른 JSON 파일이 아니에요');
+      e.target.value = '';
+      return;
+    }
+    const ok = await applyParsedData(parsed, 'stock.json을 불러왔어요');
+    if(ok) refreshJsonView();
+    e.target.value = '';
+  };
+  reader.readAsText(file);
+});
+
+loadData();
+</script>
+</body>
+</html>
