@@ -160,23 +160,6 @@
   .div-bar-col.current .div-bar{background:var(--mint);}
   .div-bar-col.current .div-bar-label{color:var(--text1);font-weight:600;}
   .div-bar-col.current .div-bar-amount{color:var(--text1);font-weight:600;}
-  .tax-check{margin-top:16px;padding-top:14px;border-top:1px dashed var(--border-strong);}
-  .tax-check-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
-  .tax-check-title{font-size:12.5px;color:var(--text2);}
-  .tax-owner-row{margin-bottom:8px;}
-  .tax-owner-row:last-child{margin-bottom:0;}
-  .tax-owner-line{display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;}
-  .tax-owner-line .name{color:var(--text2);}
-  .tax-bar-track{height:5px;background:var(--surface2);border-radius:3px;overflow:hidden;}
-  .tax-bar-fill{height:100%;border-radius:3px;background:var(--mint);}
-  .tax-bar-fill.warn{background:var(--gold);}
-  .tax-bar-fill.over{background:var(--red);}
-  .tax-account-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px dashed var(--border-strong);}
-  .tax-account-row:last-child{border-bottom:none;}
-  .tax-account-name{font-size:13.5px;color:var(--text1);}
-  .tax-account-owner{font-size:11px;color:var(--text3);margin-left:4px;}
-  .switch-row{display:flex;align-items:center;gap:6px;cursor:pointer;}
-  .switch-row input[type="checkbox"]{width:16px;height:16px;accent-color:var(--mint);cursor:pointer;}
 
   .trend-svg-wrap{
     position:relative;
@@ -1220,12 +1203,6 @@ function ensureDataShape(){
   if(!DATA.targets) DATA.targets = {};
   if(!Array.isArray(DATA.snapshots)) DATA.snapshots = [];
   if(!Array.isArray(DATA.dividends)) DATA.dividends = [];
-  if(!Array.isArray(DATA.pensionAccountIds)){
-    // 처음 도입 시, 이름에 '연금'이나 'IRP'가 들어간 계좌는 연금계좌로 추정해 기본 체크해둔다(사용자가 언제든 바꿀 수 있음)
-    DATA.pensionAccountIds = (DATA.accounts||[])
-      .filter(a=> /연금|irp/i.test(a.name||''))
-      .map(a=>a.id);
-  }
   migrateStockCatalog();
 }
 
@@ -1593,20 +1570,6 @@ function yearDividend(ownerId){
   return recordsForOwner(ownerId).filter(r=>(r.month||'').startsWith(year)).reduce((s,r)=>s+r.total,0);
 }
 
-const COMPREHENSIVE_TAX_THRESHOLD = 20000000; // 금융소득종합과세 기준(연 2천만원)
-function isPensionAccount(accountId){
-  return (DATA.pensionAccountIds||[]).includes(accountId);
-}
-// 연금계좌를 제외한 '일반 계좌'의 올해 누적 배당(세전) 합계 — 금융소득종합과세 판단용
-function yearDividendGeneral(ownerId){
-  const year = new Date().getFullYear().toString();
-  const accIds = accountsForOwner(ownerId).map(a=>a.id).filter(id=>!isPensionAccount(id));
-  if(!accIds.length) return 0;
-  return (DATA.dividends||[])
-    .filter(rec=>(rec.month||'').startsWith(year))
-    .reduce((sum,rec)=> sum + rec.accounts.filter(a=>accIds.includes(a.accountId)).reduce((s,a)=>s+a.amount,0), 0);
-}
-
 function renderSummary(){
   const el = document.getElementById('summary');
   const total = ownerTotal(currentOwner);
@@ -1717,7 +1680,6 @@ function renderDividendCalendar(){
       <div class="div-chart-scroll" id="divChartScroll">
         <div class="div-chart">${bars}</div>
       </div>
-      ${buildTaxCheckHtml()}
     </div>
   `;
   const scrollEl = document.getElementById('divChartScroll');
@@ -1729,67 +1691,6 @@ function renderDividendCalendar(){
     });
   }
 }
-
-// 일반 계좌(연금 제외) 올해 배당소득이 금융소득종합과세 기준(2천만원)에 얼마나 가까운지 보여준다
-function buildTaxCheckHtml(){
-  const owners = DATA.owners || [];
-  const rows = owners.map(owner=>{
-    const div = yearDividendGeneral(owner.id);
-    if(div <= 0) return '';
-    const pct = Math.min(999, (div / COMPREHENSIVE_TAX_THRESHOLD) * 100);
-    if(pct < 50) return ''; // 여유 있을 땐 조용히 – 가까워질 때만 보여준다
-    const barClass = pct >= 100 ? 'over' : (pct >= 80 ? 'warn' : '');
-    const statusText = pct >= 100 ? '2천만원을 넘었어요 · 종합과세 대상일 수 있어요' : `2천만원 중 ${pct.toFixed(1)}%`;
-    return `
-      <div class="tax-owner-row">
-        <div class="tax-owner-line"><span class="name">${escapeHtml(owner.name)}</span><span class="num ${pct>=100 ? 'text-red' : ''}">${fmtWon(div)}</span></div>
-        <div class="tax-bar-track"><div class="tax-bar-fill ${barClass}" style="width:${Math.min(100,pct)}%;"></div></div>
-        <div class="fs-11-5 text-dim mt-4">${statusText}</div>
-      </div>`;
-  }).join('');
-  return `
-    <div class="tax-check">
-      <div class="tax-check-head">
-        <span class="tax-check-title">일반 계좌 배당소득 (종합과세 확인)</span>
-        <button class="text-link-btn" onclick="openTaxAccountSheet()">계좌 분류</button>
-      </div>
-      ${rows || '<div class="fs-11-5 text-dim">연금계좌를 제외한 일반 계좌 배당이 쌓이면 2천만원 기준 대비 얼마나 가까운지 여기 보여줄게요.</div>'}
-    </div>
-  `;
-}
-
-function buildTaxAccountSheetHtml(){
-  const rows = (DATA.accounts||[]).map(acc=>{
-    const owner = (DATA.owners||[]).find(o=>o.id===acc.ownerId);
-    const checked = isPensionAccount(acc.id);
-    return `
-      <div class="tax-account-row">
-        <span class="tax-account-name">${escapeHtml(acc.name)}${owner ? '<span class="tax-account-owner">'+escapeHtml(owner.name)+'</span>' : ''}</span>
-        <label class="switch-row">
-          <input type="checkbox" ${checked ? 'checked' : ''} onchange="togglePensionAccount('${acc.id}', this.checked)">
-          <span class="fs-11-5 text-dim">연금계좌</span>
-        </label>
-      </div>`;
-  }).join('');
-  return `
-    <div class="panel-caption">연금계좌로 표시한 계좌는 종합과세 확인 대상에서 빠져요. 세율까지 정해진 연금계좌 배당은 위의 연금 배당 계산기에서 따로 확인하세요.</div>
-    ${rows || '<div class="empty-hint">등록된 계좌가 없어요</div>'}
-  `;
-}
-
-function openTaxAccountSheet(){
-  openSheet('계좌 분류', buildTaxAccountSheetHtml());
-}
-
-async function togglePensionAccount(accountId, isPension){
-  ensureDataShape();
-  const set = new Set(DATA.pensionAccountIds);
-  if(isPension) set.add(accountId); else set.delete(accountId);
-  DATA.pensionAccountIds = Array.from(set);
-  await saveData();
-  render();
-}
-
 
 function upsertSnapshot(){
   ensureDataShape();
@@ -2908,46 +2809,42 @@ function formatMoneyInput(el){
 function buildPensionCalcHtml(){
   const owners = DATA.owners || [];
   if(owners.length===0) return `<div class="empty-hint">등록된 계좌가 없어요</div>`;
-
-  const buildAccRow = (acc, marginClass)=>{
-    const total = accountTotal(acc.id);
-    const yieldPct = accountYieldOnCurrentPrice(acc.id);
-    return `
-      <div class="${marginClass} pt-14">
-        <div class="fs-13 text-strong mb-4">${escapeHtml(acc.name)}</div>
-        <div class="form-row mb-0">
-          <div class="field">
-            <span class="field-label">평가금액</span>
-            <input type="text" inputmode="numeric" id="pension_total_${acc.id}" value="${Math.round(total).toLocaleString('ko-KR')}" oninput="formatMoneyInput(this);recalcPensionSheet()">
-          </div>
-          <div class="field">
-            <span class="field-label">배당률(%)</span>
-            <input type="number" inputmode="decimal" step="0.01" id="pension_yield_${acc.id}" value="${yieldPct.toFixed(2)}" oninput="recalcPensionSheet()">
-          </div>
-        </div>
-        <div class="entry-row no-border-bottom pb-0">
-          <span class="text-dim">월 예상 배당(세후)</span>
-          <span class="amt num" id="pension_result_${acc.id}">₩0</span>
-        </div>
-      </div>
-    `;
-  };
-
   const ownerSections = owners.map(owner=>{
-    const pensionAccounts = accountsForOwner(owner.id).filter(a=>isPensionAccount(a.id));
-    if(pensionAccounts.length===0) return '';
-
-    const pensionRows = pensionAccounts.map((acc,idx)=> buildAccRow(acc, idx===0 ? 'mt-6' : 'mt-14')).join('');
+    const accounts = accountsForOwner(owner.id);
+    if(accounts.length===0) return '';
+    const accRows = accounts.map((acc, idx)=>{
+      const total = accountTotal(acc.id);
+      const yieldPct = accountYieldOnCurrentPrice(acc.id);
+      return `
+        <div class="${idx===0 ? 'mt-6' : 'mt-14'} pt-14">
+          <div class="fs-13 text-strong mb-4">${escapeHtml(acc.name)}</div>
+          <div class="form-row mb-0">
+            <div class="field">
+              <span class="field-label">평가금액</span>
+              <input type="text" inputmode="numeric" id="pension_total_${acc.id}" value="${Math.round(total).toLocaleString('ko-KR')}" oninput="formatMoneyInput(this);recalcPensionSheet()">
+            </div>
+            <div class="field">
+              <span class="field-label">배당률(%)</span>
+              <input type="number" inputmode="decimal" step="0.01" id="pension_yield_${acc.id}" value="${yieldPct.toFixed(2)}" oninput="recalcPensionSheet()">
+            </div>
+          </div>
+          <div class="entry-row no-border-bottom pb-0">
+            <span class="text-dim">월 예상 배당(세후)</span>
+            <span class="amt num" id="pension_result_${acc.id}">₩0</span>
+          </div>
+        </div>
+      `;
+    }).join('');
 
     return `
       <div class="panel-title sub-title mt-20 mb-4">${escapeHtml(owner.name)}</div>
-      ${pensionRows}
+      ${accRows}
       <div class="pension-sum pension-sum-owner mt-14">
         <div class="entry-row no-border-bottom pb-0">
           <span class="text-strong">${escapeHtml(owner.name)} 월 합계(세후)</span>
           <span class="amt num fs-16" id="pensionOwnerTotal_${owner.id}">₩0</span>
         </div>
-        <div class="fs-11-5 text-red mt-8 hidden" id="pensionOwnerOverLimit_${owner.id}">${escapeHtml(owner.name)}님의 연금계좌 배당 합계가 1,500만원을 초과해 16.5% 세율 적용</div>
+        <div class="fs-11-5 text-red mt-8 hidden" id="pensionOwnerOverLimit_${owner.id}">${escapeHtml(owner.name)}님의 연 배당 합계가 1,500만원을 초과해 16.5% 세율 적용</div>
       </div>
     `;
   }).filter(Boolean).join('<div class="pension-owner-divider"></div>');
@@ -2969,8 +2866,8 @@ function buildPensionCalcHtml(){
         </select>
       </div>
     </div>
-    <div class="panel-caption mt-0">연금계좌로 분류된 계좌만 대상이에요 · 평가금액·배당률은 현재 데이터 기준으로 자동 채워지며 직접 수정할 수 있어요. 계좌 주인별로 연 배당 합계가 1,500만원을 넘으면 그 사람만 선택한 세율 대신 16.5%가 자동 적용돼요. <span class="text-link-btn" onclick="openTaxAccountSheet()">계좌 분류 확인</span></div>
-    ${ownerSections || '<div class="empty-hint">연금계좌로 분류된 계좌가 없어요. 계좌 분류에서 지정해주세요.</div>'}
+    <div class="panel-caption mt-0">계좌별 평가금액·배당률은 현재 데이터 기준으로 자동 채워지며, 직접 수정할 수 있어요. 계좌 주인별로 연 배당 합계가 1,500만원을 넘으면 그 사람만 선택한 세율 대신 16.5%가 자동 적용돼요.</div>
+    ${ownerSections}
   `;
 }
 
@@ -2988,7 +2885,7 @@ function recalcPensionSheet(){
   let grandTotalMonthlyNet = 0;
 
   owners.forEach(owner=>{
-    const accounts = accountsForOwner(owner.id).filter(a=>isPensionAccount(a.id));
+    const accounts = accountsForOwner(owner.id);
     let ownerAnnual = 0;
     const perAccount = accounts.map(acc=>{
       const totalInput = document.getElementById(`pension_total_${acc.id}`);
