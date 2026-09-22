@@ -1921,13 +1921,17 @@ function buildSnapshotSheetHtml(){
   const snaps = (DATA.snapshots||[])
     .filter(s=> s.totals && typeof s.totals[currentOwner] === 'number')
     .sort((a,b)=>b.date.localeCompare(a.date));
-  const rows = snaps.map(sn=>{
-    const cost = (sn.costs && typeof sn.costs[currentOwner] === 'number') ? sn.costs[currentOwner] : null;
+  const rows = snaps.map((sn,i)=>{
+    const v = sn.totals[currentOwner];
+    const prev = snaps[i+1]; // 배열이 최신순이라 다음 항목이 직전(더 과거) 기록
+    const prevV = prev ? prev.totals[currentOwner] : null;
+    const pct = (prevV !== null && prevV !== 0) ? ((v - prevV) / prevV) * 100 : null;
+    const pctHtml = pct !== null ? ` <span class="num ${plClass(pct)}">(${fmtPercent(pct)})</span>` : '';
     return `
       <div class="entry-row snap-row" onclick="prefillSnapshotForm('${sn.date}')">
         <span>${fmtDateDot(sn.date)}</span>
         <span>
-          <span class="amt num">${fmtWon(sn.totals[currentOwner])}</span>${cost!==null ? `<span class="text-dim"> · 원금 ${fmtWon(cost)}</span>` : ''}
+          <span class="amt num">${fmtWon(v)}</span>${pctHtml}
           <span class="del-icon" onclick="event.stopPropagation();deleteSnapshot('${sn.date}')">🗑️</span>
         </span>
       </div>`;
