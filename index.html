@@ -290,10 +290,10 @@
   .breakdown-ratio{font-size:14px;font-weight:600;color:var(--text1);font-family:'Roboto',sans-serif;}
   .breakdown-pl{font-size:12px;line-height:1.3;font-family:'Roboto',sans-serif;}
   .breakdown-bar-track{
+    position:relative;
     height:6px;
     background:var(--surface2);
     border-radius:3px;
-    overflow:hidden;
   }
   .breakdown-bar-fill{
     height:100%;
@@ -301,6 +301,28 @@
     background:var(--mint);
     border-radius:3px;
   }
+  .breakdown-bar-target{
+    position:absolute;
+    left:var(--tw, 0%);
+    top:-3px;
+    bottom:-3px;
+    width:2px;
+    margin-left:-1px;
+    background:var(--text1);
+    opacity:0.85;
+    border-radius:1px;
+  }
+  .rebal-badge{
+    display:inline-block;
+    margin-top:8px;
+    font-size:11.5px;
+    padding:3px 8px;
+    border-radius:6px;
+    font-weight:500;
+  }
+  .rebal-buy{background:var(--blue-dim);color:var(--blue);}
+  .rebal-sell{background:var(--red-dim);color:var(--red);}
+  .rebal-ok{background:var(--mint-dim);color:var(--mint);}
 
   .section-title{
     font-size:22px;
@@ -2047,6 +2069,21 @@ function renderBreakdown(){
     const cat = catalogByKey(item.key);
     const currentPrice = cat ? (cat.currentPrice||0) : 0;
 
+    // 리밸런싱 제안: 지금 총 평가금액을 그대로 두고 목표비율에 맞추려면 얼마를 사고팔아야 하는지
+    let rebalHtml = '';
+    if(hasTarget && grandTotal){
+      const targetValue = grandTotal * (target/100);
+      const diff = targetValue - item.value;
+      const diffRatioPts = Math.abs(target - ratio);
+      if(diffRatioPts < 1){
+        rebalHtml = `<div class="rebal-badge rebal-ok">목표 비중에 근접해요</div>`;
+      } else if(diff > 0){
+        rebalHtml = `<div class="rebal-badge rebal-buy">매수 ${fmtWon(diff)} 검토</div>`;
+      } else {
+        rebalHtml = `<div class="rebal-badge rebal-sell">매도 ${fmtWon(-diff)} 검토</div>`;
+      }
+    }
+
     return `
       <div class="breakdown-row cursor-pointer" onclick="openTargetSheet('${keyEsc}','${sid}')">
         <div class="breakdown-top">
@@ -2062,13 +2099,16 @@ function renderBreakdown(){
         </div>
         <div class="breakdown-bar-track">
           <div class="breakdown-bar-fill" style="--w:${ratio}%;"></div>
+          ${hasTarget ? `<div class="breakdown-bar-target" style="--tw:${Math.min(100,Math.max(0,target))}%;"></div>` : ''}
         </div>
+        ${rebalHtml}
       </div>
     `;
   }).join('');
 
   const targetSumHint = targetSum > 0
-    ? `<div class="hint-text">입력된 목표비율 합계: ${targetSum.toFixed(2)}%${Math.abs(targetSum-100) > 0.01 ? ' (100%가 되도록 맞추면 더 정확해요)' : ' ✓'}</div>`
+    ? `<div class="hint-text">입력된 목표비율 합계: ${targetSum.toFixed(2)}%${Math.abs(targetSum-100) > 0.01 ? ' (100%가 되도록 맞추면 더 정확해요)' : ' ✓'}</div>
+       <div class="hint-text mt-4">매수·매도 금액은 지금 총 평가금액을 유지한 채 목표비율에 맞추는 기준으로 계산돼요. 목표비율 차이가 1%p 미만이면 근접한 것으로 봐요.</div>`
     : '';
 
   el.innerHTML = `
