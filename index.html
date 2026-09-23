@@ -1347,9 +1347,26 @@ function stockTotal(stock){
   return (stock.quantity || 0) * (catalogFor(stock).currentPrice || 0);
 }
 function stockCostBasis(stock){
-  const buyTotal = (stock.buys||[]).reduce((s,b)=>s+(b.amount||0),0);
-  const sellTotal = (stock.sells||[]).reduce((s,b)=>s+(b.amount||0),0);
-  return buyTotal - sellTotal;
+  // 평균법(이동평균원가): 매도 시에는 매도금액이 아니라, 매도 시점의 평균매입단가 × 매도수량만큼만
+  // 원금에서 차감한다. 매도금액 전체를 빼면 매도 손익이 원금에 섞여 남은 수량의 수익률이 왜곡된다.
+  const txns = [
+    ...(stock.buys||[]).map(b=>({ date:b.date||'', quantity:b.quantity||0, amount:b.amount||0, type:'buy' })),
+    ...(stock.sells||[]).map(s=>({ date:s.date||'', quantity:s.quantity||0, type:'sell' }))
+  ].sort((a,b)=> (a.date||'').localeCompare(b.date||''));
+
+  let qty = 0, cost = 0;
+  txns.forEach(t=>{
+    if(t.type==='buy'){
+      cost += t.amount;
+      qty += t.quantity;
+    } else {
+      const avgCost = qty>0 ? cost/qty : 0;
+      const sellQty = Math.min(t.quantity, qty);
+      cost -= avgCost * sellQty;
+      qty -= sellQty;
+    }
+  });
+  return Math.max(0, cost);
 }
 function stockPL(stock){
   return stockTotal(stock) - stockCostBasis(stock);
@@ -1362,6 +1379,86 @@ function stockPLPercent(stock){
 function stockKey(stock){
   return stock.key || makeKeyFrom(stock.ticker, stock.name);
 }
+
+// ===== XIRR(자금 유입출 반영 연환산 수익률) =====
+function todayStr(){
+  return new Date().toISOString().slice(0,10);
+}
+
+// cashflows: [{date:'YYYY-MM-DD', amount:number}], 매수(유출)는 음수, 매도·현재평가금액(유입)은 양수
+function xirr(cashflows){
+  const flows = (cashflows||[]).filter(cf=>cf.date && isFinite(cf.amount) && cf.amount!==0);
+  if(flows.length < 2) return null;
+  const sorted = [...flows].sort((a,b)=> a.date.localeCompare(b.date));
+  const t0 = new Date(sorted[0].date).getTime();
+  const days = sorted.map(cf => (new Date(cf.date).getTime() - t0) / 86400000);
+  const amounts = sorted.map(cf=>cf.amount);
+  if(days[days.length-1] <= 0) return null; // 모든 현금흐름이 같은 날이면 연환산 불가
+  // 부호가 섞여있지 않으면(전부 유입 또는 전부 유출) 해를 구할 수 없다
+  if(!amounts.some(a=>a>0) || !amounts.some(a=>a<0)) return null;
+
+  function npv(rate){
+    let sum = 0;
+    for(let i=0;i<amounts.length;i++){
+      sum += amounts[i] / Math.pow(1+rate, days[i]/365);
+    }
+    return sum;
+  }
+  function dnpv(rate){
+    let sum = 0;
+    for(let i=0;i<amounts.length;i++){
+      sum += -amounts[i] * (days[i]/365) / Math.pow(1+rate, days[i]/365 + 1);
+    }
+    return sum;
+  }
+
+  let rate = 0.1;
+  let converged = false;
+  for(let i=0;i<100;i++){
+    const f = npv(rate);
+    const df = dnpv(rate);
+    if(!isFinite(f) || !isFinite(df) || Math.abs(df) < 1e-10) break;
+    let next = rate - f/df;
+    if(next <= -0.999999) next = -0.999999;
+    if(!isFinite(next)) break;
+    if(Math.abs(next-rate) < 1e-7){ rate = next; converged = true; break; }
+    rate = next;
+  }
+
+  const totalAbs = amounts.reduce((s,a)=>s+Math.abs(a),0);
+  if(!converged || !isFinite(rate) || Math.abs(npv(rate)) > totalAbs*0.01){
+    // Newton법이 수렴하지 않으면 이분법으로 재시도
+    let lo=-0.99, hi=10, flo=npv(lo), fhi=npv(hi);
+    if(flo*fhi > 0) return null;
+    for(let i=0;i<200;i++){
+      const mid=(lo+hi)/2, fmid=npv(mid);
+      if(Math.abs(fmid) < totalAbs*1e-6){ rate=mid; break; }
+      if(flo*fmid<0){ hi=mid; fhi=fmid; } else { lo=mid; flo=fmid; }
+      rate=mid;
+    }
+  }
+  return isFinite(rate) ? rate*100 : null;
+}
+
+function cashflowsForStocks(stocks){
+  const flows = [];
+  (stocks||[]).forEach(s=>{
+    (s.buys||[]).forEach(b=>{ if(b.date) flows.push({ date:b.date, amount: -(b.amount||0) }); });
+    (s.sells||[]).forEach(se=>{ if(se.date) flows.push({ date:se.date, amount: (se.amount||0) }); });
+  });
+  return flows;
+}
+
+function xirrForStocks(stocks){
+  const list = stocks||[];
+  const flows = cashflowsForStocks(list);
+  const currentValue = list.reduce((s,st)=>s+stockTotal(st),0);
+  if(currentValue > 0){
+    flows.push({ date: todayStr(), amount: currentValue });
+  }
+  return xirr(flows);
+}
+
 // 특정 계좌(종목 1건)가 기준일(dateStr, YYYY-MM-DD) 시점에 실제로 보유했던 수량을
 // 매수/매도 내역의 날짜를 기준으로 다시 계산. 배당·매수·매도를 어떤 순서로 입력해도
 // 항상 그 날짜 기준의 정확한 보유수량이 나오도록 하기 위한 함수.
@@ -1630,6 +1727,7 @@ function renderSummary(){
   const cost = ownerCostBasis(currentOwner);
   const pl = total - cost;
   const plPct = cost ? (pl/cost)*100 : null;
+  const xirrPct = xirrForStocks(stocksForOwner(currentOwner));
   const monthDiv = currentMonthDividend(currentOwner);
   const yearDiv = yearDividend(currentOwner);
   const avgYield2 = ownerAvgYield(currentOwner, stockYieldOnAvgPrice);
@@ -1647,7 +1745,11 @@ function renderSummary(){
       <div class="label">총 투자원금</div>
       <div class="value num">${fmtWon(cost)}</div>
     </div>
-   <div class="metric none">
+    <div class="metric">
+      <div class="label">연환산 수익률</div>
+      <div class="value num ${xirrPct!==null ? plClass(xirrPct) : ''}">${xirrPct!==null ? fmtPercent(xirrPct) : '-'}</div>
+    </div>
+    <div class="metric none">
       <div class="label">보유 계좌 수</div>
       <div class="value num">${accountsForOwner(currentOwner).length}개</div>
     </div>
@@ -2347,6 +2449,7 @@ function buildTargetSheetContent(key, sid){
   const y3 = item.value ? (divTTM/item.value)*100 : null;
   const keyPL = item.value - item.cost;
   const keyPLPct = item.cost ? (keyPL/item.cost)*100 : null;
+  const keyXirr = xirrForStocks(stocksMatchingKey(key));
 
   const bodyHtml = `
     <div class="stat-rows mb-16">
@@ -2357,6 +2460,9 @@ function buildTargetSheetContent(key, sid){
       <div class="stat-row">
         <div class="stock-stat"><span class="stock-stat-label">투자원금</span><span class="stock-stat-value num">${fmtWon(item.cost)}</span></div>
         <div class="stock-stat"><span class="stock-stat-label">보유수량</span><span class="stock-stat-value num">${item.quantity.toLocaleString('ko-KR')}주</span></div>
+      </div>
+      <div class="stat-row">
+        <div class="stock-stat"><span class="stock-stat-label">연환산(XIRR)</span><span class="stock-stat-value num${keyXirr!==null ? ' '+plClass(keyXirr) : ''}">${keyXirr!==null ? fmtPercent(keyXirr) : '-'}</span></div>
       </div>
     </div>
     <div class="panel-title sub-title">보유현황</div>
@@ -2556,6 +2662,11 @@ function openAccountSheet(accId){
   const owner = (DATA.owners||[]).find(o=>o.id===acc.ownerId);
   const title = acc.name + (currentOwner==='ALL' && owner ? ` (${owner.name})` : '');
   const stocks = stocksForAccount(acc.id);
+  const accTotal = accountTotal(acc.id);
+  const accCost = accountCostBasis(acc.id);
+  const accPL = accTotal - accCost;
+  const accPLPct = accCost ? (accPL/accCost)*100 : null;
+  const accXirr = xirrForStocks(stocks);
   const rows = stocks.map(st=>{
     const cat = catalogFor(st);
     const pl = stockPL(st);
@@ -2572,6 +2683,14 @@ function openAccountSheet(accId){
     `;
   }).join('');
   openSheet(title, `
+    ${stocks.length ? `
+    <div class="stat-rows mb-16">
+      <div class="stat-row">
+        <div class="stock-stat"><span class="stock-stat-label">평가손익</span><span class="stock-stat-value num ${plClass(accPL)}">${fmtPL(accPL)}${accPLPct!==null ? ' ('+fmtPercent(accPLPct)+')' : ''}</span></div>
+        <div class="stock-stat"><span class="stock-stat-label">연환산(XIRR)</span><span class="stock-stat-value num${accXirr!==null ? ' '+plClass(accXirr) : ''}">${accXirr!==null ? fmtPercent(accXirr) : '-'}</span></div>
+      </div>
+    </div>
+    ` : ''}
     <div class="account-row-head">
       <span class="empty-hint p-0">종목 ${stocks.length}개</span>
       <button class="mini-add" onclick="openStockPickerSheet('${acc.id}')">+ 종목 추가</button>
@@ -2672,6 +2791,7 @@ function buildStockDetailHtml(stock){
   const divMonthsStr = divMonths.length ? divMonths.join(', ') : '-';
   const divYield = stockYieldOnAvgPrice(stock);
   const divTTM = stockDividendTTM(stock);
+  const stockXirr = xirrForStocks([stock]);
   return `
     <div class="stat-rows mb-16">
       <div class="stat-row">
@@ -2681,6 +2801,9 @@ function buildStockDetailHtml(stock){
       <div class="stat-row">
         <div class="stock-stat"><span class="stock-stat-label">투자원금</span><span class="stock-stat-value num">${fmtWon(cost)}</span></div>
         <div class="stock-stat"><span class="stock-stat-label">보유수량</span><span class="stock-stat-value num">${(stock.quantity||0).toLocaleString('ko-KR')}주</span></div>
+      </div>
+      <div class="stat-row">
+        <div class="stock-stat"><span class="stock-stat-label">연환산(XIRR)</span><span class="stock-stat-value num${stockXirr!==null ? ' '+plClass(stockXirr) : ''}">${stockXirr!==null ? fmtPercent(stockXirr) : '-'}</span></div>
       </div>
       <div class="stat-row">
         <div class="stock-stat"><span class="stock-stat-label">평균단가</span><span class="stock-stat-value num"><span class="won-sign">₩</span>${avgPrice.toLocaleString('ko-KR')}</span></div>
