@@ -638,6 +638,39 @@ background: var(--surface2);
   .form-row .field{overflow:hidden;}
   .form-row .field input, .form-row .field select{flex:none;height:42px;}
   .form-row input::placeholder{color:var(--text3);}
+  .search-sort-row{
+    display:flex;
+    gap:8px;
+    margin:10px 0 14px;
+  }
+  .search-sort-row.hidden{display:none;}
+  .search-sort-row input[type="text"]{
+    flex:1;
+    min-width:0;
+    background:var(--surface2);
+    border:1px solid var(--border-strong);
+    color:var(--text1);
+    border-radius:7px;
+    padding:0 12px;
+    height:40px;
+    box-sizing:border-box;
+    font-size:15px;
+  }
+  .search-sort-row input[type="text"]::placeholder{color:var(--text3);}
+  .search-sort-row select{
+    flex:none;
+    width:106px;
+    background:var(--surface2);
+    border:1px solid var(--border-strong);
+    color:var(--text1);
+    border-radius:7px;
+    padding:0 8px;
+    height:40px;
+    box-sizing:border-box;
+    font-size:13px;
+    -webkit-appearance:none;
+    appearance:none;
+  }
   .form-actions{display:flex;gap:8px;justify-content:flex-end;}
   .btn-primary{
     background:var(--mint-dim);
@@ -997,6 +1030,13 @@ background: var(--surface2);
     </div>
   </div>
 
+  <div class="search-sort-row hidden" id="accountSearchSortRow">
+    <input type="text" id="accountSearchInput" placeholder="계좌명 검색">
+    <select id="accountSortSelect">
+      <option value="value">평가금액순</option>
+      <option value="plpct">수익률순</option>
+    </select>
+  </div>
   <div id="accountList"></div>
 </main>
 
@@ -1089,6 +1129,10 @@ let currentOwner = null;
 let openStocks = new Set();
 let openTxSections = new Set();
 let breakdownOpen = true;
+let breakdownSearch = '';
+let breakdownSort = 'value'; // 'value' | 'plpct'
+let accountSearch = '';
+let accountSort = 'value'; // 'value' | 'plpct'
 
 const STORAGE_KEY = 'portfolio-data';
 const hasWindowStorage = (typeof window !== 'undefined') && window.storage && typeof window.storage.get === 'function';
@@ -2069,6 +2113,82 @@ function safeId(str){
   return str.replace(/[^a-zA-Z0-9_-]/g, '_');
 }
 
+function breakdownFilterSort(items){
+  const q = breakdownSearch.trim().toLowerCase();
+  let list = q
+    ? items.filter(item=> item.name.toLowerCase().includes(q) || (item.ticker && item.ticker.toLowerCase().includes(q)))
+    : items.slice();
+  if(breakdownSort === 'plpct'){
+    list.sort((a,b)=>{
+      const aPct = a.cost ? (a.value-a.cost)/a.cost : -Infinity;
+      const bPct = b.cost ? (b.value-b.cost)/b.cost : -Infinity;
+      return bPct - aPct;
+    });
+  } else {
+    list.sort((a,b)=> b.value - a.value);
+  }
+  return list;
+}
+
+function breakdownRowHtml(item, grandTotal){
+  const pl = item.value - item.cost;
+  const plPct = item.cost ? (pl/item.cost)*100 : null;
+  const ratio = grandTotal ? (item.value/grandTotal)*100 : 0;
+  const sid = safeId(item.key);
+  const keyEsc = item.key.replace(/'/g,"\\'");
+  const target = DATA.targets[item.key];
+  const hasTarget = typeof target === 'number' && !isNaN(target);
+
+  const cat = catalogByKey(item.key);
+  const currentPrice = cat ? (cat.currentPrice||0) : 0;
+
+  let rebalHtml = '';
+  if(hasTarget && grandTotal){
+    const targetValue = grandTotal * (target/100);
+    const diff = targetValue - item.value;
+    const diffRatioPts = Math.abs(target - ratio);
+    if(diffRatioPts < 1){
+      rebalHtml = `<div class="rebal-badge rebal-ok">목표 비중에 근접해요</div>`;
+    } else if(diff > 0){
+      rebalHtml = `<div class="rebal-badge rebal-buy">매수 ${fmtWon(diff)} 검토</div>`;
+    } else {
+      rebalHtml = `<div class="rebal-badge rebal-sell">매도 ${fmtWon(-diff)} 검토</div>`;
+    }
+  }
+
+  return `
+    <div class="breakdown-row cursor-pointer" onclick="openTargetSheet('${keyEsc}','${sid}')">
+      <div class="breakdown-top">
+        <div class="breakdown-name-block">
+          <div class="breakdown-name">${escapeHtml(item.name)}${item.ticker ? ' <span class="suffix-text text-dim">('+escapeHtml(item.ticker)+')</span>' : ''}${stalePriceBadgeHtml(cat)}</div>
+          <div class="breakdown-price-line">평가금액 ${fmtWon(item.value)} · 현재가 <span class="price-highlight"><span class="won-sign">₩</span>${currentPrice.toLocaleString('ko-KR')}</span></div>
+          <div class="breakdown-price-line">총 ${item.quantity.toLocaleString('ko-KR')}주${hasTarget ? ' · 목표 '+target+'%' : ''}</div>
+        </div>
+        <div class="breakdown-right">
+          <span class="breakdown-ratio num">${ratio.toFixed(2)}%</span>
+          <div class="breakdown-pl num ${plClass(pl)}">${fmtPL(pl)}${plPct!==null ? ' ('+fmtPercent(plPct)+')' : ''}</div>
+        </div>
+      </div>
+      <div class="breakdown-bar-track">
+        <div class="breakdown-bar-fill" style="--w:${ratio}%;"></div>
+        ${hasTarget ? `<div class="breakdown-bar-target" style="--tw:${Math.min(100,Math.max(0,target))}%;"></div>` : ''}
+      </div>
+      ${rebalHtml}
+    </div>
+  `;
+}
+
+function updateBreakdownRows(){
+  const rowsContainer = document.getElementById('breakdownRowsContainer');
+  if(!rowsContainer) return;
+  const items = allItemsBreakdown();
+  const grandTotal = items.reduce((s,i)=>s+i.value,0);
+  const list = breakdownFilterSort(items);
+  rowsContainer.innerHTML = list.length
+    ? list.map(item=>breakdownRowHtml(item, grandTotal)).join('')
+    : `<div class="empty-hint">검색 결과가 없어요</div>`;
+}
+
 function renderBreakdown(){
   const el = document.getElementById('breakdownSection');
   const items = allItemsBreakdown();
@@ -2079,61 +2199,25 @@ function renderBreakdown(){
     return;
   }
 
-  const sorted = [...items].sort((a,b)=> b.value - a.value);
-
-  const targetSum = sorted.reduce((s,item)=>{
+  const targetSum = items.reduce((s,item)=>{
     const t = DATA.targets[item.key];
     return s + (typeof t === 'number' ? t : 0);
   }, 0);
 
-  const rows = sorted.map(item=>{
-    const pl = item.value - item.cost;
-    const plPct = item.cost ? (pl/item.cost)*100 : null;
-    const ratio = grandTotal ? (item.value/grandTotal)*100 : 0;
-    const sid = safeId(item.key);
-    const keyEsc = item.key.replace(/'/g,"\\'");
-    const target = DATA.targets[item.key];
-    const hasTarget = typeof target === 'number' && !isNaN(target);
+  const list = breakdownFilterSort(items);
+  const rowsHtml = list.length
+    ? list.map(item=>breakdownRowHtml(item, grandTotal)).join('')
+    : `<div class="empty-hint">검색 결과가 없어요</div>`;
 
-    const cat = catalogByKey(item.key);
-    const currentPrice = cat ? (cat.currentPrice||0) : 0;
-
-    // 리밸런싱 제안: 지금 총 평가금액을 그대로 두고 목표비율에 맞추려면 얼마를 사고팔아야 하는지
-    let rebalHtml = '';
-    if(hasTarget && grandTotal){
-      const targetValue = grandTotal * (target/100);
-      const diff = targetValue - item.value;
-      const diffRatioPts = Math.abs(target - ratio);
-      if(diffRatioPts < 1){
-        rebalHtml = `<div class="rebal-badge rebal-ok">목표 비중에 근접해요</div>`;
-      } else if(diff > 0){
-        rebalHtml = `<div class="rebal-badge rebal-buy">매수 ${fmtWon(diff)} 검토</div>`;
-      } else {
-        rebalHtml = `<div class="rebal-badge rebal-sell">매도 ${fmtWon(-diff)} 검토</div>`;
-      }
-    }
-
-    return `
-      <div class="breakdown-row cursor-pointer" onclick="openTargetSheet('${keyEsc}','${sid}')">
-        <div class="breakdown-top">
-          <div class="breakdown-name-block">
-            <div class="breakdown-name">${escapeHtml(item.name)}${item.ticker ? ' <span class="suffix-text text-dim">('+escapeHtml(item.ticker)+')</span>' : ''}${stalePriceBadgeHtml(cat)}</div>
-            <div class="breakdown-price-line">평가금액 ${fmtWon(item.value)} · 현재가 <span class="price-highlight"><span class="won-sign">₩</span>${currentPrice.toLocaleString('ko-KR')}</span></div>
-            <div class="breakdown-price-line">총 ${item.quantity.toLocaleString('ko-KR')}주${hasTarget ? ' · 목표 '+target+'%' : ''}</div>
-          </div>
-          <div class="breakdown-right">
-            <span class="breakdown-ratio num">${ratio.toFixed(2)}%</span>
-            <div class="breakdown-pl num ${plClass(pl)}">${fmtPL(pl)}${plPct!==null ? ' ('+fmtPercent(plPct)+')' : ''}</div>
-          </div>
-        </div>
-        <div class="breakdown-bar-track">
-          <div class="breakdown-bar-fill" style="--w:${ratio}%;"></div>
-          ${hasTarget ? `<div class="breakdown-bar-target" style="--tw:${Math.min(100,Math.max(0,target))}%;"></div>` : ''}
-        </div>
-        ${rebalHtml}
-      </div>
-    `;
-  }).join('');
+  const toolbarHtml = `
+    <div class="search-sort-row">
+      <input type="text" id="breakdownSearchInput" placeholder="종목명 또는 티커 검색" value="${escapeHtml(breakdownSearch)}">
+      <select id="breakdownSortSelect">
+        <option value="value"${breakdownSort==='value' ? ' selected' : ''}>평가금액순</option>
+        <option value="plpct"${breakdownSort==='plpct' ? ' selected' : ''}>수익률순</option>
+      </select>
+    </div>
+  `;
 
   const targetSumHint = targetSum > 0
     ? `<div class="hint-text">입력된 목표비율 합계: ${targetSum.toFixed(2)}%${Math.abs(targetSum-100) > 0.01 ? ' (100%가 되도록 맞추면 더 정확해요)' : ' ✓'}</div>
@@ -2144,13 +2228,19 @@ function renderBreakdown(){
     <div class="section-divider-gray spaced-top"></div>
     <div class="breakdown-wrap">
       <div class="breakdown-title mt-40" id="breakdownToggle">전체 포트폴리오 비율</div>
-      ${breakdownOpen ? `<div class="breakdown-card">${rows}</div>${targetSumHint}` : ''}
+      ${breakdownOpen ? `${toolbarHtml}<div class="breakdown-card" id="breakdownRowsContainer">${rowsHtml}</div>${targetSumHint}` : ''}
     </div>
   `;
   document.getElementById('breakdownToggle').onclick = ()=>{
     breakdownOpen = !breakdownOpen;
     renderBreakdown();
   };
+  if(breakdownOpen){
+    const searchInput = document.getElementById('breakdownSearchInput');
+    const sortSelect = document.getElementById('breakdownSortSelect');
+    if(searchInput) searchInput.oninput = (e)=>{ breakdownSearch = e.target.value; updateBreakdownRows(); };
+    if(sortSelect) sortSelect.onchange = (e)=>{ breakdownSort = e.target.value; updateBreakdownRows(); };
+  }
 }
 
 function dividendTotalForKey(key){
@@ -2402,6 +2492,23 @@ async function applyGroupDividend(key, sid){
   showToast(`${rec.accounts.length}개 계좌에 총 ₩${total.toLocaleString('ko-KR')} 반영했어요`);
 }
 
+function accountFilterSort(accounts){
+  const q = accountSearch.trim().toLowerCase();
+  let list = q ? accounts.filter(acc=> acc.name.toLowerCase().includes(q)) : accounts.slice();
+  if(accountSort === 'plpct'){
+    list.sort((a,b)=>{
+      const aTotal = accountTotal(a.id), aCost = accountCostBasis(a.id);
+      const bTotal = accountTotal(b.id), bCost = accountCostBasis(b.id);
+      const aPct = aCost ? (aTotal-aCost)/aCost : -Infinity;
+      const bPct = bCost ? (bTotal-bCost)/bCost : -Infinity;
+      return bPct - aPct;
+    });
+  } else {
+    list.sort((a,b)=> accountTotal(b.id) - accountTotal(a.id));
+  }
+  return list;
+}
+
 function renderAccounts(){
   const list = document.getElementById('accountList');
   const isAll = currentOwner === 'ALL';
@@ -2415,9 +2522,16 @@ function renderAccounts(){
     ownerSel.innerHTML = ownerOptions;
     if(prev && (DATA.owners||[]).some(o=>o.id===prev)) ownerSel.value = prev;
   }
-  const accounts = accountsForOwner(currentOwner);
-  if(accounts.length===0){
+  const accountsAll = accountsForOwner(currentOwner);
+  const searchSortRow = document.getElementById('accountSearchSortRow');
+  if(searchSortRow) searchSortRow.classList.toggle('hidden', accountsAll.length===0);
+  if(accountsAll.length===0){
     list.innerHTML = `<div class="empty-state">아직 등록된 계좌가 없습니다.<br>위 '계좌 추가' 버튼으로 시작해보세요.</div>`;
+    return;
+  }
+  const accounts = accountFilterSort(accountsAll);
+  if(accounts.length===0){
+    list.innerHTML = `<div class="empty-hint">검색 결과가 없어요</div>`;
     return;
   }
   list.innerHTML = '';
@@ -3018,6 +3132,15 @@ function escapeHtml(str){
 
 document.getElementById('addAccountBtn').onclick = ()=>{
   toggleForm('accountForm');
+};
+
+document.getElementById('accountSearchInput').oninput = (e)=>{
+  accountSearch = e.target.value;
+  renderAccounts();
+};
+document.getElementById('accountSortSelect').onchange = (e)=>{
+  accountSort = e.target.value;
+  renderAccounts();
 };
 
 async function submitAccount(){
