@@ -1140,7 +1140,7 @@ let openStocks = new Set();
 let openTxSections = new Set();
 let breakdownOpen = true;
 let breakdownSearch = '';
-let breakdownSort = 'value'; // 'value' | 'plpct'
+let breakdownSort = 'plpct'; // 'value' | 'plpct'
 
 const STORAGE_KEY = 'portfolio-data';
 const hasWindowStorage = (typeof window !== 'undefined') && window.storage && typeof window.storage.get === 'function';
