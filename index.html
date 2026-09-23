@@ -1694,6 +1694,53 @@ function renderSummary(){
 }
 
 // ===== 월별 배당 캘린더 =====
+function shiftMonth(ym, delta){
+  const [y,m] = ym.split('-').map(Number);
+  const d = new Date(y, (m-1)+delta, 1);
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+}
+function monthEndStr(ym){
+  const [y,m] = ym.split('-').map(Number);
+  const d = new Date(y, m, 0); // 다음 달 0일 = 이번 달 마지막 날
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+// month(YYYY-MM)로 끝나는 직전 12개월(해당 월 포함) 배당 합계
+function ttmDividendAsOf(ownerId, month){
+  const from = shiftMonth(month, -11);
+  return recordsForOwner(ownerId)
+    .filter(r=> r.month >= from && r.month <= month)
+    .reduce((s,r)=>s+r.total,0);
+}
+// 월별로, 그 달 말일 기준 스냅샷 평가금액 대비 직전 12개월 배당 비율(시가배당률)을 계산
+function monthlyYieldSeries(ownerId, monthsBack){
+  const now = new Date();
+  const series = [];
+  for(let i=monthsBack-1;i>=0;i--){
+    const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
+    const ym = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+    series.push({ month: ym, label: (d.getMonth()+1)+'월', yieldPct: null, isCurrent: i===0 });
+  }
+  const snaps = (DATA.snapshots||[])
+    .filter(s=> s.totals && typeof s.totals[ownerId] === 'number')
+    .slice()
+    .sort((a,b)=>a.date.localeCompare(b.date));
+  if(!snaps.length) return series;
+
+  series.forEach(s=>{
+    const monthEnd = monthEndStr(s.month);
+    const candidates = snaps.filter(sn=> sn.date <= monthEnd);
+    if(!candidates.length) return;
+    const nearest = candidates[candidates.length-1];
+    const gapDays = Math.round((Date.parse(monthEnd) - Date.parse(nearest.date)) / 86400000);
+    if(gapDays > 45) return; // 그 달과 너무 동떨어진 스냅샷은 신뢰하지 않음
+    const value = nearest.totals[ownerId];
+    if(!value) return;
+    const ttmDiv = ttmDividendAsOf(ownerId, s.month);
+    s.yieldPct = (ttmDiv / value) * 100;
+  });
+  return series;
+}
+
 function monthlyDividendSeries(ownerId, monthsBack){
   const now = new Date();
   const series = [];
@@ -1742,16 +1789,48 @@ function renderDividendCalendar(){
     `;
   }).join('');
 
+  // 전년 대비 배당 성장률: 최근 12개월 합계 vs 그 이전 12개월 합계
+  const nowMonth = new Date().toISOString().slice(0,7);
+  const ttmPrev = ttmDividendAsOf(currentOwner, shiftMonth(nowMonth, -12));
+  const growthPct = ttmPrev ? ((total - ttmPrev) / ttmPrev) * 100 : null;
+  const growthHtml = growthPct!==null
+    ? ` <span class="num ${plClass(growthPct)}">(전년 대비 ${fmtPercent(growthPct)})</span>`
+    : '';
+
+  // 배당수익률(시가배당률) 추이: 월말 스냅샷 평가금액 대비 직전 12개월 배당 비율
+  const yieldSeries = monthlyYieldSeries(currentOwner, 12);
+  const hasYieldData = yieldSeries.some(m=>m.yieldPct!==null);
+  const maxYield = Math.max(...yieldSeries.map(m=>m.yieldPct||0), 0.1);
+  const yieldBars = yieldSeries.map(m=>{
+    const barPx = m.yieldPct!==null ? Math.max(4, Math.round((m.yieldPct/maxYield)*90)) : 2;
+    const label = m.yieldPct!==null ? m.yieldPct.toFixed(1)+'%' : '-';
+    return `
+      <div class="div-bar-col${m.isCurrent ? ' current' : ''}">
+        <div class="div-bar-amount num">${label}</div>
+        <div class="div-bar" style="--h:${barPx}px;"></div>
+        <div class="div-bar-label">${m.label}</div>
+      </div>
+    `;
+  }).join('');
+  const yieldTrendHtml = hasYieldData ? `
+    <div class="panel-title sub-title mt-20">배당수익률 추이</div>
+    <div class="panel-caption mt-0">그 달 말 스냅샷 평가금액 대비 직전 12개월 배당 비율이에요. 스냅샷이 없는 달은 '-'로 표시돼요.</div>
+    <div class="div-chart-scroll">
+      <div class="div-chart">${yieldBars}</div>
+    </div>
+  ` : '';
+
   el.innerHTML = `
     <div class="panel-wrap">
       <div class="panel-title title-row">
           <span>월별 배당</span>
           ${pensionCalcBtnHtml}
         </div>
-      <div class="fs-14 mb-8"><span class="text-dim">최근 12개월</span> <span class="text-mint">${fmtWon(total)}</span></div>
+      <div class="fs-14 mb-8"><span class="text-dim">최근 12개월</span> <span class="text-mint">${fmtWon(total)}</span>${growthHtml}</div>
       <div class="div-chart-scroll" id="divChartScroll">
         <div class="div-chart">${bars}</div>
       </div>
+      ${yieldTrendHtml}
     </div>
   `;
   const scrollEl = document.getElementById('divChartScroll');
