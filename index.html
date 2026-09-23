@@ -657,19 +657,36 @@ background: var(--surface2);
     font-size:15px;
   }
   .search-sort-row input[type="text"]::placeholder{color:var(--text3);}
-  .search-sort-row select{
+  .search-sort-row .select-wrap{
+    position:relative;
     flex:none;
-    width:106px;
+    width:112px;
+  }
+  .search-sort-row select{
+    width:100%;
     background:var(--surface2);
     border:1px solid var(--border-strong);
     color:var(--text1);
     border-radius:7px;
-    padding:0 8px;
+    padding:0 26px 0 10px;
     height:40px;
     box-sizing:border-box;
     font-size:13px;
     -webkit-appearance:none;
     appearance:none;
+  }
+  .search-sort-row .select-wrap::after{
+    content:'';
+    position:absolute;
+    right:9px;
+    top:50%;
+    transform:translateY(-50%);
+    width:13px;
+    height:13px;
+    background-color:var(--text2);
+    -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m21 16-4 4-4-4'/%3E%3Cpath d='M17 20V4'/%3E%3Cpath d='m3 8 4-4 4 4'/%3E%3Cpath d='M7 4v16'/%3E%3C/svg%3E") no-repeat center / contain;
+    mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m21 16-4 4-4-4'/%3E%3Cpath d='M17 20V4'/%3E%3Cpath d='m3 8 4-4 4 4'/%3E%3Cpath d='M7 4v16'/%3E%3C/svg%3E") no-repeat center / contain;
+    pointer-events:none;
   }
   .form-actions{display:flex;gap:8px;justify-content:flex-end;}
   .btn-primary{
@@ -1030,13 +1047,6 @@ background: var(--surface2);
     </div>
   </div>
 
-  <div class="search-sort-row hidden" id="accountSearchSortRow">
-    <input type="text" id="accountSearchInput" placeholder="계좌명 검색">
-    <select id="accountSortSelect">
-      <option value="value">평가금액순</option>
-      <option value="plpct">수익률순</option>
-    </select>
-  </div>
   <div id="accountList"></div>
 </main>
 
@@ -1131,8 +1141,6 @@ let openTxSections = new Set();
 let breakdownOpen = true;
 let breakdownSearch = '';
 let breakdownSort = 'value'; // 'value' | 'plpct'
-let accountSearch = '';
-let accountSort = 'value'; // 'value' | 'plpct'
 
 const STORAGE_KEY = 'portfolio-data';
 const hasWindowStorage = (typeof window !== 'undefined') && window.storage && typeof window.storage.get === 'function';
@@ -2212,10 +2220,12 @@ function renderBreakdown(){
   const toolbarHtml = `
     <div class="search-sort-row">
       <input type="text" id="breakdownSearchInput" placeholder="종목명 또는 티커 검색" value="${escapeHtml(breakdownSearch)}">
-      <select id="breakdownSortSelect">
-        <option value="value"${breakdownSort==='value' ? ' selected' : ''}>평가금액순</option>
-        <option value="plpct"${breakdownSort==='plpct' ? ' selected' : ''}>수익률순</option>
-      </select>
+      <div class="select-wrap">
+        <select id="breakdownSortSelect">
+          <option value="value"${breakdownSort==='value' ? ' selected' : ''}>평가금액순</option>
+          <option value="plpct"${breakdownSort==='plpct' ? ' selected' : ''}>수익률순</option>
+        </select>
+      </div>
     </div>
   `;
 
@@ -2492,23 +2502,6 @@ async function applyGroupDividend(key, sid){
   showToast(`${rec.accounts.length}개 계좌에 총 ₩${total.toLocaleString('ko-KR')} 반영했어요`);
 }
 
-function accountFilterSort(accounts){
-  const q = accountSearch.trim().toLowerCase();
-  let list = q ? accounts.filter(acc=> acc.name.toLowerCase().includes(q)) : accounts.slice();
-  if(accountSort === 'plpct'){
-    list.sort((a,b)=>{
-      const aTotal = accountTotal(a.id), aCost = accountCostBasis(a.id);
-      const bTotal = accountTotal(b.id), bCost = accountCostBasis(b.id);
-      const aPct = aCost ? (aTotal-aCost)/aCost : -Infinity;
-      const bPct = bCost ? (bTotal-bCost)/bCost : -Infinity;
-      return bPct - aPct;
-    });
-  } else {
-    list.sort((a,b)=> accountTotal(b.id) - accountTotal(a.id));
-  }
-  return list;
-}
-
 function renderAccounts(){
   const list = document.getElementById('accountList');
   const isAll = currentOwner === 'ALL';
@@ -2522,16 +2515,9 @@ function renderAccounts(){
     ownerSel.innerHTML = ownerOptions;
     if(prev && (DATA.owners||[]).some(o=>o.id===prev)) ownerSel.value = prev;
   }
-  const accountsAll = accountsForOwner(currentOwner);
-  const searchSortRow = document.getElementById('accountSearchSortRow');
-  if(searchSortRow) searchSortRow.classList.toggle('hidden', accountsAll.length===0);
-  if(accountsAll.length===0){
-    list.innerHTML = `<div class="empty-state">아직 등록된 계좌가 없습니다.<br>위 '계좌 추가' 버튼으로 시작해보세요.</div>`;
-    return;
-  }
-  const accounts = accountFilterSort(accountsAll);
+  const accounts = accountsForOwner(currentOwner);
   if(accounts.length===0){
-    list.innerHTML = `<div class="empty-hint">검색 결과가 없어요</div>`;
+    list.innerHTML = `<div class="empty-state">아직 등록된 계좌가 없습니다.<br>위 '계좌 추가' 버튼으로 시작해보세요.</div>`;
     return;
   }
   list.innerHTML = '';
@@ -3132,15 +3118,6 @@ function escapeHtml(str){
 
 document.getElementById('addAccountBtn').onclick = ()=>{
   toggleForm('accountForm');
-};
-
-document.getElementById('accountSearchInput').oninput = (e)=>{
-  accountSearch = e.target.value;
-  renderAccounts();
-};
-document.getElementById('accountSortSelect').onchange = (e)=>{
-  accountSort = e.target.value;
-  renderAccounts();
 };
 
 async function submitAccount(){
