@@ -1485,7 +1485,7 @@ function stockDividendTTM(stock){
 }
 // 기준2: 최근 12개월 배당 ÷ 총 투자원금 (=평균매입단가×수량) — 지금 페이스가 앞으로도 이어진다면의 수익률
 // 현재가를 마지막으로 언제 반영했는지 기준으로, 오래됐으면 살짝 알려준다
-const STALE_PRICE_DAYS = 14;
+const STALE_PRICE_DAYS = 1;
 function daysSincePriceUpdate(cat){
   if(!cat || !cat.priceUpdatedAt) return null;
   const days = Math.round((Date.now() - Date.parse(cat.priceUpdatedAt)) / 86400000);
