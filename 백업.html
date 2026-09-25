@@ -26,25 +26,27 @@
     --red:#e2635a;
     --red-dim:#3a1e1c;
     --lime:#a3e635;
+    --divider-gray:#3a4149;
   }
   body.light-theme{
-    --bg:#f6f5f2;
+    --bg:#ffffff;
     --surface1:#ffffff;
-    --surface2:#eef0f2;
-    --border:#e0e3e7;
-    --border-strong:#c8ccd2;
-    --text1:#1b1f24;
-    --text2:#5b6470;
-    --text3:#8b93a0;
+    --surface2:#f7f8fa;
+    --border:#f0f1f3;
+    --border-strong:#e5e7eb;
+    --text1:#191f28;
+    --text2:#4e5968;
+    --text3:#8b95a1;
     --mint:#178a5c;
-    --mint-dim:#dff3ea;
+    --mint-dim:#e6f7f0;
     --gold:#a8720f;
-    --gold-dim:#faf0da;
+    --gold-dim:#fbf3e2;
     --blue:#2f6fb0;
-    --blue-dim:#e5f0fa;
+    --blue-dim:#eaf3fb;
     --red:#c33a2f;
-    --red-dim:#fbe7e5;
+    --red-dim:#fcebe9;
     --lime:#65a30d;
+    --divider-gray:#f2f2f2;
   }
   html{
     -webkit-text-size-adjust:100%;
@@ -106,8 +108,8 @@
   main{padding:20px;}
 
   .section-divider-gray{
-    height:8px;
-    background:var(--border-strong);
+    height:12px;
+    background:var(--divider-gray);
   }
 
   .panel-wrap{padding:0 20px;}
@@ -386,15 +388,6 @@
   .stock-row+.stock-row {
     margin-top:32px;
   }
-  .stock-card-head{
-    display:flex;
-    align-items:center;
-    gap:10px;
-    margin-bottom:10px;
-  }
-  .stock-card-title{flex:1;min-width:0;}
-  .stock-card-name{font-size:16px;font-weight:400;color:var(--text1);}
-  .stock-card-ticker{font-size:11px;color:var(--text3);font-weight:400;margin-left:4px;}
   .stock-stat-grid{
     display:flex;
     flex-wrap:wrap;
@@ -636,6 +629,56 @@ background: var(--surface2);
   .form-row .field{overflow:hidden;}
   .form-row .field input, .form-row .field select{flex:none;height:42px;}
   .form-row input::placeholder{color:var(--text3);}
+  .search-sort-row{
+    display:flex;
+    gap:8px;
+    margin:10px 0 14px;
+  }
+  .search-sort-row.hidden{display:none;}
+  .search-sort-row input[type="text"]{
+    flex:1;
+    min-width:0;
+    background:var(--surface2);
+    border:1px solid var(--border-strong);
+    color:var(--text1);
+    border-radius:7px;
+    padding:0 12px;
+    height:40px;
+    box-sizing:border-box;
+    font-size:15px;
+  }
+  .search-sort-row input[type="text"]::placeholder{color:var(--text3);}
+  .search-sort-row .select-wrap{
+    position:relative;
+    flex:none;
+    width:112px;
+  }
+  .search-sort-row select{
+    width:100%;
+    background:var(--surface2);
+    border:1px solid var(--border-strong);
+    color:var(--text1);
+    border-radius:7px;
+    padding:0 26px 0 10px;
+    height:40px;
+    box-sizing:border-box;
+    font-size:13px;
+    -webkit-appearance:none;
+    appearance:none;
+  }
+  .search-sort-row .select-wrap::after{
+    content:'';
+    position:absolute;
+    right:9px;
+    top:50%;
+    transform:translateY(-50%);
+    width:13px;
+    height:13px;
+    background-color:var(--text2);
+    -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m21 16-4 4-4-4'/%3E%3Cpath d='M17 20V4'/%3E%3Cpath d='m3 8 4-4 4 4'/%3E%3Cpath d='M7 4v16'/%3E%3C/svg%3E") no-repeat center / contain;
+    mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m21 16-4 4-4-4'/%3E%3Cpath d='M17 20V4'/%3E%3Cpath d='m3 8 4-4 4 4'/%3E%3Cpath d='M7 4v16'/%3E%3C/svg%3E") no-repeat center / contain;
+    pointer-events:none;
+  }
   .form-actions{display:flex;gap:8px;justify-content:flex-end;}
   .btn-primary{
     background:var(--mint-dim);
@@ -1087,6 +1130,8 @@ let currentOwner = null;
 let openStocks = new Set();
 let openTxSections = new Set();
 let breakdownOpen = true;
+let breakdownSearch = '';
+let breakdownSort = 'plpct'; // 'value' | 'plpct'
 
 const STORAGE_KEY = 'portfolio-data';
 const hasWindowStorage = (typeof window !== 'undefined') && window.storage && typeof window.storage.get === 'function';
@@ -1293,9 +1338,26 @@ function stockTotal(stock){
   return (stock.quantity || 0) * (catalogFor(stock).currentPrice || 0);
 }
 function stockCostBasis(stock){
-  const buyTotal = (stock.buys||[]).reduce((s,b)=>s+(b.amount||0),0);
-  const sellTotal = (stock.sells||[]).reduce((s,b)=>s+(b.amount||0),0);
-  return buyTotal - sellTotal;
+  // 평균법(이동평균원가): 매도 시에는 매도금액이 아니라, 매도 시점의 평균매입단가 × 매도수량만큼만
+  // 원금에서 차감한다. 매도금액 전체를 빼면 매도 손익이 원금에 섞여 남은 수량의 수익률이 왜곡된다.
+  const txns = [
+    ...(stock.buys||[]).map(b=>({ date:b.date||'', quantity:b.quantity||0, amount:b.amount||0, type:'buy' })),
+    ...(stock.sells||[]).map(s=>({ date:s.date||'', quantity:s.quantity||0, type:'sell' }))
+  ].sort((a,b)=> (a.date||'').localeCompare(b.date||''));
+
+  let qty = 0, cost = 0;
+  txns.forEach(t=>{
+    if(t.type==='buy'){
+      cost += t.amount;
+      qty += t.quantity;
+    } else {
+      const avgCost = qty>0 ? cost/qty : 0;
+      const sellQty = Math.min(t.quantity, qty);
+      cost -= avgCost * sellQty;
+      qty -= sellQty;
+    }
+  });
+  return Math.max(0, cost);
 }
 function stockPL(stock){
   return stockTotal(stock) - stockCostBasis(stock);
@@ -1308,6 +1370,7 @@ function stockPLPercent(stock){
 function stockKey(stock){
   return stock.key || makeKeyFrom(stock.ticker, stock.name);
 }
+
 // 특정 계좌(종목 1건)가 기준일(dateStr, YYYY-MM-DD) 시점에 실제로 보유했던 수량을
 // 매수/매도 내역의 날짜를 기준으로 다시 계산. 배당·매수·매도를 어떤 순서로 입력해도
 // 항상 그 날짜 기준의 정확한 보유수량이 나오도록 하기 위한 함수.
@@ -1593,7 +1656,7 @@ function renderSummary(){
       <div class="label">총 투자원금</div>
       <div class="value num">${fmtWon(cost)}</div>
     </div>
-   <div class="metric none">
+    <div class="metric none">
       <div class="label">보유 계좌 수</div>
       <div class="value num">${accountsForOwner(currentOwner).length}개</div>
     </div>
@@ -1622,6 +1685,53 @@ function renderSummary(){
 }
 
 // ===== 월별 배당 캘린더 =====
+function shiftMonth(ym, delta){
+  const [y,m] = ym.split('-').map(Number);
+  const d = new Date(y, (m-1)+delta, 1);
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+}
+function monthEndStr(ym){
+  const [y,m] = ym.split('-').map(Number);
+  const d = new Date(y, m, 0); // 다음 달 0일 = 이번 달 마지막 날
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+// month(YYYY-MM)로 끝나는 직전 12개월(해당 월 포함) 배당 합계
+function ttmDividendAsOf(ownerId, month){
+  const from = shiftMonth(month, -11);
+  return recordsForOwner(ownerId)
+    .filter(r=> r.month >= from && r.month <= month)
+    .reduce((s,r)=>s+r.total,0);
+}
+// 월별로, 그 달 말일 기준 스냅샷 평가금액 대비 직전 12개월 배당 비율(시가배당률)을 계산
+function monthlyYieldSeries(ownerId, monthsBack){
+  const now = new Date();
+  const series = [];
+  for(let i=monthsBack-1;i>=0;i--){
+    const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
+    const ym = d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+    series.push({ month: ym, label: (d.getMonth()+1)+'월', yieldPct: null, isCurrent: i===0 });
+  }
+  const snaps = (DATA.snapshots||[])
+    .filter(s=> s.totals && typeof s.totals[ownerId] === 'number')
+    .slice()
+    .sort((a,b)=>a.date.localeCompare(b.date));
+  if(!snaps.length) return series;
+
+  series.forEach(s=>{
+    const monthEnd = monthEndStr(s.month);
+    const candidates = snaps.filter(sn=> sn.date <= monthEnd);
+    if(!candidates.length) return;
+    const nearest = candidates[candidates.length-1];
+    const gapDays = Math.round((Date.parse(monthEnd) - Date.parse(nearest.date)) / 86400000);
+    if(gapDays > 45) return; // 그 달과 너무 동떨어진 스냅샷은 신뢰하지 않음
+    const value = nearest.totals[ownerId];
+    if(!value) return;
+    const ttmDiv = ttmDividendAsOf(ownerId, s.month);
+    s.yieldPct = (ttmDiv / value) * 100;
+  });
+  return series;
+}
+
 function monthlyDividendSeries(ownerId, monthsBack){
   const now = new Date();
   const series = [];
@@ -1670,16 +1780,48 @@ function renderDividendCalendar(){
     `;
   }).join('');
 
+  // 전년 대비 배당 성장률: 최근 12개월 합계 vs 그 이전 12개월 합계
+  const nowMonth = new Date().toISOString().slice(0,7);
+  const ttmPrev = ttmDividendAsOf(currentOwner, shiftMonth(nowMonth, -12));
+  const growthPct = ttmPrev ? ((total - ttmPrev) / ttmPrev) * 100 : null;
+  const growthHtml = growthPct!==null
+    ? ` <span class="num ${plClass(growthPct)}">(전년 대비 ${fmtPercent(growthPct)})</span>`
+    : '';
+
+  // 배당수익률(시가배당률) 추이: 월말 스냅샷 평가금액 대비 직전 12개월 배당 비율
+  const yieldSeries = monthlyYieldSeries(currentOwner, 12);
+  const hasYieldData = yieldSeries.some(m=>m.yieldPct!==null);
+  const maxYield = Math.max(...yieldSeries.map(m=>m.yieldPct||0), 0.1);
+  const yieldBars = yieldSeries.map(m=>{
+    const barPx = m.yieldPct!==null ? Math.max(4, Math.round((m.yieldPct/maxYield)*90)) : 2;
+    const label = m.yieldPct!==null ? m.yieldPct.toFixed(1)+'%' : '-';
+    return `
+      <div class="div-bar-col${m.isCurrent ? ' current' : ''}">
+        <div class="div-bar-amount num">${label}</div>
+        <div class="div-bar" style="--h:${barPx}px;"></div>
+        <div class="div-bar-label">${m.label}</div>
+      </div>
+    `;
+  }).join('');
+  const yieldTrendHtml = hasYieldData ? `
+    <div class="panel-title sub-title mt-20">배당수익률 추이</div>
+    <div class="panel-caption mt-0">그 달 말 스냅샷 평가금액 대비 직전 12개월 배당 비율이에요. 스냅샷이 없는 달은 '-'로 표시돼요.</div>
+    <div class="div-chart-scroll">
+      <div class="div-chart">${yieldBars}</div>
+    </div>
+  ` : '';
+
   el.innerHTML = `
     <div class="panel-wrap">
       <div class="panel-title title-row">
           <span>월별 배당</span>
           ${pensionCalcBtnHtml}
         </div>
-      <div class="fs-14 mb-8"><span class="text-dim">최근 12개월</span> <span class="text-mint">${fmtWon(total)}</span></div>
+      <div class="fs-14 mb-8"><span class="text-dim">최근 12개월</span> <span class="text-mint">${fmtWon(total)}</span>${growthHtml}</div>
       <div class="div-chart-scroll" id="divChartScroll">
         <div class="div-chart">${bars}</div>
       </div>
+      ${yieldTrendHtml}
     </div>
   `;
   const scrollEl = document.getElementById('divChartScroll');
@@ -2067,6 +2209,82 @@ function safeId(str){
   return str.replace(/[^a-zA-Z0-9_-]/g, '_');
 }
 
+function breakdownFilterSort(items){
+  const q = breakdownSearch.trim().toLowerCase();
+  let list = q
+    ? items.filter(item=> item.name.toLowerCase().includes(q) || (item.ticker && item.ticker.toLowerCase().includes(q)))
+    : items.slice();
+  if(breakdownSort === 'plpct'){
+    list.sort((a,b)=>{
+      const aPct = a.cost ? (a.value-a.cost)/a.cost : -Infinity;
+      const bPct = b.cost ? (b.value-b.cost)/b.cost : -Infinity;
+      return bPct - aPct;
+    });
+  } else {
+    list.sort((a,b)=> b.value - a.value);
+  }
+  return list;
+}
+
+function breakdownRowHtml(item, grandTotal){
+  const pl = item.value - item.cost;
+  const plPct = item.cost ? (pl/item.cost)*100 : null;
+  const ratio = grandTotal ? (item.value/grandTotal)*100 : 0;
+  const sid = safeId(item.key);
+  const keyEsc = item.key.replace(/'/g,"\\'");
+  const target = DATA.targets[item.key];
+  const hasTarget = typeof target === 'number' && !isNaN(target);
+
+  const cat = catalogByKey(item.key);
+  const currentPrice = cat ? (cat.currentPrice||0) : 0;
+
+  let rebalHtml = '';
+  if(hasTarget && grandTotal){
+    const targetValue = grandTotal * (target/100);
+    const diff = targetValue - item.value;
+    const diffRatioPts = Math.abs(target - ratio);
+    if(diffRatioPts < 1){
+      rebalHtml = `<div class="rebal-badge rebal-ok">목표 비중에 근접해요</div>`;
+    } else if(diff > 0){
+      rebalHtml = `<div class="rebal-badge rebal-buy">매수 ${fmtWon(diff)} 검토</div>`;
+    } else {
+      rebalHtml = `<div class="rebal-badge rebal-sell">매도 ${fmtWon(-diff)} 검토</div>`;
+    }
+  }
+
+  return `
+    <div class="breakdown-row cursor-pointer" onclick="openTargetSheet('${keyEsc}','${sid}')">
+      <div class="breakdown-top">
+        <div class="breakdown-name-block">
+          <div class="breakdown-name">${escapeHtml(item.name)}${item.ticker ? ' <span class="suffix-text text-dim">('+escapeHtml(item.ticker)+')</span>' : ''}${stalePriceBadgeHtml(cat)}</div>
+          <div class="breakdown-price-line">평가금액 ${fmtWon(item.value)} · 현재가 <span class="price-highlight"><span class="won-sign">₩</span>${currentPrice.toLocaleString('ko-KR')}</span></div>
+          <div class="breakdown-price-line">총 ${item.quantity.toLocaleString('ko-KR')}주${hasTarget ? ' · 목표 '+target+'%' : ''}</div>
+        </div>
+        <div class="breakdown-right">
+          <span class="breakdown-ratio num">${ratio.toFixed(2)}%</span>
+          <div class="breakdown-pl num ${plClass(pl)}">${fmtPL(pl)}${plPct!==null ? ' ('+fmtPercent(plPct)+')' : ''}</div>
+        </div>
+      </div>
+      <div class="breakdown-bar-track">
+        <div class="breakdown-bar-fill" style="--w:${ratio}%;"></div>
+        ${hasTarget ? `<div class="breakdown-bar-target" style="--tw:${Math.min(100,Math.max(0,target))}%;"></div>` : ''}
+      </div>
+      ${rebalHtml}
+    </div>
+  `;
+}
+
+function updateBreakdownRows(){
+  const rowsContainer = document.getElementById('breakdownRowsContainer');
+  if(!rowsContainer) return;
+  const items = allItemsBreakdown();
+  const grandTotal = items.reduce((s,i)=>s+i.value,0);
+  const list = breakdownFilterSort(items);
+  rowsContainer.innerHTML = list.length
+    ? list.map(item=>breakdownRowHtml(item, grandTotal)).join('')
+    : `<div class="empty-hint">검색 결과가 없어요</div>`;
+}
+
 function renderBreakdown(){
   const el = document.getElementById('breakdownSection');
   const items = allItemsBreakdown();
@@ -2077,61 +2295,27 @@ function renderBreakdown(){
     return;
   }
 
-  const sorted = [...items].sort((a,b)=> b.value - a.value);
-
-  const targetSum = sorted.reduce((s,item)=>{
+  const targetSum = items.reduce((s,item)=>{
     const t = DATA.targets[item.key];
     return s + (typeof t === 'number' ? t : 0);
   }, 0);
 
-  const rows = sorted.map(item=>{
-    const pl = item.value - item.cost;
-    const plPct = item.cost ? (pl/item.cost)*100 : null;
-    const ratio = grandTotal ? (item.value/grandTotal)*100 : 0;
-    const sid = safeId(item.key);
-    const keyEsc = item.key.replace(/'/g,"\\'");
-    const target = DATA.targets[item.key];
-    const hasTarget = typeof target === 'number' && !isNaN(target);
+  const list = breakdownFilterSort(items);
+  const rowsHtml = list.length
+    ? list.map(item=>breakdownRowHtml(item, grandTotal)).join('')
+    : `<div class="empty-hint">검색 결과가 없어요</div>`;
 
-    const cat = catalogByKey(item.key);
-    const currentPrice = cat ? (cat.currentPrice||0) : 0;
-
-    // 리밸런싱 제안: 지금 총 평가금액을 그대로 두고 목표비율에 맞추려면 얼마를 사고팔아야 하는지
-    let rebalHtml = '';
-    if(hasTarget && grandTotal){
-      const targetValue = grandTotal * (target/100);
-      const diff = targetValue - item.value;
-      const diffRatioPts = Math.abs(target - ratio);
-      if(diffRatioPts < 1){
-        rebalHtml = `<div class="rebal-badge rebal-ok">목표 비중에 근접해요</div>`;
-      } else if(diff > 0){
-        rebalHtml = `<div class="rebal-badge rebal-buy">매수 ${fmtWon(diff)} 검토</div>`;
-      } else {
-        rebalHtml = `<div class="rebal-badge rebal-sell">매도 ${fmtWon(-diff)} 검토</div>`;
-      }
-    }
-
-    return `
-      <div class="breakdown-row cursor-pointer" onclick="openTargetSheet('${keyEsc}','${sid}')">
-        <div class="breakdown-top">
-          <div class="breakdown-name-block">
-            <div class="breakdown-name">${escapeHtml(item.name)}${item.ticker ? ' <span class="suffix-text text-dim">('+escapeHtml(item.ticker)+')</span>' : ''}${stalePriceBadgeHtml(cat)}</div>
-            <div class="breakdown-price-line">평가금액 ${fmtWon(item.value)} · 현재가 <span class="price-highlight"><span class="won-sign">₩</span>${currentPrice.toLocaleString('ko-KR')}</span></div>
-            <div class="breakdown-price-line">총 ${item.quantity.toLocaleString('ko-KR')}주${hasTarget ? ' · 목표 '+target+'%' : ''}</div>
-          </div>
-          <div class="breakdown-right">
-            <span class="breakdown-ratio num">${ratio.toFixed(2)}%</span>
-            <div class="breakdown-pl num ${plClass(pl)}">${fmtPL(pl)}${plPct!==null ? ' ('+fmtPercent(plPct)+')' : ''}</div>
-          </div>
-        </div>
-        <div class="breakdown-bar-track">
-          <div class="breakdown-bar-fill" style="--w:${ratio}%;"></div>
-          ${hasTarget ? `<div class="breakdown-bar-target" style="--tw:${Math.min(100,Math.max(0,target))}%;"></div>` : ''}
-        </div>
-        ${rebalHtml}
+  const toolbarHtml = `
+    <div class="search-sort-row">
+      <input type="text" id="breakdownSearchInput" placeholder="종목명 또는 티커 검색" value="${escapeHtml(breakdownSearch)}">
+      <div class="select-wrap">
+        <select id="breakdownSortSelect">
+          <option value="value"${breakdownSort==='value' ? ' selected' : ''}>평가금액순</option>
+          <option value="plpct"${breakdownSort==='plpct' ? ' selected' : ''}>수익률순</option>
+        </select>
       </div>
-    `;
-  }).join('');
+    </div>
+  `;
 
   const targetSumHint = targetSum > 0
     ? `<div class="hint-text">입력된 목표비율 합계: ${targetSum.toFixed(2)}%${Math.abs(targetSum-100) > 0.01 ? ' (100%가 되도록 맞추면 더 정확해요)' : ' ✓'}</div>
@@ -2142,13 +2326,19 @@ function renderBreakdown(){
     <div class="section-divider-gray spaced-top"></div>
     <div class="breakdown-wrap">
       <div class="breakdown-title mt-40" id="breakdownToggle">전체 포트폴리오 비율</div>
-      ${breakdownOpen ? `<div class="breakdown-card">${rows}</div>${targetSumHint}` : ''}
+      ${breakdownOpen ? `${toolbarHtml}<div class="breakdown-card" id="breakdownRowsContainer">${rowsHtml}</div>${targetSumHint}` : ''}
     </div>
   `;
   document.getElementById('breakdownToggle').onclick = ()=>{
     breakdownOpen = !breakdownOpen;
     renderBreakdown();
   };
+  if(breakdownOpen){
+    const searchInput = document.getElementById('breakdownSearchInput');
+    const sortSelect = document.getElementById('breakdownSortSelect');
+    if(searchInput) searchInput.oninput = (e)=>{ breakdownSearch = e.target.value; updateBreakdownRows(); };
+    if(sortSelect) sortSelect.onchange = (e)=>{ breakdownSort = e.target.value; updateBreakdownRows(); };
+  }
 }
 
 function dividendTotalForKey(key){
