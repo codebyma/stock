@@ -2384,7 +2384,7 @@ function renderBreakdown(){
     <div class="section-divider-gray spaced-top"></div>
     <div class="breakdown-wrap">
       <div class="breakdown-title mt-40" id="breakdownToggle">전체 포트폴리오 비율</div>
-      ${breakdownOpen ? `${toolbarHtml}<div class="breakdown-card" id="breakdownRowsContainer">${rowsHtml}</div>${targetSumHint}<div class="mt-18" style="text-align:center;"><button class="add-btn" onclick="openBuySimSheet()">매수 시뮬레이션</button></div>` : ''}
+      ${breakdownOpen ? `${toolbarHtml}<div class="breakdown-card" id="breakdownRowsContainer">${rowsHtml}</div>${targetSumHint}<div class="button-row center mt-12"><button class="text-link-btn" onclick="openBuySimSheet()">매수 시뮬레이션</button></div>` : ''}
     </div>
   `;
   document.getElementById('breakdownToggle').onclick = ()=>{
