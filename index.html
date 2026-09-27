@@ -198,6 +198,24 @@
     background:var(--border-strong);
     pointer-events:none;
   }
+  .trend-grid-line{
+    position:absolute;
+    left:0;
+    right:0;
+    height:1px;
+    opacity:0.25;
+    pointer-events:none;
+  }
+  .trend-grid-label{
+    position:absolute;
+    left:0;
+    font-size:10px;
+    opacity:0.85;
+    background:var(--surface1);
+    padding:0 3px 0 0;
+    transform:translateY(-100%);
+    pointer-events:none;
+  }
   .trend-dot{
     display:none;
     position:absolute;
@@ -918,6 +936,25 @@ background: var(--surface2);
   .suffix-text{font-weight:400;font-size:12px;}
   .hint-text{font-size:11.5px;color:var(--text3);padding:2px 4px 2px;}
   .stat-footnote{font-size:11px;color:var(--text2);margin:6px 0 2px;}
+  .sim-hint{font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.5;}
+  .sim-row{padding:12px 0;border-bottom:1px solid var(--border);}
+  .sim-row:last-child{border-bottom:none;}
+  .sim-row-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px;}
+  .sim-row-name{font-size:15px;color:var(--text1);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .sim-row-ratio{font-size:13px;color:var(--text2);flex:none;}
+  .sim-row-ratio .sim-arrow-val{color:var(--mint);font-weight:600;}
+  .sim-input{
+    width:100%;
+    background:var(--surface2);
+    border:1px solid var(--border-strong);
+    color:var(--text1);
+    border-radius:7px;
+    padding:0 12px;
+    height:40px;
+    box-sizing:border-box;
+    font-size:15px;
+  }
+  .sim-input::placeholder{color:var(--text3);}
   .divider-top{border-top:1px solid var(--border);}
   .pension-sum{
     padding:12px 14px;
@@ -1139,6 +1176,19 @@ let dataSource = null; // 'server-json' | 'window-storage' | 'new'
 
 function uid(prefix){ return prefix + '_' + Math.random().toString(36).slice(2,9); }
 function fmtWon(n){ return '<span class="won-sign">₩</span>' + (n||0).toLocaleString('ko-KR'); }
+// 차트 눈금 라벨처럼 짧게 표시할 때 쓰는 억/만 단위 압축 표기 (예: 1.1억, 6,856만)
+function fmtWonCompact(n){
+  const v = n||0;
+  const abs = Math.abs(v);
+  if(abs >= 100000000){
+    const eok = v/100000000;
+    return (Number.isInteger(eok) ? eok : eok.toFixed(1)) + '억';
+  }
+  if(abs >= 10000){
+    return Math.round(v/10000).toLocaleString('ko-KR') + '만';
+  }
+  return v.toLocaleString('ko-KR');
+}
 function showToast(msg){
   const t = document.getElementById('toast');
   t.textContent = msg;
@@ -2028,8 +2078,16 @@ function renderAssetTrend(){
     const lineColor = isDown ? 'var(--red)' : 'var(--mint)';
     const areaColor = isDown ? 'var(--red-dim)' : 'var(--mint-dim)';
 
+    // Y축 눈금선 2개(66%, 33% 지점) — 값 크기를 눈으로 가늠하기 쉽게. 색은 그래프 선 색(민트/빨강)에 맞춘다
+    const gridVals = [min + span*(2/3), min + span*(1/3)];
+    const gridLinesHtml = gridVals.map(v=>{
+      const y = yOf(v);
+      return `<div class="trend-grid-line" style="top:${y.toFixed(1)}px;background:${lineColor};"></div><div class="trend-grid-label" style="top:${y.toFixed(1)}px;color:${lineColor};">${fmtWonCompact(v)}</div>`;
+    }).join('');
+
     chartHtml = `
       <div class="trend-svg-wrap" id="trendChartWrap">
+        ${gridLinesHtml}
         <svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}" preserveAspectRatio="none">
           <polygon points="${areaPoints}" fill="${areaColor}" opacity="0.6"></polygon>
           ${hasCost ? `<polyline points="${costPts.join(' ')}" fill="none" stroke="var(--text3)" stroke-width="1.5" stroke-dasharray="4 3" stroke-linejoin="round" vector-effect="non-scaling-stroke"></polyline>` : ''}
@@ -2326,7 +2384,7 @@ function renderBreakdown(){
     <div class="section-divider-gray spaced-top"></div>
     <div class="breakdown-wrap">
       <div class="breakdown-title mt-40" id="breakdownToggle">전체 포트폴리오 비율</div>
-      ${breakdownOpen ? `${toolbarHtml}<div class="breakdown-card" id="breakdownRowsContainer">${rowsHtml}</div>${targetSumHint}` : ''}
+      ${breakdownOpen ? `${toolbarHtml}<div class="breakdown-card" id="breakdownRowsContainer">${rowsHtml}</div>${targetSumHint}<div class="mt-18" style="text-align:center;"><button class="add-btn" onclick="openBuySimSheet()">매수 시뮬레이션</button></div>` : ''}
     </div>
   `;
   document.getElementById('breakdownToggle').onclick = ()=>{
@@ -2525,6 +2583,71 @@ function openTargetSheet(key, sid){
   if(!content) return;
   openTargetSheetLayer = { key, layer: 1 };
   openSheet(content.title, content.bodyHtml);
+}
+
+// ===== 매수 시뮬레이션(전체 종목 한 번에) =====
+function openBuySimSheet(){
+  const items = allItemsBreakdown().slice().sort((a,b)=> b.value - a.value);
+  if(!items.length){ showToast('보유 종목이 없어요'); return; }
+
+  const rows = items.map(item=>{
+    const sid = safeId(item.key);
+    const target = DATA.targets[item.key];
+    const hasTarget = typeof target === 'number' && !isNaN(target);
+    return `
+      <div class="sim-row">
+        <div class="sim-row-head">
+          <span class="sim-row-name">${escapeHtml(item.name)}${hasTarget ? ` <span class="text-dim">(목표 ${target}%)</span>` : ''}</span>
+          <span class="sim-row-ratio num" id="simratio_${sid}">-</span>
+        </div>
+        <input type="number" inputmode="decimal" placeholder="추가 매수 금액" class="sim-input" id="simin_${sid}" oninput="recalcBuySim()">
+      </div>
+    `;
+  }).join('');
+
+  openSheet('매수 시뮬레이션', `
+    <div class="sim-hint">종목마다 추가로 매수할 금액을 넣어보세요. 전체 총액이 그만큼 늘어난다고 보고, 모든 종목의 비중이 한 번에 어떻게 바뀌는지 보여드려요.</div>
+    <div id="simRowsContainer">${rows}</div>
+    <div class="button-row mt-18">
+      <button class="btn-ghost" onclick="resetBuySim()">초기화</button>
+    </div>
+  `);
+  recalcBuySim();
+}
+
+function recalcBuySim(){
+  const items = allItemsBreakdown();
+  const baseGrandTotal = items.reduce((s,i)=>s+i.value,0);
+
+  let addSum = 0;
+  const addByKey = {};
+  items.forEach(item=>{
+    const sid = safeId(item.key);
+    const input = document.getElementById(`simin_${sid}`);
+    const amt = input ? (Number(input.value) || 0) : 0;
+    addByKey[item.key] = amt;
+    addSum += amt;
+  });
+
+  const newGrandTotal = baseGrandTotal + addSum;
+  items.forEach(item=>{
+    const sid = safeId(item.key);
+    const el = document.getElementById(`simratio_${sid}`);
+    if(!el) return;
+    const oldRatio = baseGrandTotal ? (item.value/baseGrandTotal)*100 : 0;
+    if(addSum <= 0){
+      el.textContent = oldRatio.toFixed(2)+'%';
+      return;
+    }
+    const newValue = item.value + (addByKey[item.key]||0);
+    const newRatio = newGrandTotal ? (newValue/newGrandTotal)*100 : 0;
+    el.innerHTML = `${oldRatio.toFixed(2)}% → <span class="sim-arrow-val">${newRatio.toFixed(2)}%</span>`;
+  });
+}
+
+function resetBuySim(){
+  document.querySelectorAll('.sim-input').forEach(inp=>{ inp.value=''; });
+  recalcBuySim();
 }
 
 function openTargetSheetNested(key, sid){
