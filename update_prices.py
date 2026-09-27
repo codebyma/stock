@@ -71,18 +71,29 @@ def main():
         except Exception as e:
             print(f"[실패] {ticker}: {e}", file=sys.stderr)
 
+    now_kst = datetime.utcnow() + timedelta(hours=9)
+    today_kst = now_kst.strftime("%Y-%m-%d")
+    kst_now_full = now_kst.strftime("%Y-%m-%d %H:%M") + " (KST)"
+
     updated = 0
     for c in catalog:
         t = (c.get("ticker") or "").strip()
-        if t in prices and c.get("currentPrice") != prices[t]:
+        if t not in prices:
+            continue
+        # 값이 그대로여도 오늘 시세 조회에 성공했다면 "최신 확인일"은 갱신한다.
+        # 이걸 안 하면 앱의 "현재가 방치 알림"(priceUpdatedAt 기준)이
+        # 실제로는 매일 갱신되고 있어도 계속 옛날 날짜에 멈춰 있게 된다.
+        if c.get("priceUpdatedAt") != today_kst:
+            c["priceUpdatedAt"] = today_kst
+            updated += 1
+        if c.get("currentPrice") != prices[t]:
             c["currentPrice"] = prices[t]
             updated += 1
 
     if updated > 0:
-        kst_now = (datetime.utcnow() + timedelta(hours=9)).strftime("%Y-%m-%d %H:%M")
-        data["lastPriceUpdate"] = kst_now + " (KST)"
+        data["lastPriceUpdate"] = kst_now_full
         save_data(DATA_PATH, data)
-        print(f"{updated}개 종목의 현재가를 갱신했습니다.")
+        print(f"{updated}건 갱신했습니다. (가격 변경 + 최신 확인일 갱신 포함)")
     else:
         print("변경된 가격이 없습니다.")
 
