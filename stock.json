@@ -54,7 +54,7 @@
     {
       "id": "stk_ciu0vbl",
       "accountId": "acc_aioddia",
-      "quantity": 198,
+      "quantity": 208,
       "buys": [
         {
           "id": "tx_cklblvk",
@@ -69,6 +69,13 @@
           "quantity": 16,
           "price": 25655,
           "amount": 410480
+        },
+        {
+          "id": "tx_3ve0fzb",
+          "date": "2026-09-28",
+          "quantity": 10,
+          "price": 26020,
+          "amount": 260200
         }
       ],
       "sells": [],
@@ -78,7 +85,7 @@
     {
       "id": "stk_j07rhyo",
       "accountId": "acc_aioddia",
-      "quantity": 32,
+      "quantity": 33,
       "buys": [
         {
           "id": "tx_rlxdg7a",
@@ -86,6 +93,13 @@
           "quantity": 32,
           "price": 101712,
           "amount": 3254784
+        },
+        {
+          "id": "tx_3n88f9y",
+          "date": "2026-09-28",
+          "quantity": 1,
+          "price": 183060,
+          "amount": 183060
         }
       ],
       "sells": [],
@@ -197,7 +211,7 @@
     {
       "id": "stk_ef8wp45",
       "accountId": "acc_aioddia",
-      "quantity": 35,
+      "quantity": 37,
       "buys": [
         {
           "id": "tx_r9efht8",
@@ -205,6 +219,13 @@
           "quantity": 35,
           "price": 21291,
           "amount": 745185
+        },
+        {
+          "id": "tx_hao64dt",
+          "date": "2026-09-28",
+          "quantity": 2,
+          "price": 24700,
+          "amount": 49400
         }
       ],
       "sells": [],
@@ -418,7 +439,7 @@
     {
       "id": "stk_hijgh1z",
       "accountId": "acc_1q4nsbn",
-      "quantity": 13,
+      "quantity": 14,
       "buys": [
         {
           "id": "tx_slcq0e9",
@@ -426,6 +447,13 @@
           "quantity": 13,
           "price": 154390,
           "amount": 2007070
+        },
+        {
+          "id": "tx_oyoqeq1",
+          "date": "2026-09-28",
+          "quantity": 1,
+          "price": 182980,
+          "amount": 182980
         }
       ],
       "sells": [],
@@ -486,7 +514,7 @@
       "id": "stk_nvssojl",
       "accountId": "acc_1q4nsbn",
       "key": "360750",
-      "quantity": 6,
+      "quantity": 56,
       "buys": [
         {
           "id": "tx_3wjxhud",
@@ -494,6 +522,13 @@
           "quantity": 6,
           "price": 25392,
           "amount": 152352
+        },
+        {
+          "id": "tx_bw5vg4h",
+          "date": "2026-09-28",
+          "quantity": 50,
+          "price": 26015,
+          "amount": 1300750
         }
       ],
       "sells": []
@@ -680,32 +715,6 @@
         "ALL": 68555517,
         "wife": 50688504
       }
-    },
-    {
-      "date": "2026-09-25",
-      "totals": {
-        "me": 27486080,
-        "ALL": 114847900,
-        "wife": 87361820
-      },
-      "costs": {
-        "me": 17867013,
-        "ALL": 68555517,
-        "wife": 50688504
-      }
-    },
-    {
-      "date": "2026-09-26",
-      "totals": {
-        "me": 27486080,
-        "ALL": 114847900,
-        "wife": 87361820
-      },
-      "costs": {
-        "me": 17867013.0,
-        "ALL": 68555517.0,
-        "wife": 50688504.0
-      }
     }
   ],
   "dividends": [
@@ -718,11 +727,6 @@
       "date": "2026-07-30",
       "perShare": 66,
       "accounts": [
-        {
-          "accountId": "acc_aioddia",
-          "quantity": 182,
-          "amount": 12012
-        },
         {
           "accountId": "acc_1ynxc3d",
           "quantity": 373,
@@ -750,11 +754,6 @@
       "perShare": 255,
       "accounts": [
         {
-          "accountId": "acc_aioddia",
-          "quantity": 32,
-          "amount": 8160
-        },
-        {
           "accountId": "acc_1ynxc3d",
           "quantity": 46,
           "amount": 11730
@@ -766,11 +765,6 @@
         },
         {
           "accountId": "acc_brrccwl",
-          "quantity": 13,
-          "amount": 3315
-        },
-        {
-          "accountId": "acc_1q4nsbn",
           "quantity": 13,
           "amount": 3315
         }
