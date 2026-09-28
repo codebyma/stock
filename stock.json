@@ -58,7 +58,7 @@
       "buys": [
         {
           "id": "tx_cklblvk",
-          "date": "2026-09-04",
+          "date": "2026-09-01",
           "quantity": 182,
           "price": 16946,
           "amount": 3084172
@@ -89,7 +89,7 @@
       "buys": [
         {
           "id": "tx_rlxdg7a",
-          "date": "2026-09-04",
+          "date": "2026-09-01",
           "quantity": 32,
           "price": 101712,
           "amount": 3254784
@@ -113,7 +113,7 @@
       "buys": [
         {
           "id": "tx_qqb1cg1",
-          "date": "2026-09-04",
+          "date": "2026-09-01",
           "quantity": 144,
           "price": 13897,
           "amount": 2001168
@@ -130,7 +130,7 @@
       "buys": [
         {
           "id": "tx_8botibx",
-          "date": "2026-09-04",
+          "date": "2026-09-01",
           "quantity": 373,
           "price": 17178,
           "amount": 6407394
@@ -147,7 +147,7 @@
       "buys": [
         {
           "id": "tx_5xugpr5",
-          "date": "2026-09-04",
+          "date": "2026-09-01",
           "quantity": 46,
           "price": 108497,
           "amount": 4990862
@@ -164,7 +164,7 @@
       "buys": [
         {
           "id": "tx_foe90fe",
-          "date": "2026-09-04",
+          "date": "2026-09-01",
           "quantity": 269,
           "price": 16307,
           "amount": 4386583
@@ -181,7 +181,7 @@
       "buys": [
         {
           "id": "tx_u7t550a",
-          "date": "2026-09-04",
+          "date": "2026-09-01",
           "quantity": 26,
           "price": 15346,
           "amount": 398996
@@ -198,7 +198,7 @@
       "buys": [
         {
           "id": "tx_3jbyb3f",
-          "date": "2026-09-04",
+          "date": "2026-09-01",
           "quantity": 80,
           "price": 11930,
           "amount": 954400
@@ -215,7 +215,7 @@
       "buys": [
         {
           "id": "tx_r9efht8",
-          "date": "2026-09-04",
+          "date": "2026-09-01",
           "quantity": 35,
           "price": 21291,
           "amount": 745185
@@ -239,7 +239,7 @@
       "buys": [
         {
           "id": "tx_0cchxh3",
-          "date": "2026-09-04",
+          "date": "2026-09-01",
           "quantity": 35,
           "price": 13149,
           "amount": 460215
@@ -256,7 +256,7 @@
       "buys": [
         {
           "id": "tx_z1hnsli",
-          "date": "2026-09-04",
+          "date": "2026-09-01",
           "quantity": 65,
           "price": 8407,
           "amount": 546455
@@ -273,7 +273,7 @@
       "buys": [
         {
           "id": "tx_pjtgeby",
-          "date": "2026-09-04",
+          "date": "2026-09-01",
           "quantity": 71,
           "price": 12094,
           "amount": 858674
@@ -290,7 +290,7 @@
       "buys": [
         {
           "id": "tx_mn5wfav",
-          "date": "2026-09-04",
+          "date": "2026-09-01",
           "quantity": 39,
           "price": 14077,
           "amount": 549003
@@ -307,7 +307,7 @@
       "buys": [
         {
           "id": "tx_5b7qtgw",
-          "date": "2026-09-04",
+          "date": "2026-09-01",
           "quantity": 86,
           "price": 11772,
           "amount": 1012392
@@ -324,7 +324,7 @@
       "buys": [
         {
           "id": "tx_77bzllq",
-          "date": "2026-09-04",
+          "date": "2026-09-01",
           "quantity": 32,
           "price": 9671,
           "amount": 309472
@@ -341,7 +341,7 @@
       "buys": [
         {
           "id": "tx_1dgc6hy",
-          "date": "2026-09-06",
+          "date": "2026-09-01",
           "quantity": 245,
           "price": 15090,
           "amount": 3697050
@@ -358,7 +358,7 @@
       "buys": [
         {
           "id": "tx_g6624qg",
-          "date": "2026-09-06",
+          "date": "2026-09-01",
           "quantity": 34,
           "price": 103134,
           "amount": 3506556
@@ -375,7 +375,7 @@
       "buys": [
         {
           "id": "tx_eampp1v",
-          "date": "2026-09-06",
+          "date": "2026-09-01",
           "quantity": 387,
           "price": 12742,
           "amount": 4931154
@@ -392,7 +392,7 @@
       "buys": [
         {
           "id": "tx_tnz12tz",
-          "date": "2026-09-06",
+          "date": "2026-09-01",
           "quantity": 37,
           "price": 27995,
           "amount": 1035815
@@ -409,7 +409,7 @@
       "buys": [
         {
           "id": "tx_ct4h1o2",
-          "date": "2026-09-06",
+          "date": "2026-09-01",
           "quantity": 13,
           "price": 157383,
           "amount": 2045979
@@ -426,7 +426,7 @@
       "buys": [
         {
           "id": "tx_ct20jx9",
-          "date": "2026-09-06",
+          "date": "2026-09-01",
           "quantity": 246,
           "price": 12325,
           "amount": 3031950
@@ -443,7 +443,7 @@
       "buys": [
         {
           "id": "tx_slcq0e9",
-          "date": "2026-09-06",
+          "date": "2026-09-01",
           "quantity": 13,
           "price": 154390,
           "amount": 2007070
@@ -467,7 +467,7 @@
       "buys": [
         {
           "id": "tx_t7dn4i3",
-          "date": "2026-09-06",
+          "date": "2026-09-01",
           "quantity": 194,
           "price": 12184,
           "amount": 2363696
@@ -484,7 +484,7 @@
       "buys": [
         {
           "id": "tx_2mxg2v8",
-          "date": "2026-09-06",
+          "date": "2026-09-01",
           "quantity": 23,
           "price": 21772,
           "amount": 500756
@@ -541,7 +541,7 @@
       "buys": [
         {
           "id": "tx_yn57kda",
-          "date": "2026-09-04",
+          "date": "2026-09-01",
           "quantity": 525,
           "price": 15535,
           "amount": 8155875
@@ -557,7 +557,7 @@
       "buys": [
         {
           "id": "tx_gb9qgk3",
-          "date": "2026-09-04",
+          "date": "2026-09-01",
           "quantity": 140,
           "price": 21085,
           "amount": 2951900
@@ -573,7 +573,7 @@
       "buys": [
         {
           "id": "tx_5t74gta",
-          "date": "2026-09-04",
+          "date": "2026-09-01",
           "quantity": 258,
           "price": 10056,
           "amount": 2594448
@@ -589,7 +589,7 @@
       "buys": [
         {
           "id": "tx_8d4harm",
-          "date": "2026-09-04",
+          "date": "2026-09-01",
           "quantity": 83,
           "price": 13037,
           "amount": 1082071
