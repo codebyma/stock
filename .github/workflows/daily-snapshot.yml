@@ -6,7 +6,7 @@ on:
     # 그날 마지막 시세 갱신(update-prices.yml, 16:00 KST)이 끝난 뒤이면서
     # 아직 날짜가 안 바뀐 시점 → "오늘" 날짜로 그날 종가 기준 스냅샷이 저장됨.
     # (자정 정각에 돌리면 KST 기준으로 이미 다음 날이 되어 하루씩 밀리므로 피함)
-    - cron: '50 14 * * 1-5'
+    - cron: '00 9 * * 1-5'
   workflow_dispatch: {}   # 필요할 때 수동으로도 실행 가능 (Actions 탭 > Run workflow)
 
 permissions:
