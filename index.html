@@ -379,7 +379,6 @@
     margin:0 -20px;
     margin:0 0 0 0;
     padding:0;
-    border-bottom: 1px dashed var(--border);
   }
   /* .account-card:last-child{border-bottom:none;} */
   .account-head{
@@ -838,10 +837,8 @@ background: var(--surface2);
     align-items:center;
     gap:10px;
     padding:14px 0;
-    border-bottom:1px dashed var(--border-strong);
     cursor:pointer;
   }
-  .acc-stock-row:last-child{border-bottom:none;}
   .acc-stock-name{
     font-size:14px;
     font-weight:600;
@@ -2977,11 +2974,11 @@ function txFormHtml(stockId, field){
     <div class="form-row">
       <div class="field">
         <span class="field-label">수량</span>
-        <input type="number" inputmode="decimal" placeholder="예: 10" id="${field}_qty_${stockId}">
+        <input type="number" inputmode="decimal" placeholder="예: 10" id="${field}_qty_${stockId}" onfocus="this.value=''">
       </div>
       <div class="field">
         <span class="field-label">주당 단가</span>
-        <input type="number" inputmode="decimal" placeholder="예: 20000" id="${field}_price_${stockId}"${priceAttrs}>
+        <input type="number" inputmode="decimal" placeholder="예: 20000" id="${field}_price_${stockId}"${priceAttrs} onfocus="this.value=''">
       </div>
     </div>
     <div class="form-actions">
