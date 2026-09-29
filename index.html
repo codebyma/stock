@@ -862,6 +862,7 @@ background: var(--surface2);
     color:var(--text1);
   }
   .acc-stock-pl{font-size:12px;margin-top:2px;}
+  .acc-stock-weight{font-size:11.5px;font-weight:400;color:var(--text2);margin-top:3px;}
   .sheet-close-btn{
     background:none;
     border:none;
@@ -2767,13 +2768,18 @@ function openAccountSheet(accId){
   const owner = (DATA.owners||[]).find(o=>o.id===acc.ownerId);
   const title = acc.name + (currentOwner==='ALL' && owner ? ` (${owner.name})` : '');
   const stocks = stocksForAccount(acc.id);
+  // 종목별 비중: 이 계좌 총 평가금액 대비 각 종목 평가금액
+  const accSum = stocks.reduce((sum, st)=> sum + stockTotal(st), 0);
+  // 전체 계좌 보기에서는 티커와 '현재가 N일째 그대로' 문구를 숨김
+  const hideMeta = currentOwner === 'ALL';
   const rows = stocks.map(st=>{
     const cat = catalogFor(st);
     const pl = stockPL(st);
     const plPct = stockPLPercent(st);
+    const weightPct = accSum > 0 ? (stockTotal(st) / accSum) * 100 : null;
     return `
       <div class="acc-stock-row" onclick="openStockDetailSheet('${st.id}')">
-        <div class="acc-stock-name">${escapeHtml(cat.name)}${cat.ticker ? '<span class="acc-stock-ticker">('+escapeHtml(cat.ticker)+')</span>' : ''}${stalePriceBadgeHtml(cat)}</div>
+        <div class="acc-stock-name">${escapeHtml(cat.name)}${(!hideMeta && cat.ticker) ? '<span class="acc-stock-ticker">('+escapeHtml(cat.ticker)+')</span>' : ''}${hideMeta ? '' : stalePriceBadgeHtml(cat)}<div class="acc-stock-weight">계좌 내 비중 <span class="num">${weightPct!==null ? weightPct.toFixed(1)+'%' : '-'}</span></div></div>
         <div class="acc-stock-right">
           <div class="num">${fmtWon(stockTotal(st))}</div>
           <div class="num acc-stock-pl ${plClass(pl)}">${fmtPL(pl)}${plPct!==null ? ' ('+fmtPercent(plPct)+')' : ''}</div>
@@ -2954,6 +2960,10 @@ function dividendListHtmlForStock(stock){
 function txFormHtml(stockId, field){
   const formId = (field==='buys' ? 'buyform_' : 'sellform_') + stockId;
   const dateLabel = field==='buys' ? '매수일' : '매도일';
+  // 매수 폼은 주당 단가를 현재가로 미리 채워둔다 (직접 고치면 그 값을 유지)
+  const _stk = DATA.stocks.find(s=>s.id===stockId);
+  const _curPrice = (field==='buys' && _stk) ? (catalogFor(_stk).currentPrice || 0) : 0;
+  const priceAttrs = _curPrice ? ` value="${_curPrice}" data-auto="1" oninput="this.dataset.auto='0'"` : '';
   return `
     <div class="form-row">
       <div class="field">
@@ -2971,7 +2981,7 @@ function txFormHtml(stockId, field){
       </div>
       <div class="field">
         <span class="field-label">주당 단가</span>
-        <input type="number" inputmode="decimal" placeholder="예: 20000" id="${field}_price_${stockId}">
+        <input type="number" inputmode="decimal" placeholder="예: 20000" id="${field}_price_${stockId}"${priceAttrs}>
       </div>
     </div>
     <div class="form-actions">
@@ -3022,7 +3032,20 @@ function toggleForm(id){
   const el = document.getElementById(id);
   const willOpen = !el.classList.contains('open');
   el.classList.toggle('open');
-  if(willOpen) scrollToId(id);
+  if(willOpen){
+    // 매수 폼을 열 때, 단가를 직접 안 건드렸다면 최신 현재가로 다시 채움
+    const m = /^buyform_(.+)$/.exec(id);
+    if(m){
+      const stk = DATA.stocks.find(x=>x.id===m[1]);
+      const inp = document.getElementById(`buys_price_${m[1]}`);
+      const cp = stk ? (catalogFor(stk).currentPrice || 0) : 0;
+      if(inp && cp && (!inp.value || inp.dataset.auto==='1')){
+        inp.value = cp;
+        inp.dataset.auto = '1';
+      }
+    }
+    scrollToId(id);
+  }
 }
 function closeForm(id){
   document.getElementById(id).classList.remove('open');
