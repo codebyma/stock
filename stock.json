@@ -737,9 +737,22 @@
         "wife": 85934535
       },
       "costs": {
-        "me": 19843403.0,
-        "ALL": 70531907.0,
-        "wife": 50688504.0
+        "me": 19843403,
+        "ALL": 70531907,
+        "wife": 50688504
+      }
+    },
+    {
+      "date": "2026-09-30",
+      "totals": {
+        "me": 28968855,
+        "wife": 86157195,
+        "ALL": 115126050
+      },
+      "costs": {
+        "me": 19843403,
+        "wife": 50688504,
+        "ALL": 70531907
       }
     }
   ],
@@ -1057,6 +1070,69 @@
           "accountId": "acc_5ma36fu",
           "quantity": 387,
           "amount": 11610
+        }
+      ]
+    },
+    {
+      "id": "divrec_js3yp3m",
+      "key": "466940",
+      "name": "TIGER 은행고배당플러스TOP10",
+      "ticker": "466940",
+      "month": "2026-09",
+      "date": "2026-09-29",
+      "perShare": 104,
+      "accounts": [
+        {
+          "accountId": "acc_1q4nsbn",
+          "quantity": 23,
+          "amount": 2392
+        }
+      ]
+    },
+    {
+      "id": "divrec_vbiub88",
+      "key": "458730",
+      "name": "TIGER 미국배당다우존스",
+      "ticker": "458730",
+      "month": "2026-09",
+      "date": "2026-09-29",
+      "perShare": 39,
+      "accounts": [
+        {
+          "accountId": "acc_aioddia",
+          "quantity": 26,
+          "amount": 1014
+        },
+        {
+          "accountId": "acc_brrccwl",
+          "quantity": 246,
+          "amount": 9594
+        },
+        {
+          "accountId": "acc_1q4nsbn",
+          "quantity": 194,
+          "amount": 7566
+        }
+      ]
+    },
+    {
+      "id": "divrec_4tcpmxy",
+      "key": "182480",
+      "name": "TIGER 미국MSCI리츠(합성H)",
+      "ticker": "182480",
+      "month": "2026-09",
+      "date": "2026-09-29",
+      "perShare": 45,
+      "accounts": [
+        {
+          "accountId": "acc_aioddia",
+          "quantity": 35,
+          "amount": 1575
+        },
+        {
+          "accountId": "acc_o4bjqgm",
+          "quantity": 83,
+          "amount": 3735
         }
       ]
     }
