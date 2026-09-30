@@ -1533,7 +1533,7 @@ function stockDividendTTM(stock){
 }
 // 기준2: 최근 12개월 배당 ÷ 총 투자원금 (=평균매입단가×수량) — 지금 페이스가 앞으로도 이어진다면의 수익률
 // 현재가를 마지막으로 언제 반영했는지 기준으로, 오래됐으면 살짝 알려준다
-const STALE_PRICE_DAYS = 1;
+const STALE_PRICE_DAYS = 14;
 function daysSincePriceUpdate(cat){
   if(!cat || !cat.priceUpdatedAt) return null;
   const days = Math.round((Date.now() - Date.parse(cat.priceUpdatedAt)) / 86400000);
@@ -2774,9 +2774,10 @@ function openAccountSheet(accId){
     const pl = stockPL(st);
     const plPct = stockPLPercent(st);
     const weightPct = accSum > 0 ? (stockTotal(st) / accSum) * 100 : null;
+    const avgPrice = st.quantity ? Math.round(stockCostBasis(st) / st.quantity) : 0;
     return `
       <div class="acc-stock-row" onclick="openStockDetailSheet('${st.id}')">
-        <div class="acc-stock-name">${escapeHtml(cat.name)}${(!hideMeta && cat.ticker) ? '<span class="acc-stock-ticker">('+escapeHtml(cat.ticker)+')</span>' : ''}${hideMeta ? '' : stalePriceBadgeHtml(cat)}<div class="acc-stock-weight">계좌 내 비중 <span class="num">${weightPct!==null ? weightPct.toFixed(1)+'%' : '-'}</span></div></div>
+        <div class="acc-stock-name">${escapeHtml(cat.name)}${(!hideMeta && cat.ticker) ? '<span class="acc-stock-ticker">('+escapeHtml(cat.ticker)+')</span>' : ''}${hideMeta ? '' : stalePriceBadgeHtml(cat)}<div class="acc-stock-weight"><span class="num">${(st.quantity||0).toLocaleString('ko-KR')}</span>주 · 평균단가 ${fmtWon(avgPrice)} · 비중 <span class="num">${weightPct!==null ? weightPct.toFixed(1)+'%' : '-'}</span></div></div>
         <div class="acc-stock-right">
           <div class="num">${fmtWon(stockTotal(st))}</div>
           <div class="num acc-stock-pl ${plClass(pl)}">${fmtPL(pl)}${plPct!==null ? ' ('+fmtPercent(plPct)+')' : ''}</div>
