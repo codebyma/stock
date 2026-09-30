@@ -1625,6 +1625,20 @@ function showStockDividendYieldTooltip(evt, stockId){
   toggleTooltip(evt.currentTarget, '배당률 계산', body);
 }
 
+function showMonthlyYieldTooltip(evt, month){
+  evt.stopPropagation();
+  const m = monthlyYieldSeries(currentOwner, 12).find(x=>x.month===month);
+  if(!m) return;
+  const ym = month.replace('-', '.');
+  let body;
+  if(m.yieldPct === null){
+    body = '이 달 말 무렵의 평가금액 기록(스냅샷)이 없어 계산할 수 없어요.';
+  } else {
+    body = `직전 12개월 배당금 ${fmtWon(Math.round(m.ttmDiv))} ÷ 그 달 말 평가금액 ${fmtWon(Math.round(m.value))} = ${m.yieldPct.toFixed(2)}%`;
+  }
+  toggleTooltip(evt.currentTarget, `${ym} 배당수익률 계산`, body);
+}
+
 function closeYieldTooltip(){
   const el = document.getElementById('yieldTooltip');
   if(el) el.remove();
@@ -1776,6 +1790,8 @@ function monthlyYieldSeries(ownerId, monthsBack){
     if(!value) return;
     const ttmDiv = ttmDividendAsOf(ownerId, s.month);
     s.yieldPct = (ttmDiv / value) * 100;
+    s.ttmDiv = ttmDiv;
+    s.value = value;
   });
   return series;
 }
@@ -1844,7 +1860,7 @@ function renderDividendCalendar(){
     const barPx = m.yieldPct!==null ? Math.max(4, Math.round((m.yieldPct/maxYield)*90)) : 2;
     const label = m.yieldPct!==null ? m.yieldPct.toFixed(1)+'%' : '-';
     return `
-      <div class="div-bar-col${m.isCurrent ? ' current' : ''}">
+      <div class="div-bar-col${m.isCurrent ? ' current' : ''}" style="cursor:pointer;" onclick="showMonthlyYieldTooltip(event,'${m.month}')">
         <div class="div-bar-amount num">${label}</div>
         <div class="div-bar" style="--h:${barPx}px;"></div>
         <div class="div-bar-label">${m.label}</div>
@@ -1853,7 +1869,7 @@ function renderDividendCalendar(){
   }).join('');
   const yieldTrendHtml = hasYieldData ? `
     <div class="panel-title sub-title mt-20">배당수익률 추이</div>
-    <div class="panel-caption mt-0">그 달 말 스냅샷 평가금액 대비 직전 12개월 배당 비율이에요. 스냅샷이 없는 달은 '-'로 표시돼요.</div>
+    <div class="panel-caption mt-0" style="color:var(--text2);">막대를 누르면 계산식을 볼 수 있어요. 스냅샷이 없는 달은 '-'로 표시돼요.</div>
     <div class="div-chart-scroll">
       <div class="div-chart">${yieldBars}</div>
     </div>
