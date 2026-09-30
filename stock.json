@@ -828,7 +828,7 @@
     {
       "id": "divrec_6slqxiy",
       "key": "329650",
-      "name": "KODEX TRF3070",
+      "name": "Ⓚ TRF3070",
       "ticker": "329650",
       "month": "2026-07",
       "date": "2026-07-14",
@@ -844,7 +844,7 @@
     {
       "id": "divrec_ecknywt",
       "key": "329650",
-      "name": "KODEX TRF3070",
+      "name": "Ⓚ TRF3070",
       "ticker": "329650",
       "month": "2026-08",
       "date": "2026-08-13",
@@ -928,7 +928,7 @@
     {
       "id": "divrec_vmixqwi",
       "key": "379800",
-      "name": "KODEX 미국S&P500",
+      "name": "Ⓚ 미국S&P500",
       "ticker": "379800",
       "month": "2026-07",
       "date": "2026-07-30",
@@ -944,7 +944,7 @@
     {
       "id": "divrec_wzn9vsw",
       "key": "381180",
-      "name": "🆃 미국필라델피아반도체나스닥",
+      "name": "Ⓣ 미국필라델피아반도체나스닥",
       "ticker": "381180",
       "month": "2026-07",
       "date": "2026-07-30",
@@ -1012,7 +1012,7 @@
     {
       "id": "divrec_s2kbn9o",
       "key": "441640",
-      "name": "KODEX 미국배당커버드콜액티브",
+      "name": "Ⓚ 미국배당커버드콜액티브",
       "ticker": "441640",
       "month": "2026-07",
       "date": "2026-07-14",
@@ -1028,7 +1028,7 @@
     {
       "id": "divrec_upj6wco",
       "key": "441640",
-      "name": "KODEX 미국배당커버드콜액티브",
+      "name": "Ⓚ 미국배당커버드콜액티브",
       "ticker": "441640",
       "month": "2026-08",
       "date": "2026-08-13",
@@ -1044,7 +1044,7 @@
     {
       "id": "divrec_hemlhyn",
       "key": "441640",
-      "name": "KODEX 미국배당커버드콜액티브",
+      "name": "Ⓚ 미국배당커버드콜액티브",
       "ticker": "441640",
       "month": "2026-09",
       "date": "2026-09-14",
@@ -1060,7 +1060,7 @@
     {
       "id": "divrec_wruk8xm",
       "key": "329650",
-      "name": "KODEX TRF3070",
+      "name": "Ⓚ TRF3070",
       "ticker": "329650",
       "month": "2026-09",
       "date": "2026-09-14",
@@ -1159,7 +1159,7 @@
     {
       "key": "381180",
       "ticker": "381180",
-      "name": "🅃 미국필라델피아반도체나스닥",
+      "name": "Ⓣ 미국필라델피아반도체나스닥",
       "currentPrice": 44310,
       "naverUrl": "https://m.stock.naver.com/domestic/stock/381180/analysis",
       "tossUrl": "https://tossinvest.com/_ul/kgSKyD",
@@ -1177,7 +1177,7 @@
     {
       "key": "304660",
       "ticker": "304660",
-      "name": "KODEX 미국30년국채울트라선물(H)",
+      "name": "Ⓚ 미국30년국채울트라선물(H)",
       "currentPrice": 6945,
       "naverUrl": "https://m.stock.naver.com/domestic/stock/304660/analysis",
       "tossUrl": "https://tossinvest.com/_ul/kIzzeG",
@@ -1240,7 +1240,7 @@
     {
       "key": "441640",
       "ticker": "441640",
-      "name": "KODEX 미국배당커버드콜액티브",
+      "name": "Ⓚ 미국배당커버드콜액티브",
       "currentPrice": 12190,
       "naverUrl": "https://m.stock.naver.com/domestic/stock/441640/analysis",
       "tossUrl": "https://tossinvest.com/_ul/kQyzsB",
@@ -1249,7 +1249,7 @@
     {
       "key": "329650",
       "ticker": "329650",
-      "name": "KODEX TRF3070",
+      "name": "Ⓚ TRF3070",
       "currentPrice": 13935,
       "naverUrl": "https://m.stock.naver.com/domestic/stock/329650/analysis",
       "tossUrl": "https://tossinvest.com/_ul/kIzzuC",
@@ -1259,7 +1259,7 @@
     {
       "key": "379800",
       "ticker": "379800",
-      "name": "KODEX 미국S&P500",
+      "name": "Ⓚ 미국S&P500",
       "currentPrice": 23470,
       "naverUrl": "https://m.stock.naver.com/domestic/stock/379800/analysis",
       "tossUrl": "https://tossinvest.com/_ul/kUSkeF",
