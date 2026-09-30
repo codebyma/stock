@@ -760,7 +760,7 @@
     {
       "id": "divrec_xl0ulp7",
       "key": "360750",
-      "name": "TIGER S&P500",
+      "name": "Ⓣ S&P500",
       "ticker": "360750",
       "month": "2026-07",
       "date": "2026-07-30",
@@ -786,7 +786,7 @@
     {
       "id": "divrec_ye6bmfw",
       "key": "133690",
-      "name": "TIGER 나스닥100",
+      "name": "Ⓣ 나스닥100",
       "ticker": "133690",
       "month": "2026-07",
       "date": "2026-07-30",
@@ -812,7 +812,7 @@
     {
       "id": "divrec_av1jb6a",
       "key": "466940",
-      "name": "TIGER 은행고배당플러스TOP10",
+      "name": "Ⓣ 은행고배당플러스TOP10",
       "ticker": "466940",
       "month": "2026-07",
       "date": "2026-07-30",
@@ -860,7 +860,7 @@
     {
       "id": "divrec_gz5pzn9",
       "key": "466940",
-      "name": "TIGER 은행고배당플러스TOP10",
+      "name": "Ⓣ 은행고배당플러스TOP10",
       "ticker": "466940",
       "month": "2026-08",
       "date": "2026-08-28",
@@ -876,7 +876,7 @@
     {
       "id": "divrec_rkw31fa",
       "key": "458730",
-      "name": "TIGER 미국배당다우존스",
+      "name": "Ⓣ 미국배당다우존스",
       "ticker": "458730",
       "month": "2026-07",
       "date": "2026-07-30",
@@ -902,7 +902,7 @@
     {
       "id": "divrec_4uil22l",
       "key": "458730",
-      "name": "TIGER 미국배당다우존스",
+      "name": "Ⓣ 미국배당다우존스",
       "ticker": "458730",
       "month": "2026-08",
       "date": "2026-08-28",
@@ -970,7 +970,7 @@
     {
       "id": "divrec_dmx6yyy",
       "key": "182480",
-      "name": "TIGER 미국MSCI리츠(합성H)",
+      "name": "Ⓣ 미국MSCI리츠(합성H)",
       "ticker": "182480",
       "month": "2026-07",
       "date": "2026-07-30",
@@ -991,7 +991,7 @@
     {
       "id": "divrec_m79tynp",
       "key": "182480",
-      "name": "TIGER 미국MSCI리츠(합성H)",
+      "name": "Ⓣ 미국MSCI리츠(합성H)",
       "ticker": "182480",
       "month": "2026-08",
       "date": "2026-08-28",
@@ -1076,7 +1076,7 @@
     {
       "id": "divrec_js3yp3m",
       "key": "466940",
-      "name": "TIGER 은행고배당플러스TOP10",
+      "name": "Ⓣ 은행고배당플러스TOP10",
       "ticker": "466940",
       "month": "2026-09",
       "date": "2026-09-29",
@@ -1092,7 +1092,7 @@
     {
       "id": "divrec_vbiub88",
       "key": "458730",
-      "name": "TIGER 미국배당다우존스",
+      "name": "Ⓣ 미국배당다우존스",
       "ticker": "458730",
       "month": "2026-09",
       "date": "2026-09-29",
@@ -1118,7 +1118,7 @@
     {
       "id": "divrec_4tcpmxy",
       "key": "182480",
-      "name": "TIGER 미국MSCI리츠(합성H)",
+      "name": "Ⓣ 미국MSCI리츠(합성H)",
       "ticker": "182480",
       "month": "2026-09",
       "date": "2026-09-29",
@@ -1141,7 +1141,7 @@
     {
       "key": "360750",
       "ticker": "360750",
-      "name": "TIGER S&P500",
+      "name": "Ⓣ S&P500",
       "currentPrice": 25825,
       "naverUrl": "https://m.stock.naver.com/domestic/stock/360750/analysis",
       "tossUrl": "https://tossinvest.com/_ul/kUSDQA",
@@ -1150,7 +1150,7 @@
     {
       "key": "133690",
       "ticker": "133690",
-      "name": "TIGER 나스닥100",
+      "name": "Ⓣ 나스닥100",
       "currentPrice": 181810,
       "naverUrl": "https://m.stock.naver.com/domestic/stock/133690/analysis",
       "tossUrl": "https://tossinvest.com/_ul/kUyScA",
@@ -1168,7 +1168,7 @@
     {
       "key": "305080",
       "ticker": "305080",
-      "name": "TIGER 미국채10년선물",
+      "name": "Ⓣ 미국채10년선물",
       "currentPrice": 11665,
       "naverUrl": "https://m.stock.naver.com/domestic/stock/305080/analysis",
       "tossUrl": "https://tossinvest.com/_ul/kIzzKD",
@@ -1186,7 +1186,7 @@
     {
       "key": "458730",
       "ticker": "458730",
-      "name": "TIGER 미국배당다우존스",
+      "name": "Ⓣ 미국배당다우존스",
       "currentPrice": 14155,
       "naverUrl": "https://m.stock.naver.com/domestic/stock/458730/analysis",
       "tossUrl": "https://tossinvest.com/_ul/kUi3QA",
@@ -1195,7 +1195,7 @@
     {
       "key": "319640",
       "ticker": "319640",
-      "name": "TIGER 골드선물(H)",
+      "name": "Ⓣ 골드선물(H)",
       "currentPrice": 24535,
       "naverUrl": "https://m.stock.naver.com/domestic/stock/319640/analysis",
       "tossUrl": "https://tossinvest.com/_ul/kIzzaD",
@@ -1204,7 +1204,7 @@
     {
       "key": "0008S0",
       "ticker": "0008S0",
-      "name": "TIGER 마국배당다우존스타켓데일리커버드콜",
+      "name": "Ⓣ 마국배당다우존스타켓데일리커버드콜",
       "currentPrice": 9335,
       "naverUrl": "https://m.stock.naver.com/domestic/stock/0008S0/analysis",
       "tossUrl": "https://tossinvest.com/_ul/kUSDQA",
@@ -1213,7 +1213,7 @@
     {
       "key": "182480",
       "ticker": "182480",
-      "name": "TIGER 미국MSCI리츠(합성H)",
+      "name": "Ⓣ 미국MSCI리츠(합성H)",
       "currentPrice": 12890,
       "naverUrl": "https://m.stock.naver.com/domestic/stock/182480/analysis",
       "tossUrl": "https://tossinvest.com/_ul/kIzzOD",
@@ -1222,7 +1222,7 @@
     {
       "key": "371460",
       "ticker": "371460",
-      "name": "TIGER 차이나전기차SOLACTIVE",
+      "name": "Ⓣ 차이나전기차SOLACTIVE",
       "currentPrice": 9075,
       "naverUrl": "https://m.stock.naver.com/domestic/stock/371460/analysis",
       "tossUrl": "https://tossinvest.com/_ul/kIzz2C",
@@ -1231,7 +1231,7 @@
     {
       "key": "466940",
       "ticker": "466940",
-      "name": "TIGER 은행고배당플러스TOP10",
+      "name": "Ⓣ 은행고배당플러스TOP10",
       "currentPrice": 26150,
       "naverUrl": "https://m.stock.naver.com/domestic/stock/466940/analysis",
       "tossUrl": "https://tossinvest.com/_ul/k4ikeF",
