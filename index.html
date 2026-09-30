@@ -2764,7 +2764,14 @@ function openAccountSheet(accId){
   if(!acc) return;
   const owner = (DATA.owners||[]).find(o=>o.id===acc.ownerId);
   const title = acc.name + (currentOwner==='ALL' && owner ? ` (${owner.name})` : '');
-  const stocks = stocksForAccount(acc.id);
+  // 수익률 높은 순 정렬 (원금이 없어 수익률을 못 구하는 종목은 맨 아래)
+  const stocks = [...stocksForAccount(acc.id)].sort((a,b)=>{
+    const pa = stockPLPercent(a), pb = stockPLPercent(b);
+    if(pa===null && pb===null) return 0;
+    if(pa===null) return 1;
+    if(pb===null) return -1;
+    return pb - pa;
+  });
   // 종목별 비중: 이 계좌 총 평가금액 대비 각 종목 평가금액
   const accSum = stocks.reduce((sum, st)=> sum + stockTotal(st), 0);
   // 전체 계좌 보기에서는 티커와 '현재가 N일째 그대로' 문구를 숨김
