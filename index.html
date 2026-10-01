@@ -2259,7 +2259,6 @@ async function submitSnapshotForm(){
 }
 
 async function deleteSnapshot(date){
-  if(!confirm(`${fmtDateDot(date)} 스냅샷을 삭제할까요? (모든 탭에서 이 날짜 기록이 사라져요)`)) return;
   DATA.snapshots = DATA.snapshots.filter(x=>x.date!==date);
   await saveData();
   render();
