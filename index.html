@@ -1020,6 +1020,8 @@ background: var(--surface2);
   .mt-14{margin-top:14px !important;}
   .mt-18{margin-top:18px !important;}
   .mt-20{margin-top:20px !important;}
+  .mt-24{margin-top:24px !important;}
+  .mt-28{margin-top:28px !important;}
   .mt-40{margin-top:40px !important;}
 
   .mb-0{margin-bottom:0 !important;}
@@ -1028,6 +1030,7 @@ background: var(--surface2);
   .mb-8{margin-bottom:8px !important;}
   .mb-12{margin-bottom:12px !important;}
   .mb-16{margin-bottom:16px !important;}
+  .mb-24{margin-bottom:24px !important;}
 
   .scroll-locked{overflow:hidden;}
   .body-scroll-locked{
@@ -1038,6 +1041,7 @@ background: var(--surface2);
   }
   .pb-40{padding-bottom:40px !important;}
   .pt-14{padding-top:14px !important;}
+  .pt-20{padding-top:20px !important;}
   .pb-0{padding-bottom:0 !important;}
   .pb-2{padding-bottom:2px !important;}
   .pt-0{padding-top:0 !important;}
@@ -2515,7 +2519,7 @@ function buildTargetSheetContent(key, sid){
   const keyPLPct = item.cost ? (keyPL/item.cost)*100 : null;
 
   const bodyHtml = `
-    <div class="stat-rows mb-16">
+    <div class="stat-rows mb-24">
       <div class="stat-row">
         <div class="stock-stat"><span class="stock-stat-label">평가금액</span><span class="stock-stat-value num">${fmtWon(item.value)}</span></div>
         <div class="stock-stat"><span class="stock-stat-label">평가손익</span><span class="stock-stat-value num ${plClass(keyPL)}">${fmtPL(keyPL)}${keyPLPct!==null ? ' ('+fmtPercent(keyPLPct)+')' : ''}</span></div>
@@ -2528,7 +2532,7 @@ function buildTargetSheetContent(key, sid){
     <div class="panel-title sub-title">보유현황</div>
     ${holdingsListHtmlForKey(key)}
 
-    <div class="mt-20 pt-14 divider-top">
+    <div class="mt-24">
       <div class="panel-title sub-title title-row cursor-pointer" onclick="openKeyDividendSheet('${keyEsc}')"><span>배당현황</span>${CHEVRON_SVG}</div>
       <div class="yield-grid">
         <div class="yield-card" onclick="showYieldTooltip(event,2)">
@@ -2936,14 +2940,14 @@ function buildStockDetailHtml(stock){
       </div>
     </div>
      ${hasBuys ? `
-     <div class="panel-title sub-title mb-4">매수</div>
+     <div class="panel-title sub-title mt-24 mb-4">매수</div>
      ${entryListHtml(stock.buys, stock.id, 'buys')}
      ` : ''}
     <div class="form-panel" id="buyform_${stock.id}">
         ${txFormHtml(stock.id,'buys')}
       </div>
     ${hasSells ? `
-    <div class="panel-title sub-title ${hasBuys ? 'mt-12 ' : ''}mb-4">매도</div>
+    <div class="panel-title sub-title mt-24 mb-4">매도</div>
      ${entryListHtml(stock.sells, stock.id, 'sells')}
      ` : ''}
       <div class="form-panel" id="sellform_${stock.id}">
