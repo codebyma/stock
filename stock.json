@@ -820,38 +820,6 @@
   ],
   "dividends": [
     {
-      "id": "divrec_ye6bmfw",
-      "key": "133690",
-      "name": "Ⓣ 나스닥100",
-      "ticker": "133690",
-      "month": "2026-07",
-      "date": "2026-07-30",
-      "perShare": 255,
-      "accounts": [
-        {
-          "accountId": "acc_5ma36fu",
-          "quantity": 34,
-          "amount": 8670
-        }
-      ]
-    },
-    {
-      "id": "divrec_av1jb6a",
-      "key": "466940",
-      "name": "Ⓣ 은행고배당플러스TOP10",
-      "ticker": "466940",
-      "month": "2026-07",
-      "date": "2026-07-30",
-      "perShare": 100,
-      "accounts": [
-        {
-          "accountId": "acc_1q4nsbn",
-          "quantity": 23,
-          "amount": 2300
-        }
-      ]
-    },
-    {
       "id": "divrec_gz5pzn9",
       "key": "466940",
       "name": "Ⓣ 은행고배당플러스TOP10",
@@ -864,90 +832,6 @@
           "accountId": "acc_1q4nsbn",
           "quantity": 23,
           "amount": 2300
-        }
-      ]
-    },
-    {
-      "id": "divrec_rkw31fa",
-      "key": "458730",
-      "name": "Ⓣ 미국배당다우존스",
-      "ticker": "458730",
-      "month": "2026-07",
-      "date": "2026-07-30",
-      "perShare": 37,
-      "accounts": [
-        {
-          "accountId": "acc_aioddia",
-          "quantity": 26,
-          "amount": 962
-        },
-        {
-          "accountId": "acc_1q4nsbn",
-          "quantity": 194,
-          "amount": 7178
-        }
-      ]
-    },
-    {
-      "id": "divrec_vmixqwi",
-      "key": "379800",
-      "name": "Ⓚ 미국S&P500",
-      "ticker": "379800",
-      "month": "2026-07",
-      "date": "2026-07-30",
-      "perShare": 132,
-      "accounts": [
-        {
-          "accountId": "acc_o4bjqgm",
-          "quantity": 140,
-          "amount": 18480
-        }
-      ]
-    },
-    {
-      "id": "divrec_wzn9vsw",
-      "key": "381180",
-      "name": "Ⓣ 미국필라델피아반도체나스닥",
-      "ticker": "381180",
-      "month": "2026-07",
-      "date": "2026-07-30",
-      "perShare": 49,
-      "accounts": [
-        {
-          "accountId": "acc_aioddia",
-          "quantity": 144,
-          "amount": 7056
-        },
-        {
-          "accountId": "acc_1ynxc3d",
-          "quantity": 269,
-          "amount": 13181
-        },
-        {
-          "accountId": "acc_o4bjqgm",
-          "quantity": 525,
-          "amount": 25725
-        }
-      ]
-    },
-    {
-      "id": "divrec_dmx6yyy",
-      "key": "182480",
-      "name": "Ⓣ 미국MSCI리츠(합성H)",
-      "ticker": "182480",
-      "month": "2026-07",
-      "date": "2026-07-30",
-      "perShare": 46,
-      "accounts": [
-        {
-          "accountId": "acc_aioddia",
-          "quantity": 35,
-          "amount": 1610
-        },
-        {
-          "accountId": "acc_o4bjqgm",
-          "quantity": 83,
-          "amount": 3818
         }
       ]
     },
@@ -969,22 +853,6 @@
           "accountId": "acc_o4bjqgm",
           "quantity": 83,
           "amount": 1660
-        }
-      ]
-    },
-    {
-      "id": "divrec_s2kbn9o",
-      "key": "441640",
-      "name": "Ⓚ 미국배당커버드콜액티브",
-      "ticker": "441640",
-      "month": "2026-07",
-      "date": "2026-07-14",
-      "perShare": 103,
-      "accounts": [
-        {
-          "accountId": "acc_1q4nsbn",
-          "quantity": 10,
-          "amount": 1030
         }
       ]
     },
