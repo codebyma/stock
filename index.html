@@ -1046,7 +1046,7 @@ background: var(--surface2);
 </head>
 <body>
 
-<div class="save-status" id="saveStatus">저장된 데이터 불러오는 중...</div>
+<div class="save-status" id="saveStatus"></div>
 
 <div class="owner-tabs" id="ownerTabs"></div>
 
@@ -1197,8 +1197,7 @@ function showToast(msg){
 }
 
 function setSaveStatus(msg){
-  const el = document.getElementById('saveStatus');
-  if(el) el.textContent = msg;
+  // 상단 안내 문구는 표시하지 않음 (호출부는 그대로 두고 여기서만 무시)
 }
 
 function isValidPortfolio(obj){
