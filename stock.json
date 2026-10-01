@@ -586,7 +586,7 @@
       "id": "stk_dsjmytl",
       "accountId": "acc_o4bjqgm",
       "key": "381180",
-      "quantity": 525,
+      "quantity": 527,
       "buys": [
         {
           "id": "tx_yn57kda",
@@ -594,6 +594,13 @@
           "quantity": 525,
           "price": 15535,
           "amount": 8155875
+        },
+        {
+          "id": "tx_srb62r2",
+          "date": "2026-09-23",
+          "quantity": 2,
+          "price": 44842,
+          "amount": 89684
         }
       ],
       "sells": []
@@ -602,7 +609,7 @@
       "id": "stk_t0xfyur",
       "accountId": "acc_o4bjqgm",
       "key": "379800",
-      "quantity": 140,
+      "quantity": 143,
       "buys": [
         {
           "id": "tx_gb9qgk3",
@@ -610,6 +617,13 @@
           "quantity": 140,
           "price": 21085,
           "amount": 2951900
+        },
+        {
+          "id": "tx_ahy7fwn",
+          "date": "2026-09-23",
+          "quantity": 3,
+          "price": 23671,
+          "amount": 71013
         }
       ],
       "sells": []
@@ -808,13 +822,13 @@
       "date": "2026-10-01",
       "totals": {
         "me": 28968855,
-        "wife": 90887790,
-        "ALL": 119856645
+        "wife": 91046820,
+        "ALL": 120015675
       },
       "costs": {
         "me": 19843403,
-        "wife": 55438869,
-        "ALL": 75282272
+        "wife": 55599566,
+        "ALL": 75442969
       }
     }
   ],
