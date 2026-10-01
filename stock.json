@@ -889,27 +889,6 @@
       ]
     },
     {
-      "id": "divrec_4uil22l",
-      "key": "458730",
-      "name": "Ⓣ 미국배당다우존스",
-      "ticker": "458730",
-      "month": "2026-08",
-      "date": "2026-08-28",
-      "perShare": 30,
-      "accounts": [
-        {
-          "accountId": "acc_aioddia",
-          "quantity": 26,
-          "amount": 780
-        },
-        {
-          "accountId": "acc_1q4nsbn",
-          "quantity": 194,
-          "amount": 5820
-        }
-      ]
-    },
-    {
       "id": "divrec_vmixqwi",
       "key": "379800",
       "name": "Ⓚ 미국S&P500",
@@ -1117,6 +1096,48 @@
           "accountId": "acc_o4bjqgm",
           "quantity": 83,
           "amount": 3735
+        }
+      ]
+    },
+    {
+      "id": "divrec_66r3doi",
+      "key": "329650",
+      "name": "Ⓚ TRF3070",
+      "ticker": "329650",
+      "month": "2026-08",
+      "date": "2026-08-13",
+      "perShare": 31,
+      "accounts": [
+        {
+          "accountId": "acc_5ma36fu",
+          "quantity": 387,
+          "amount": 11997
+        }
+      ]
+    },
+    {
+      "id": "divrec_ktd0b9t",
+      "key": "458730",
+      "name": "Ⓣ 미국배당다우존스",
+      "ticker": "458730",
+      "month": "2026-08",
+      "date": "2026-08-28",
+      "perShare": 30,
+      "accounts": [
+        {
+          "accountId": "acc_aioddia",
+          "quantity": 26,
+          "amount": 780
+        },
+        {
+          "accountId": "acc_brrccwl",
+          "quantity": 246,
+          "amount": 7380
+        },
+        {
+          "accountId": "acc_1q4nsbn",
+          "quantity": 194,
+          "amount": 5820
         }
       ]
     }
