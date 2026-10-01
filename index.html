@@ -1205,9 +1205,14 @@ function isValidPortfolio(obj){
   return !!(obj && obj.owners && obj.accounts && obj.stocks);
 }
 
+// 한국 시간(KST, UTC+9) 기준 오늘 날짜 (YYYY-MM-DD). toISOString은 UTC라 한국 새벽 0~9시에 전날로 찍힘
+function todayKST(){
+  return new Date(Date.now() + 9*3600*1000).toISOString().slice(0,10);
+}
+
 async function autoSaveTodaySnapshotIfNeeded(){
   ensureDataShape();
-  const today = new Date().toISOString().slice(0,10);
+  const today = todayKST();
   const existing = DATA.snapshots.find(s=>s.date===today);
   if(existing && existing.costs) return;
   upsertSnapshot();
@@ -1902,7 +1907,7 @@ function renderDividendCalendar(){
 
 function upsertSnapshot(){
   ensureDataShape();
-  const today = new Date().toISOString().slice(0,10);
+  const today = todayKST();
   const totals = {};
   const costs = {};
   DATA.owners.forEach(o=>{ totals[o.id] = ownerTotal(o.id); costs[o.id] = ownerCostBasis(o.id); });
@@ -2225,7 +2230,7 @@ async function submitSnapshotForm(){
   const date = document.getElementById('snap_date').value;
   const value = parseMoneyField('snap_value');
   const cost = parseMoneyField('snap_cost');
-  const today = new Date().toISOString().slice(0,10);
+  const today = todayKST();
   if(!date){ showToast('날짜를 선택해주세요'); return; }
   if(date > today){ showToast('오늘 이후 날짜는 기록할 수 없어요'); return; }
   if(!value){ showToast('평가금액을 입력해주세요'); return; }
@@ -3407,6 +3412,7 @@ async function submitTx(stockId, field){
     stock.quantity = Math.max(0, (stock.quantity||0) - qty);
   }
   recalcDividendQuantitiesForStock(stock);
+  upsertSnapshot(); // 보유 수량이 바뀌었으니 오늘 스냅샷도 함께 갱신
   await saveData();
   render();
   refreshStockDetailSheetIfOpen(stockId);
@@ -3423,6 +3429,7 @@ async function deleteEntry(stockId, field, entryId){
     stock.quantity = (stock.quantity||0) + entry.quantity;
   }
   recalcDividendQuantitiesForStock(stock);
+  upsertSnapshot();
   await saveData();
   render();
   refreshStockDetailSheetIfOpen(stockId);
@@ -3442,6 +3449,7 @@ async function deleteStock(stockId){
   }
   DATA.stocks = DATA.stocks.filter(s=>s.id!==stockId);
   openStocks.delete(stockId);
+  upsertSnapshot();
   await saveData();
   render();
   // 계좌 시트 안에서 열었던 상세면 계좌 목록으로 돌아가고, 그 외(포트폴리오 모음 등)는 기존처럼 닫는다
