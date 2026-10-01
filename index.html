@@ -445,6 +445,7 @@
   }
   .entry-row:last-child{border-bottom:none;}
   .entry-row .amt{color:var(--text1);}
+  .entry-right{display:flex;align-items:center;flex-shrink:0;margin-left:8px;}
   .entry-row .del{
     color:var(--red);
     cursor:pointer;
@@ -2971,7 +2972,7 @@ function entryListHtml(list, stockId, field){
   return sorted.map(item=>`
     <div class="entry-row">
       <span>${fmtDateDot(item.date)}${item.price ? ' · 주당 <span class="won-sign">₩</span>'+item.price.toLocaleString('ko-KR') : ''} · ${item.quantity||0}주</span>
-      <span class="del-icon" onclick="deleteEntry('${stockId}','${field}','${item.id}')">🗑️</span>
+      <span class="entry-right"><span class="amt num">${fmtWon(item.amount != null ? item.amount : (item.quantity||0) * (item.price||0))}</span><span class="del-icon" onclick="deleteEntry('${stockId}','${field}','${item.id}')">🗑️</span></span>
     </div>
   `).join('');
 }
