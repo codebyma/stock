@@ -172,6 +172,7 @@
     -webkit-user-select:none;
   }
   .trend-svg-wrap svg{display:block;}
+  .trend-svg-wrap.pl{height:100px;}
   .range-tabs{display:flex;gap:6px;margin:10px 0 8px;}
   .range-tab{
     flex:1;
@@ -1932,6 +1933,7 @@ async function saveSnapshotNow(){
 
 let trendRange = 'all';
 let trendChart = null;
+let plChart = null;
 const TREND_RANGES = [
   { key:'1m', label:'1개월', days:30 },
   { key:'3m', label:'3개월', days:91 },
@@ -2014,6 +2016,67 @@ function bindTrendChartEvents(){
   }
 }
 
+function hidePlTip(){
+  ['plGuide','plDot','plTip'].forEach(id=>{
+    const e = document.getElementById(id);
+    if(e) e.style.display = 'none';
+  });
+}
+
+function showPlTip(k){
+  const c = plChart;
+  if(!c || !c.points[k]) return;
+  const p = c.points[k];
+  const snap = c.snaps[p.si];
+  const leftPct = p.x / c.w * 100;
+  const topPct = p.y / c.h * 100;
+  const guide = document.getElementById('plGuide');
+  const dot = document.getElementById('plDot');
+  const tip = document.getElementById('plTip');
+  if(!guide || !dot || !tip) return;
+  guide.style.left = leftPct + '%';
+  guide.style.display = 'block';
+  dot.style.left = leftPct + '%';
+  dot.style.top = topPct + '%';
+  dot.style.display = 'block';
+  const pct = p.cost ? (p.pl / p.cost) * 100 : null;
+  let rows = `<div class="trend-tip-date">${fmtDateDot(snap.date)}</div>
+    <div class="trend-tip-row"><span>평가손익</span><span class="num ${plClass(p.pl)}">${fmtPL(p.pl)}${pct!==null ? ' ('+fmtPercent(pct)+')' : ''}</span></div>`;
+  const prev = c.points[k-1];
+  if(prev){
+    const d = p.pl - prev.pl;
+    rows += `<div class="trend-tip-row"><span>직전 기록 대비</span><span class="num ${plClass(d)}">${fmtPL(d)}</span></div>`;
+  }
+  tip.innerHTML = rows;
+  tip.style.left = leftPct > 50 ? '4px' : 'auto';
+  tip.style.right = leftPct > 50 ? 'auto' : '4px';
+  tip.style.display = 'block';
+}
+
+function bindPlChartEvents(){
+  const wrap = document.getElementById('plChartWrap');
+  if(!wrap || !plChart) return;
+  const pick = (ev)=>{
+    const rect = wrap.getBoundingClientRect();
+    const vx = Math.min(1, Math.max(0, (ev.clientX - rect.left) / rect.width)) * plChart.w;
+    let best = 0, bestDist = Infinity;
+    plChart.points.forEach((pt, i)=>{
+      const d = Math.abs(pt.x - vx);
+      if(d < bestDist){ bestDist = d; best = i; }
+    });
+    showPlTip(best);
+  };
+  wrap.onpointerdown = pick;
+  wrap.onpointermove = pick;
+  wrap.onpointerleave = (ev)=>{ if(ev.pointerType === 'mouse') hidePlTip(); };
+  if(!window._plOutsideBound){
+    window._plOutsideBound = true;
+    document.addEventListener('pointerdown', (ev)=>{
+      if(!ev.target.closest || !ev.target.closest('#plChartWrap')) hidePlTip();
+    });
+  }
+}
+
 function renderAssetTrend(){
   const el = document.getElementById('assetTrendSection');
   const allSnaps = (DATA.snapshots||[]).filter(s=> s.totals && typeof s.totals[currentOwner] === 'number');
@@ -2060,8 +2123,10 @@ function renderAssetTrend(){
 
   let periodHtml = '';
   let chartHtml = '';
+  let plChartHtml = '';
   let minmaxText = '';
   trendChart = null;
+  plChart = null;
 
   if(snaps.length < 2){
     chartHtml = `<div class="panel-empty">이 기간에는 기록이 부족해요. 더 긴 기간을 선택해 보세요.</div>`;
@@ -2129,6 +2194,48 @@ function renderAssetTrend(){
       </div>
       ${hasCost || hasTotalReturn ? `<div class="trend-legend"><span><i class="lg-line"></i>평가금액</span>${hasCost ? `<span><i class="lg-dash"></i>투자원금</span>` : ''}${hasTotalReturn ? `<span><i class="lg-dot"></i>배당 포함 총수익</span>` : ''}</div>` : ''}
     `;
+
+    // ---- 평가손익 추이: 평가금액 − 투자원금. 추가 입금(원금 증가)의 영향을 뺀 순수 손익 흐름
+    const plIdx = [], plVals = [];
+    costs.forEach((c,i)=>{ if(c !== null){ plIdx.push(i); plVals.push(values[i] - c); } });
+    if(plVals.length >= 2){
+      const ph = 100;
+      const pmin = Math.min(...plVals, 0);
+      const pmax = Math.max(...plVals, 0);
+      const pspan = (pmax - pmin) || 1;
+      const pyOf = v => pad + ((pmax - v)/pspan)*(ph - 2*pad);
+      const ppoints = plIdx.map((si,k)=>({ x: xOf(si), y: pyOf(plVals[k]), si, pl: plVals[k], cost: costs[si] }));
+      plChart = { points: ppoints, snaps, w, h: ph };
+      const nPl = plVals.length;
+      const lastPl = plVals[nPl-1];
+      const lastCost = costs[plIdx[nPl-1]];
+      const lastPlPct = lastCost ? (lastPl/lastCost)*100 : null;
+      const dPl = lastPl - plVals[nPl-2];
+      const gap = Math.round((Date.parse(snaps[plIdx[nPl-1]].date) - Date.parse(snaps[plIdx[nPl-2]].date)) / 86400000);
+      const dLabel = Number.isFinite(gap) && gap > 0 ? `${gap}일 전 기록 대비` : '직전 기록 대비';
+      const plColor = lastPl < 0 ? 'var(--red)' : 'var(--mint)';
+      const plLine = ppoints.map(q=>`${q.x.toFixed(1)},${q.y.toFixed(1)}`).join(' ');
+      const zeroY = pyOf(0).toFixed(1);
+      plChartHtml = `
+        <div class="panel-title sub-title mt-24 mb-4">평가손익 추이</div>
+        <div class="trend-latest-delta num ${plClass(lastPl)}">${fmtPL(lastPl)}${lastPlPct!==null ? ' ('+fmtPercent(lastPlPct)+')' : ''}</div>
+        <div class="trend-first-delta num"><span class="${plClass(dPl)}">${fmtPL(dPl)}</span> · ${dLabel} · 원금 추가분 제외</div>
+        <div class="trend-svg-wrap pl" id="plChartWrap">
+          <svg viewBox="0 0 ${w} ${ph}" width="100%" height="${ph}" preserveAspectRatio="none">
+            <line x1="${pad}" y1="${zeroY}" x2="${w-pad}" y2="${zeroY}" stroke="var(--text3)" stroke-width="1" stroke-dasharray="4 3" vector-effect="non-scaling-stroke"></line>
+            <polyline points="${plLine}" fill="none" stroke="${plColor}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"></polyline>
+          </svg>
+          <div class="trend-guide" id="plGuide"></div>
+          <div class="trend-dot" id="plDot" style="border-color:${plColor};"></div>
+          <div class="trend-tip" id="plTip"></div>
+        </div>
+        <div class="trend-caption-row">
+          <span>${fmtDateDot(snaps[plIdx[0]].date)}</span>
+          <span>${fmtDateDot(snaps[plIdx[nPl-1]].date)}</span>
+        </div>
+        <div class="trend-legend"><span><i class="lg-dash"></i>0 (손익 없음)</span></div>
+      `;
+    }
   }
 
   el.innerHTML = `
@@ -2143,10 +2250,12 @@ function renderAssetTrend(){
       ${periodHtml}
       ${rangeTabsHtml}
       ${chartHtml}
+      ${plChartHtml}
       ${manageHtml}
     </div>
   `;
   bindTrendChartEvents();
+  bindPlChartEvents();
   const trigEl = document.getElementById('trendLatestTrigger');
   if(trigEl) trigEl.dataset.minmax = minmaxText;
 }
