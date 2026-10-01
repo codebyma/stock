@@ -126,7 +126,7 @@
     {
       "id": "stk_wj4tpvs",
       "accountId": "acc_1ynxc3d",
-      "quantity": 373,
+      "quantity": 385,
       "buys": [
         {
           "id": "tx_8botibx",
@@ -134,6 +134,13 @@
           "quantity": 373,
           "price": 17178,
           "amount": 6407394
+        },
+        {
+          "id": "tx_mvamygp",
+          "date": "2026-09-29",
+          "quantity": 12,
+          "price": 25890,
+          "amount": 310680
         }
       ],
       "sells": [],
@@ -143,7 +150,7 @@
     {
       "id": "stk_qqdaf6n",
       "accountId": "acc_1ynxc3d",
-      "quantity": 46,
+      "quantity": 47,
       "buys": [
         {
           "id": "tx_5xugpr5",
@@ -151,6 +158,13 @@
           "quantity": 46,
           "price": 108497,
           "amount": 4990862
+        },
+        {
+          "id": "tx_e6g0lil",
+          "date": "2026-09-29",
+          "quantity": 1,
+          "price": 181795,
+          "amount": 181795
         }
       ],
       "sells": [],
@@ -337,7 +351,7 @@
     {
       "id": "stk_0slfxzl",
       "accountId": "acc_5ma36fu",
-      "quantity": 245,
+      "quantity": 249,
       "buys": [
         {
           "id": "tx_1dgc6hy",
@@ -345,6 +359,13 @@
           "quantity": 245,
           "price": 15090,
           "amount": 3697050
+        },
+        {
+          "id": "tx_387l26a",
+          "date": "2026-09-29",
+          "quantity": 4,
+          "price": 25890,
+          "amount": 103560
         }
       ],
       "sells": [],
@@ -371,7 +392,7 @@
     {
       "id": "stk_fxiabam",
       "accountId": "acc_5ma36fu",
-      "quantity": 387,
+      "quantity": 395,
       "buys": [
         {
           "id": "tx_eampp1v",
@@ -379,6 +400,13 @@
           "quantity": 387,
           "price": 12742,
           "amount": 4931154
+        },
+        {
+          "id": "tx_qbrqokp",
+          "date": "2026-10-01",
+          "quantity": 8,
+          "price": 13975,
+          "amount": 111800
         }
       ],
       "sells": [],
@@ -388,7 +416,7 @@
     {
       "id": "stk_dk5wf2i",
       "accountId": "acc_brrccwl",
-      "quantity": 37,
+      "quantity": 137,
       "buys": [
         {
           "id": "tx_tnz12tz",
@@ -396,6 +424,13 @@
           "quantity": 37,
           "price": 27995,
           "amount": 1035815
+        },
+        {
+          "id": "tx_ed97llw",
+          "date": "2026-09-29",
+          "quantity": 100,
+          "price": 25905,
+          "amount": 2590500
         }
       ],
       "sells": [],
@@ -405,7 +440,7 @@
     {
       "id": "stk_r2144xx",
       "accountId": "acc_brrccwl",
-      "quantity": 13,
+      "quantity": 14,
       "buys": [
         {
           "id": "tx_ct4h1o2",
@@ -413,6 +448,13 @@
           "quantity": 13,
           "price": 157383,
           "amount": 2045979
+        },
+        {
+          "id": "tx_1m4r3ha",
+          "date": "2026-09-29",
+          "quantity": 1,
+          "price": 182000,
+          "amount": 182000
         }
       ],
       "sells": [],
@@ -422,7 +464,7 @@
     {
       "id": "stk_bwh1i1q",
       "accountId": "acc_brrccwl",
-      "quantity": 246,
+      "quantity": 335,
       "buys": [
         {
           "id": "tx_ct20jx9",
@@ -430,6 +472,13 @@
           "quantity": 246,
           "price": 12325,
           "amount": 3031950
+        },
+        {
+          "id": "tx_d21nbz9",
+          "date": "2026-09-29",
+          "quantity": 89,
+          "price": 14270,
+          "amount": 1270030
         }
       ],
       "sells": [],
@@ -750,39 +799,26 @@
         "wife": 86157195
       },
       "costs": {
-        "me": 19843403.0,
-        "ALL": 70531907.0,
-        "wife": 50688504.0
+        "me": 19843403,
+        "ALL": 70531907,
+        "wife": 50688504
+      }
+    },
+    {
+      "date": "2026-10-01",
+      "totals": {
+        "me": 28968855,
+        "wife": 90887790,
+        "ALL": 119856645
+      },
+      "costs": {
+        "me": 19843403,
+        "wife": 55438869,
+        "ALL": 75282272
       }
     }
   ],
   "dividends": [
-    {
-      "id": "divrec_xl0ulp7",
-      "key": "360750",
-      "name": "Ⓣ S&P500",
-      "ticker": "360750",
-      "month": "2026-07",
-      "date": "2026-07-30",
-      "perShare": 66,
-      "accounts": [
-        {
-          "accountId": "acc_1ynxc3d",
-          "quantity": 373,
-          "amount": 24618
-        },
-        {
-          "accountId": "acc_5ma36fu",
-          "quantity": 245,
-          "amount": 16170
-        },
-        {
-          "accountId": "acc_brrccwl",
-          "quantity": 37,
-          "amount": 2442
-        }
-      ]
-    },
     {
       "id": "divrec_ye6bmfw",
       "key": "133690",
@@ -793,19 +829,9 @@
       "perShare": 255,
       "accounts": [
         {
-          "accountId": "acc_1ynxc3d",
-          "quantity": 46,
-          "amount": 11730
-        },
-        {
           "accountId": "acc_5ma36fu",
           "quantity": 34,
           "amount": 8670
-        },
-        {
-          "accountId": "acc_brrccwl",
-          "quantity": 13,
-          "amount": 3315
         }
       ]
     },
@@ -822,38 +848,6 @@
           "accountId": "acc_1q4nsbn",
           "quantity": 23,
           "amount": 2300
-        }
-      ]
-    },
-    {
-      "id": "divrec_6slqxiy",
-      "key": "329650",
-      "name": "Ⓚ TRF3070",
-      "ticker": "329650",
-      "month": "2026-07",
-      "date": "2026-07-14",
-      "perShare": 31,
-      "accounts": [
-        {
-          "accountId": "acc_5ma36fu",
-          "quantity": 387,
-          "amount": 11997
-        }
-      ]
-    },
-    {
-      "id": "divrec_ecknywt",
-      "key": "329650",
-      "name": "Ⓚ TRF3070",
-      "ticker": "329650",
-      "month": "2026-08",
-      "date": "2026-08-13",
-      "perShare": 31,
-      "accounts": [
-        {
-          "accountId": "acc_5ma36fu",
-          "quantity": 387,
-          "amount": 11997
         }
       ]
     },
@@ -888,11 +882,6 @@
           "amount": 962
         },
         {
-          "accountId": "acc_brrccwl",
-          "quantity": 246,
-          "amount": 9102
-        },
-        {
           "accountId": "acc_1q4nsbn",
           "quantity": 194,
           "amount": 7178
@@ -912,11 +901,6 @@
           "accountId": "acc_aioddia",
           "quantity": 26,
           "amount": 780
-        },
-        {
-          "accountId": "acc_brrccwl",
-          "quantity": 246,
-          "amount": 7380
         },
         {
           "accountId": "acc_1q4nsbn",
@@ -1105,8 +1089,8 @@
         },
         {
           "accountId": "acc_brrccwl",
-          "quantity": 246,
-          "amount": 9594
+          "quantity": 335,
+          "amount": 13065
         },
         {
           "accountId": "acc_1q4nsbn",
