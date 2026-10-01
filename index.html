@@ -3305,7 +3305,7 @@ function openMonthDividendSheet(month){
     let dayLabel = '';
     if(rec.date){
       const parts = rec.date.split('-');
-      if(parts.length===3) dayLabel = `${parseInt(parts[1],10)}월 ${parseInt(parts[2],10)}일 · `;
+      if(parts.length===3) dayLabel = `${fmtDateDot(rec.date)} · `;
     }
     return `
       <div class="mb-12">
