@@ -245,7 +245,7 @@
   .lg-line{display:inline-block;width:14px;height:0;border-top:2px solid var(--mint);}
   .lg-dash{display:inline-block;width:14px;height:0;border-top:2px dashed var(--text3);}
   .lg-dot{display:inline-block;width:14px;height:0;border-top:2px dotted var(--gold);}
-  .lg-bar{display:inline-block;width:8px;height:10px;background:linear-gradient(var(--red) 50%, var(--blue) 50%);opacity:0.8;border-radius:1px;}
+  .lg-bar{display:inline-block;width:8px;height:10px;background:linear-gradient(var(--red) 50%, var(--blue) 50%);opacity:0.45;border-radius:1px;}
   .trend-pl-label{
     position:absolute;
     left:0;
@@ -281,7 +281,6 @@
     font-weight:700;
     color:var(--text1);
     margin:22px 0 10px;
-    cursor:pointer;
   }
   .breakdown-row{
     padding:14px 0;
@@ -913,6 +912,37 @@ background: var(--surface2);
   }
   .button-row.center{justify-content:center;}
   .section-divider-gray.spaced-top{margin:40px 0 0;}
+  /* 메인 탭 (포트폴리오 / 계좌 / 월별 배당) */
+  .main-tabs{
+    display:flex;
+    margin-top:40px;
+    padding:0 20px;
+    border-bottom:1px solid var(--border);
+  }
+  .main-tab{
+    flex:1;
+    text-align:center;
+    padding:16px 0 14px;
+    font-size:17px;
+    font-weight:600;
+    color:var(--text3);
+    cursor:pointer;
+    border-bottom:2px solid transparent;
+    margin-bottom:-1px;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .main-tab.active{
+    color:var(--text1);
+    border-bottom-color:var(--text1);
+  }
+  .tab-panel{display:none;}
+  .tab-panel.active{display:block;}
+  .tab-panel .section-divider-gray{display:none;}
+  .tab-panel .breakdown-wrap,
+  .tab-panel .panel-wrap{padding-top:20px;}
+  .tab-panel .breakdown-title.mt-40,
+  .tab-panel .section-title.mt-40,
+  .tab-panel .panel-title.title-row.mt-40{margin-top:20px !important;}
   .section-divider-gray.flush-top{margin:20px -20px 0;}
   .panel-title.title-row{
     display:flex;
@@ -1050,8 +1080,18 @@ background: var(--surface2);
 <div class="summary" id="summary"></div>
 
 <div id="assetTrendSection"></div>
-<div id="breakdownSection"></div>
 
+<div class="main-tabs" id="mainTabs">
+  <div class="main-tab" data-tab="breakdown" onclick="setMainTab('breakdown')">포트폴리오</div>
+  <div class="main-tab" data-tab="accounts" onclick="setMainTab('accounts')">계좌</div>
+  <div class="main-tab" data-tab="dividend" onclick="setMainTab('dividend')">월별 배당</div>
+</div>
+
+<div class="tab-panel" id="tabPanel_breakdown">
+<div id="breakdownSection"></div>
+</div>
+
+<div class="tab-panel" id="tabPanel_accounts">
 <main>
   <div class="section-divider-gray flush-top"></div>
   <div class="section-title mt-40">
@@ -1073,8 +1113,11 @@ background: var(--surface2);
 
   <div id="accountList"></div>
 </main>
+</div>
 
+<div class="tab-panel" id="tabPanel_dividend">
 <div id="dividendCalendarSection"></div>
+</div>
 
 <div class="section-divider-gray spaced-top"></div>
 <div class="panel-wrap">
@@ -1165,6 +1208,7 @@ let currentOwner = null;
 let openStocks = new Set();
 let openTxSections = new Set();
 let breakdownOpen = true;
+let currentMainTab = 'breakdown'; // 'breakdown' | 'accounts' | 'dividend'
 let breakdownSearch = '';
 let breakdownSort = 'plpct'; // 'value' | 'plpct'
 
@@ -1316,8 +1360,24 @@ async function saveData(){
   }
 }
 
+function applyMainTab(){
+  document.querySelectorAll('#mainTabs .main-tab').forEach(t=>{
+    t.classList.toggle('active', t.dataset.tab === currentMainTab);
+  });
+  ['breakdown','accounts','dividend'].forEach(k=>{
+    const panel = document.getElementById('tabPanel_'+k);
+    if(panel) panel.classList.toggle('active', k === currentMainTab);
+  });
+}
+function setMainTab(tab){
+  if(currentMainTab === tab) return;
+  currentMainTab = tab;
+  applyMainTab();
+}
+
 function render(){
   ensureDataShape();
+  applyMainTab();
   renderOwnerTabs();
   renderSummary();
   renderDividendCalendar();
@@ -1898,14 +1958,6 @@ function renderDividendCalendar(){
       ${yieldTrendHtml}
     </div>
   `;
-  const scrollEl = document.getElementById('divChartScroll');
-  if(scrollEl){
-    requestAnimationFrame(()=>{
-      requestAnimationFrame(()=>{
-        scrollEl.scrollLeft = scrollEl.scrollWidth;
-      });
-    });
-  }
 }
 
 function upsertSnapshot(){
@@ -2164,7 +2216,7 @@ function renderAssetTrend(){
         const top = Math.min(y, zyN);
         const bh = Math.max(1, Math.abs(y - zyN));
         const col = q.d < 0 ? 'var(--blue)' : 'var(--red)';
-        return `<rect x="${(xOf(q.i) - bw/2).toFixed(1)}" y="${top.toFixed(1)}" width="${bw.toFixed(1)}" height="${bh.toFixed(1)}" fill="${col}" opacity="0.7"></rect>`;
+        return `<rect x="${(xOf(q.i) - bw/2).toFixed(1)}" y="${top.toFixed(1)}" width="${bw.toFixed(1)}" height="${bh.toFixed(1)}" fill="${col}" opacity="0.35"></rect>`;
       }).join('');
       plOverlaySvg = `
           <line x1="${pad}" y1="${zyN.toFixed(1)}" x2="${w-pad}" y2="${zyN.toFixed(1)}" stroke="var(--text3)" stroke-width="1" stroke-dasharray="2 3" opacity="0.6" vector-effect="non-scaling-stroke"></line>
@@ -2439,7 +2491,12 @@ function renderBreakdown(){
   const grandTotal = items.reduce((s,i)=>s+i.value,0);
 
   if(items.length===0){
-    el.innerHTML = '';
+    el.innerHTML = `
+      <div class="breakdown-wrap">
+        <div class="breakdown-title mt-40">전체 포트폴리오 비율</div>
+        <div class="panel-empty">아직 등록된 종목이 없어요.</div>
+      </div>
+    `;
     return;
   }
 
@@ -2477,10 +2534,6 @@ function renderBreakdown(){
       ${breakdownOpen ? `${toolbarHtml}<div class="breakdown-card" id="breakdownRowsContainer">${rowsHtml}</div>${targetSumHint}<div class="button-row center mt-12"><button class="text-link-btn" onclick="openBuySimSheet()">매수 시뮬레이션</button></div>` : ''}
     </div>
   `;
-  document.getElementById('breakdownToggle').onclick = ()=>{
-    breakdownOpen = !breakdownOpen;
-    renderBreakdown();
-  };
   if(breakdownOpen){
     const searchInput = document.getElementById('breakdownSearchInput');
     const sortSelect = document.getElementById('breakdownSortSelect');
