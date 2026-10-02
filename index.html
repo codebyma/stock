@@ -172,7 +172,6 @@
     -webkit-user-select:none;
   }
   .trend-svg-wrap svg{display:block;}
-  .trend-svg-wrap.pl{height:100px;}
   .range-tabs{display:flex;gap:6px;margin:10px 0 8px;}
   .range-tab{
     flex:1;
@@ -197,24 +196,6 @@
     bottom:0;
     width:1px;
     background:var(--border-strong);
-    pointer-events:none;
-  }
-  .trend-grid-line{
-    position:absolute;
-    left:0;
-    right:0;
-    height:1px;
-    opacity:0.25;
-    pointer-events:none;
-  }
-  .trend-grid-label{
-    position:absolute;
-    left:0;
-    font-size:10px;
-    opacity:0.85;
-    background:var(--surface1);
-    padding:0 3px 0 0;
-    transform:translateY(-100%);
     pointer-events:none;
   }
   .trend-dot{
@@ -264,6 +245,16 @@
   .lg-line{display:inline-block;width:14px;height:0;border-top:2px solid var(--mint);}
   .lg-dash{display:inline-block;width:14px;height:0;border-top:2px dashed var(--text3);}
   .lg-dot{display:inline-block;width:14px;height:0;border-top:2px dotted var(--gold);}
+  .lg-bar{display:inline-block;width:8px;height:10px;background:linear-gradient(var(--red) 50%, var(--blue) 50%);opacity:0.8;border-radius:1px;}
+  .trend-pl-label{
+    position:absolute;
+    left:0;
+    font-size:10px;
+    opacity:0.9;
+    pointer-events:none;
+  }
+  .trend-pl-label.bottom{transform:translateY(-100%);}
+  .pl-toggle-row{display:flex;justify-content:flex-end;margin-top:10px;}
   .snap-row{cursor:pointer;}
   .trend-caption-row{
     display:flex;
@@ -1058,7 +1049,6 @@ background: var(--surface2);
 
 <div class="summary" id="summary"></div>
 
-<div id="dividendCalendarSection"></div>
 <div id="assetTrendSection"></div>
 <div id="breakdownSection"></div>
 
@@ -1083,6 +1073,8 @@ background: var(--surface2);
 
   <div id="accountList"></div>
 </main>
+
+<div id="dividendCalendarSection"></div>
 
 <div class="section-divider-gray spaced-top"></div>
 <div class="panel-wrap">
@@ -1715,8 +1707,6 @@ function renderSummary(){
   const plPct = cost ? (pl/cost)*100 : null;
   const monthDiv = currentMonthDividend(currentOwner);
   const yearDiv = yearDividend(currentOwner);
-  const avgYield2 = ownerAvgYield(currentOwner, stockYieldOnAvgPrice);
-  const avgYield3 = ownerAvgYield(currentOwner, stockYieldOnCurrentPrice);
   el.innerHTML = `
     <div class="metric">
       <div class="label">총 평가금액</div>
@@ -1741,19 +1731,6 @@ function renderSummary(){
     <div class="metric">
       <div class="label">올해 누적 배당</div>
       <div class="value text-gold num">${fmtWon(yearDiv)}</div>
-    </div>
-    <div class="metric full-row">
-      <div class="label mb-8">배당률 평균</div>
-      <div class="yield-grid">
-        <div class="yield-card" onclick="showYieldTooltip(event,2)">
-          <div class="yield-label">최근 12개월<br>평균매입가 기준</div>
-          <div class="yield-value num">${fmtPctPlain(avgYield2)}</div>
-        </div>
-        <div class="yield-card" onclick="showYieldTooltip(event,3)">
-          <div class="yield-label">최근 12개월<br>현재가 기준</div>
-          <div class="yield-value num">${fmtPctPlain(avgYield3)}</div>
-        </div>
-      </div>
     </div>
   `;
 }
@@ -1833,8 +1810,9 @@ function renderDividendCalendar(){
 
   if(total===0){
     el.innerHTML = `
+      <div class="section-divider-gray spaced-top"></div>
       <div class="panel-wrap">
-        <div class="panel-title title-row">
+        <div class="panel-title title-row mt-40">
           <span>월별 배당</span>
           ${pensionCalcBtnHtml}
         </div>
@@ -1887,13 +1865,33 @@ function renderDividendCalendar(){
     </div>
   ` : '';
 
+  // 배당률 평균 (최근 12개월 배당금 기준): 평균매입가 기준 / 현재가 기준
+  const avgYield2 = ownerAvgYield(currentOwner, stockYieldOnAvgPrice);
+  const avgYield3 = ownerAvgYield(currentOwner, stockYieldOnCurrentPrice);
+  const avgYieldHtml = `
+    <div class="panel-title sub-title mt-20">배당률 평균</div>
+    <div class="yield-grid">
+      <div class="yield-card" onclick="showYieldTooltip(event,2)">
+        <div class="yield-label">최근 12개월<br>평균매입가 기준</div>
+        <div class="yield-value num">${fmtPctPlain(avgYield2)}</div>
+      </div>
+      <div class="yield-card" onclick="showYieldTooltip(event,3)">
+        <div class="yield-label">최근 12개월<br>현재가 기준</div>
+        <div class="yield-value num">${fmtPctPlain(avgYield3)}</div>
+      </div>
+    </div>
+  `;
+
   el.innerHTML = `
+    <div class="section-divider-gray spaced-top"></div>
     <div class="panel-wrap">
-      <div class="panel-title title-row">
+      <div class="panel-title title-row mt-40">
           <span>월별 배당</span>
           ${pensionCalcBtnHtml}
         </div>
       <div class="fs-14 mb-8"><span class="text-dim">최근 12개월</span> <span class="text-mint">${fmtWon(total)}</span>${growthHtml}</div>
+      ${avgYieldHtml}
+      <div class="panel-title sub-title mt-20">월별 배당금</div>
       <div class="div-chart-scroll" id="divChartScroll">
         <div class="div-chart">${bars}</div>
       </div>
@@ -1933,7 +1931,11 @@ async function saveSnapshotNow(){
 
 let trendRange = 'all';
 let trendChart = null;
-let plChart = null;
+let plOverlay = true; // true: 자산 추이 차트에 직전 기록 대비 손익 막대를 겹쳐서 표시
+function togglePlOverlay(){
+  plOverlay = !plOverlay;
+  renderAssetTrend();
+}
 const TREND_RANGES = [
   { key:'1m', label:'1개월', days:30 },
   { key:'3m', label:'3개월', days:91 },
@@ -1985,6 +1987,13 @@ function showTrendTip(i){
     rows += `
       <div class="trend-tip-row"><span>배당 포함 총수익</span><span class="num text-gold">${fmtWon(c.totalReturnValues[i])}</span></div>`;
   }
+  // 직전 기록 대비 순수 손익 (원금 추가분 제외) — 배당 아래에 표시
+  const pcost = i > 0 ? c.costs[i-1] : null;
+  if(cost !== null && pcost !== null && pcost !== undefined){
+    const dpl = (v - cost) - (c.snaps[i-1].totals[currentOwner] - pcost);
+    rows += `
+      <div class="trend-tip-row"><span>직전 대비 손익</span><span class="num ${plClass(dpl)}">${fmtPL(dpl)}</span></div>`;
+  }
   tip.innerHTML = rows;
   // 점과 겹치지 않도록 반대편 모서리에 띄운다
   tip.style.left = leftPct > 50 ? '4px' : 'auto';
@@ -2016,67 +2025,6 @@ function bindTrendChartEvents(){
   }
 }
 
-function hidePlTip(){
-  ['plGuide','plDot','plTip'].forEach(id=>{
-    const e = document.getElementById(id);
-    if(e) e.style.display = 'none';
-  });
-}
-
-function showPlTip(k){
-  const c = plChart;
-  if(!c || !c.points[k]) return;
-  const p = c.points[k];
-  const snap = c.snaps[p.si];
-  const leftPct = p.x / c.w * 100;
-  const topPct = p.y / c.h * 100;
-  const guide = document.getElementById('plGuide');
-  const dot = document.getElementById('plDot');
-  const tip = document.getElementById('plTip');
-  if(!guide || !dot || !tip) return;
-  guide.style.left = leftPct + '%';
-  guide.style.display = 'block';
-  dot.style.left = leftPct + '%';
-  dot.style.top = topPct + '%';
-  dot.style.display = 'block';
-  const pct = p.cost ? (p.pl / p.cost) * 100 : null;
-  let rows = `<div class="trend-tip-date">${fmtDateDot(snap.date)}</div>
-    <div class="trend-tip-row"><span>평가손익</span><span class="num ${plClass(p.pl)}">${fmtPL(p.pl)}${pct!==null ? ' ('+fmtPercent(pct)+')' : ''}</span></div>`;
-  const prev = c.points[k-1];
-  if(prev){
-    const d = p.pl - prev.pl;
-    rows += `<div class="trend-tip-row"><span>직전 기록 대비</span><span class="num ${plClass(d)}">${fmtPL(d)}</span></div>`;
-  }
-  tip.innerHTML = rows;
-  tip.style.left = leftPct > 50 ? '4px' : 'auto';
-  tip.style.right = leftPct > 50 ? 'auto' : '4px';
-  tip.style.display = 'block';
-}
-
-function bindPlChartEvents(){
-  const wrap = document.getElementById('plChartWrap');
-  if(!wrap || !plChart) return;
-  const pick = (ev)=>{
-    const rect = wrap.getBoundingClientRect();
-    const vx = Math.min(1, Math.max(0, (ev.clientX - rect.left) / rect.width)) * plChart.w;
-    let best = 0, bestDist = Infinity;
-    plChart.points.forEach((pt, i)=>{
-      const d = Math.abs(pt.x - vx);
-      if(d < bestDist){ bestDist = d; best = i; }
-    });
-    showPlTip(best);
-  };
-  wrap.onpointerdown = pick;
-  wrap.onpointermove = pick;
-  wrap.onpointerleave = (ev)=>{ if(ev.pointerType === 'mouse') hidePlTip(); };
-  if(!window._plOutsideBound){
-    window._plOutsideBound = true;
-    document.addEventListener('pointerdown', (ev)=>{
-      if(!ev.target.closest || !ev.target.closest('#plChartWrap')) hidePlTip();
-    });
-  }
-}
-
 function renderAssetTrend(){
   const el = document.getElementById('assetTrendSection');
   const allSnaps = (DATA.snapshots||[]).filter(s=> s.totals && typeof s.totals[currentOwner] === 'number');
@@ -2087,9 +2035,8 @@ function renderAssetTrend(){
   if(allSnaps.length < 2){
     trendChart = null;
     el.innerHTML = `
-      <div class="section-divider-gray spaced-top"></div>
       <div class="panel-wrap">
-        <div class="panel-title title-row mt-40">
+        <div class="panel-title title-row">
           <span>자산 추이</span>
           ${saveBtnHtml}
         </div>
@@ -2123,10 +2070,8 @@ function renderAssetTrend(){
 
   let periodHtml = '';
   let chartHtml = '';
-  let plChartHtml = '';
   let minmaxText = '';
   trendChart = null;
-  plChart = null;
 
   if(snaps.length < 2){
     chartHtml = `<div class="panel-empty">이 기간에는 기록이 부족해요. 더 긴 기간을 선택해 보세요.</div>`;
@@ -2168,21 +2113,49 @@ function renderAssetTrend(){
     const lineColor = isDown ? 'var(--red)' : 'var(--mint)';
     const areaColor = isDown ? 'var(--red-dim)' : 'var(--mint-dim)';
 
-    // Y축 눈금선 2개(66%, 33% 지점) — 값 크기를 눈으로 가늠하기 쉽게. 색은 그래프 선 색(민트/빨강)에 맞춘다
-    const gridVals = [min + span*(2/3), min + span*(1/3)];
-    const gridLinesHtml = gridVals.map(v=>{
-      const y = yOf(v);
-      return `<div class="trend-grid-line" style="top:${y.toFixed(1)}px;background:${lineColor};"></div><div class="trend-grid-label" style="top:${y.toFixed(1)}px;color:${lineColor};">${fmtWonCompact(v)}</div>`;
-    }).join('');
+    // ---- 직전 기록 대비 순수 손익 = 평가손익(평가금액 − 투자원금)의 변화량. 추가 입금(원금 증가)의 영향이 빠진 값
+    // 바로 앞 기록과 둘 다 투자원금이 있을 때만 계산
+    const plDeltas = [];
+    for(let i = 1; i < values.length; i++){
+      if(costs[i] !== null && costs[i-1] !== null){
+        plDeltas.push({ i, d: (values[i] - costs[i]) - (values[i-1] - costs[i-1]) });
+      }
+    }
+    const canPl = plDeltas.length >= 1;
+    let plOverlaySvg = '', plOverlayLabels = '';
+    if(canPl && plOverlay){
+      // 평가금액과 스케일이 다르므로 자기 축(오른쪽 라벨)으로 같은 높이 안에 막대로 그린다. 0 기준선 위는 증가, 아래는 감소
+      const dvals = plDeltas.map(q=>q.d);
+      const omin = Math.min(...dvals, 0);
+      const omax = Math.max(...dvals, 0);
+      const ospan = (omax - omin) || 1;
+      const oyOf = v => h - pad - ((v - omin)/ospan)*(h - 2*pad);
+      const zyN = oyOf(0);
+      const bw = Math.max(2, ((w - 2*pad)/Math.max(1, values.length - 1)) * 0.45);
+      const bars = plDeltas.map(q=>{
+        const y = oyOf(q.d);
+        const top = Math.min(y, zyN);
+        const bh = Math.max(1, Math.abs(y - zyN));
+        const col = q.d < 0 ? 'var(--blue)' : 'var(--red)';
+        return `<rect x="${(xOf(q.i) - bw/2).toFixed(1)}" y="${top.toFixed(1)}" width="${bw.toFixed(1)}" height="${bh.toFixed(1)}" fill="${col}" opacity="0.7"></rect>`;
+      }).join('');
+      plOverlaySvg = `
+          <line x1="${pad}" y1="${zyN.toFixed(1)}" x2="${w-pad}" y2="${zyN.toFixed(1)}" stroke="var(--text3)" stroke-width="1" stroke-dasharray="2 3" opacity="0.6" vector-effect="non-scaling-stroke"></line>
+          ${bars}`;
+      const fmtSigned = v => (v > 0 ? '+' : '') + fmtWonCompact(v);
+      plOverlayLabels = `<div class="trend-pl-label" style="top:${oyOf(omax).toFixed(1)}px;color:${omax > 0 ? 'var(--red)' : 'var(--text3)'};">${fmtSigned(omax)}</div>` +
+        (omin < 0 ? `<div class="trend-pl-label bottom" style="top:${oyOf(omin).toFixed(1)}px;color:var(--blue);">${fmtSigned(omin)}</div>` : '');
+    }
 
     chartHtml = `
       <div class="trend-svg-wrap" id="trendChartWrap">
-        ${gridLinesHtml}
+        ${plOverlayLabels}
         <svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}" preserveAspectRatio="none">
           <polygon points="${areaPoints}" fill="${areaColor}" opacity="0.6"></polygon>
           ${hasCost ? `<polyline points="${costPts.join(' ')}" fill="none" stroke="var(--text3)" stroke-width="1.5" stroke-dasharray="4 3" stroke-linejoin="round" vector-effect="non-scaling-stroke"></polyline>` : ''}
           <polyline points="${polyPoints}" fill="none" stroke="${lineColor}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"></polyline>
           ${hasTotalReturn ? `<polyline points="${totalReturnPts.join(' ')}" fill="none" stroke="var(--gold)" stroke-width="1.8" stroke-dasharray="1 3.5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"></polyline>` : ''}
+          ${plOverlaySvg}
         </svg>
         <div class="trend-guide" id="trendGuide"></div>
         <div class="trend-dot" id="trendDot"></div>
@@ -2192,56 +2165,15 @@ function renderAssetTrend(){
         <span>${fmtDateDot(snaps[0].date)}</span>
         <span>${fmtDateDot(snaps[snaps.length-1].date)}</span>
       </div>
-      ${hasCost || hasTotalReturn ? `<div class="trend-legend"><span><i class="lg-line"></i>평가금액</span>${hasCost ? `<span><i class="lg-dash"></i>투자원금</span>` : ''}${hasTotalReturn ? `<span><i class="lg-dot"></i>배당 포함 총수익</span>` : ''}</div>` : ''}
+      ${hasCost || hasTotalReturn || (canPl && plOverlay) ? `<div class="trend-legend"><span><i class="lg-line"></i>평가금액</span>${hasCost ? `<span><i class="lg-dash"></i>투자원금</span>` : ''}${hasTotalReturn ? `<span><i class="lg-dot"></i>배당 포함 총수익</span>` : ''}${canPl && plOverlay ? `<span><i class="lg-bar"></i>직전 대비 손익 (왼쪽 축)</span>` : ''}</div>` : ''}
+      ${canPl ? `<div class="pl-toggle-row"><button class="range-tab${plOverlay ? ' active' : ''}" style="flex:none;padding:6px 12px;" onclick="togglePlOverlay()">직전 대비 손익 보기</button></div>` : ''}
     `;
 
-    // ---- 평가손익 추이: 평가금액 − 투자원금. 추가 입금(원금 증가)의 영향을 뺀 순수 손익 흐름
-    const plIdx = [], plVals = [];
-    costs.forEach((c,i)=>{ if(c !== null){ plIdx.push(i); plVals.push(values[i] - c); } });
-    if(plVals.length >= 2){
-      const ph = 100;
-      const pmin = Math.min(...plVals, 0);
-      const pmax = Math.max(...plVals, 0);
-      const pspan = (pmax - pmin) || 1;
-      const pyOf = v => pad + ((pmax - v)/pspan)*(ph - 2*pad);
-      const ppoints = plIdx.map((si,k)=>({ x: xOf(si), y: pyOf(plVals[k]), si, pl: plVals[k], cost: costs[si] }));
-      plChart = { points: ppoints, snaps, w, h: ph };
-      const nPl = plVals.length;
-      const lastPl = plVals[nPl-1];
-      const lastCost = costs[plIdx[nPl-1]];
-      const lastPlPct = lastCost ? (lastPl/lastCost)*100 : null;
-      const dPl = lastPl - plVals[nPl-2];
-      const gap = Math.round((Date.parse(snaps[plIdx[nPl-1]].date) - Date.parse(snaps[plIdx[nPl-2]].date)) / 86400000);
-      const dLabel = Number.isFinite(gap) && gap > 0 ? `${gap}일 전 기록 대비` : '직전 기록 대비';
-      const plColor = lastPl < 0 ? 'var(--red)' : 'var(--mint)';
-      const plLine = ppoints.map(q=>`${q.x.toFixed(1)},${q.y.toFixed(1)}`).join(' ');
-      const zeroY = pyOf(0).toFixed(1);
-      plChartHtml = `
-        <div class="panel-title sub-title mt-24 mb-4">평가손익 추이</div>
-        <div class="trend-latest-delta num ${plClass(lastPl)}">${fmtPL(lastPl)}${lastPlPct!==null ? ' ('+fmtPercent(lastPlPct)+')' : ''}</div>
-        <div class="trend-first-delta num"><span class="${plClass(dPl)}">${fmtPL(dPl)}</span> · ${dLabel} · 원금 추가분 제외</div>
-        <div class="trend-svg-wrap pl" id="plChartWrap">
-          <svg viewBox="0 0 ${w} ${ph}" width="100%" height="${ph}" preserveAspectRatio="none">
-            <line x1="${pad}" y1="${zeroY}" x2="${w-pad}" y2="${zeroY}" stroke="var(--text3)" stroke-width="1" stroke-dasharray="4 3" vector-effect="non-scaling-stroke"></line>
-            <polyline points="${plLine}" fill="none" stroke="${plColor}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"></polyline>
-          </svg>
-          <div class="trend-guide" id="plGuide"></div>
-          <div class="trend-dot" id="plDot" style="border-color:${plColor};"></div>
-          <div class="trend-tip" id="plTip"></div>
-        </div>
-        <div class="trend-caption-row">
-          <span>${fmtDateDot(snaps[plIdx[0]].date)}</span>
-          <span>${fmtDateDot(snaps[plIdx[nPl-1]].date)}</span>
-        </div>
-        <div class="trend-legend"><span><i class="lg-dash"></i>0 (손익 없음)</span></div>
-      `;
-    }
   }
 
   el.innerHTML = `
-    <div class="section-divider-gray spaced-top"></div>
     <div class="panel-wrap">
-      <div class="panel-title title-row mt-40">
+      <div class="panel-title title-row">
         <span>자산 추이</span>
         ${saveBtnHtml}
       </div>
@@ -2250,12 +2182,10 @@ function renderAssetTrend(){
       ${periodHtml}
       ${rangeTabsHtml}
       ${chartHtml}
-      ${plChartHtml}
       ${manageHtml}
     </div>
   `;
   bindTrendChartEvents();
-  bindPlChartEvents();
   const trigEl = document.getElementById('trendLatestTrigger');
   if(trigEl) trigEl.dataset.minmax = minmaxText;
 }
