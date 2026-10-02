@@ -2122,17 +2122,44 @@ function renderAssetTrend(){
       }
     }
     const canPl = plDeltas.length >= 1;
-    let plOverlaySvg = '', plOverlayLabels = '';
+    let plOverlaySvg = '', plOverlayLabels = '', plUnit = '';
     if(canPl && plOverlay){
-      // 평가금액과 스케일이 다르므로 자기 축(오른쪽 라벨)으로 같은 높이 안에 막대로 그린다. 0 기준선 위는 증가, 아래는 감소
-      const dvals = plDeltas.map(q=>q.d);
+      // 막대가 너무 많으면 폭이 얇아져 읽기 어려우므로 주간 → 월간 순으로 합산해서 30개 안팎으로 유지.
+      // 변화량은 더하면 그 기간 전체의 변화량이 되므로 값은 정확하다. 막대 위치는 묶음의 마지막 기록 날짜.
+      const MAX_BARS = 30;
+      const groupBars = (keyFn)=>{
+        const m = new Map();
+        plDeltas.forEach(q=>{
+          const k = keyFn(snaps[q.i].date);
+          const g = m.get(k);
+          if(g){ g.d += q.d; g.i = q.i; } else { m.set(k, { i: q.i, d: q.d }); }
+        });
+        return Array.from(m.values());
+      };
+      const weekKey = (dateStr)=>{
+        const dt = new Date(dateStr + 'T00:00:00');
+        dt.setDate(dt.getDate() - ((dt.getDay() + 6) % 7)); // 그 주 월요일
+        return dt.getFullYear() + '-' + String(dt.getMonth()+1).padStart(2,'0') + '-' + String(dt.getDate()).padStart(2,'0');
+      };
+      let plBars = plDeltas;
+      if(plBars.length > MAX_BARS){
+        plBars = groupBars(weekKey);
+        plUnit = ' (주간 합계)';
+        if(plBars.length > MAX_BARS){
+          plBars = groupBars(d => d.slice(0,7));
+          plUnit = ' (월간 합계)';
+        }
+      }
+      // 평가금액과 스케일이 다르므로 자기 축(왼쪽 라벨)으로 같은 높이 안에 막대로 그린다. 0 기준선 위는 증가, 아래는 감소
+      const dvals = plBars.map(q=>q.d);
       const omin = Math.min(...dvals, 0);
       const omax = Math.max(...dvals, 0);
       const ospan = (omax - omin) || 1;
       const oyOf = v => h - pad - ((v - omin)/ospan)*(h - 2*pad);
       const zyN = oyOf(0);
-      const bw = Math.max(2, ((w - 2*pad)/Math.max(1, values.length - 1)) * 0.45);
-      const bars = plDeltas.map(q=>{
+      const spacing = plUnit ? (w - 2*pad)/Math.max(1, plBars.length) : (w - 2*pad)/Math.max(1, values.length - 1);
+      const bw = Math.max(2, spacing * 0.5);
+      const bars = plBars.map(q=>{
         const y = oyOf(q.d);
         const top = Math.min(y, zyN);
         const bh = Math.max(1, Math.abs(y - zyN));
@@ -2165,7 +2192,7 @@ function renderAssetTrend(){
         <span>${fmtDateDot(snaps[0].date)}</span>
         <span>${fmtDateDot(snaps[snaps.length-1].date)}</span>
       </div>
-      ${hasCost || hasTotalReturn || (canPl && plOverlay) ? `<div class="trend-legend"><span><i class="lg-line"></i>평가금액</span>${hasCost ? `<span><i class="lg-dash"></i>투자원금</span>` : ''}${hasTotalReturn ? `<span><i class="lg-dot"></i>배당 포함 총수익</span>` : ''}${canPl && plOverlay ? `<span><i class="lg-bar"></i>직전 대비 손익 (왼쪽 축)</span>` : ''}</div>` : ''}
+      ${hasCost || hasTotalReturn || (canPl && plOverlay) ? `<div class="trend-legend"><span><i class="lg-line"></i>평가금액</span>${hasCost ? `<span><i class="lg-dash"></i>투자원금</span>` : ''}${hasTotalReturn ? `<span><i class="lg-dot"></i>배당 포함 총수익</span>` : ''}${canPl && plOverlay ? `<span><i class="lg-bar"></i>직전 대비 손익${plUnit} (왼쪽 축)</span>` : ''}</div>` : ''}
       ${canPl ? `<div class="pl-toggle-row"><button class="range-tab${plOverlay ? ' active' : ''}" style="flex:none;padding:6px 12px;" onclick="togglePlOverlay()">직전 대비 손익 보기</button></div>` : ''}
     `;
 
