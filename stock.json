@@ -661,8 +661,99 @@
       "sells": []
     }
   ],
-  "lastPriceUpdate": "2026-10-02 09:01 (KST)",
+  "lastPriceUpdate": "2026-10-02 13:39 (KST)",
   "snapshots": [
+    {
+      "date": "2026-09-02",
+      "totals": {
+        "me": 25751356,
+        "wife": 82593542,
+        "ALL": 108344898
+      },
+      "costs": {
+        "me": 17175571,
+        "wife": 50688504,
+        "ALL": 67864075
+      }
+    },
+    {
+      "date": "2026-09-03",
+      "totals": {
+        "me": 25788254,
+        "wife": 82629380,
+        "ALL": 108417634
+      },
+      "costs": {
+        "me": 17175571,
+        "wife": 50688504,
+        "ALL": 67864075
+      }
+    },
+    {
+      "date": "2026-09-04",
+      "totals": {
+        "me": 25918368,
+        "wife": 83186262,
+        "ALL": 109104630
+      },
+      "costs": {
+        "me": 17175571,
+        "wife": 50688504,
+        "ALL": 67864075
+      }
+    },
+    {
+      "date": "2026-09-07",
+      "totals": {
+        "me": 25850167,
+        "wife": 83402796,
+        "ALL": 109252963
+      },
+      "costs": {
+        "me": 17175571,
+        "wife": 50688504,
+        "ALL": 67864075
+      }
+    },
+    {
+      "date": "2026-09-08",
+      "totals": {
+        "me": 26409130,
+        "wife": 83568216,
+        "ALL": 109977346
+      },
+      "costs": {
+        "me": 17714661,
+        "wife": 50688504,
+        "ALL": 68403165
+      }
+    },
+    {
+      "date": "2026-09-09",
+      "totals": {
+        "me": 26269508,
+        "wife": 83236911,
+        "ALL": 109506419
+      },
+      "costs": {
+        "me": 17714661,
+        "wife": 50688504,
+        "ALL": 68403165
+      }
+    },
+    {
+      "date": "2026-09-10",
+      "totals": {
+        "me": 26357373,
+        "wife": 83014176,
+        "ALL": 109371549
+      },
+      "costs": {
+        "me": 17867013,
+        "wife": 50688504,
+        "ALL": 68555517
+      }
+    },
     {
       "date": "2026-09-11",
       "totals": {
@@ -859,9 +950,9 @@
     {
       "date": "2026-10-02",
       "totals": {
-        "me": 29258745,
-        "wife": 92334375,
-        "ALL": 121593120
+        "me": 29243315,
+        "wife": 92284295,
+        "ALL": 121527610
       },
       "costs": {
         "me": 19843403,
@@ -1067,7 +1158,7 @@
       "key": "360750",
       "ticker": "360750",
       "name": "Ⓣ S&P500",
-      "currentPrice": 25930,
+      "currentPrice": 25895,
       "naverUrl": "https://m.stock.naver.com/domestic/stock/360750/analysis",
       "tossUrl": "https://tossinvest.com/_ul/kUSDQA",
       "priceUpdatedAt": "2026-10-02"
@@ -1076,7 +1167,7 @@
       "key": "133690",
       "ticker": "133690",
       "name": "Ⓣ 나스닥100",
-      "currentPrice": 184260,
+      "currentPrice": 184115,
       "naverUrl": "https://m.stock.naver.com/domestic/stock/133690/analysis",
       "tossUrl": "https://tossinvest.com/_ul/kUyScA",
       "priceUpdatedAt": "2026-10-02"
@@ -1085,7 +1176,7 @@
       "key": "381180",
       "ticker": "381180",
       "name": "Ⓣ 미국필라델피아반도체나스닥",
-      "currentPrice": 45545,
+      "currentPrice": 45565,
       "naverUrl": "https://m.stock.naver.com/domestic/stock/381180/analysis",
       "tossUrl": "https://tossinvest.com/_ul/kgSKyD",
       "priceUpdatedAt": "2026-10-02"
@@ -1094,7 +1185,7 @@
       "key": "305080",
       "ticker": "305080",
       "name": "Ⓣ 미국채10년선물",
-      "currentPrice": 11725,
+      "currentPrice": 11720,
       "naverUrl": "https://m.stock.naver.com/domestic/stock/305080/analysis",
       "tossUrl": "https://tossinvest.com/_ul/kIzzKD",
       "priceUpdatedAt": "2026-10-02"
@@ -1112,7 +1203,7 @@
       "key": "458730",
       "ticker": "458730",
       "name": "Ⓣ 미국배당다우존스",
-      "currentPrice": 14070,
+      "currentPrice": 14095,
       "naverUrl": "https://m.stock.naver.com/domestic/stock/458730/analysis",
       "tossUrl": "https://tossinvest.com/_ul/kUi3QA",
       "priceUpdatedAt": "2026-10-02"
@@ -1130,7 +1221,7 @@
       "key": "0008S0",
       "ticker": "0008S0",
       "name": "Ⓣ 마국배당다우존스타켓데일리커버드콜",
-      "currentPrice": 9290,
+      "currentPrice": 9305,
       "naverUrl": "https://m.stock.naver.com/domestic/stock/0008S0/analysis",
       "tossUrl": "https://tossinvest.com/_ul/kUSDQA",
       "priceUpdatedAt": "2026-10-02"
@@ -1139,7 +1230,7 @@
       "key": "182480",
       "ticker": "182480",
       "name": "Ⓣ 미국MSCI리츠(합성H)",
-      "currentPrice": 12765,
+      "currentPrice": 12730,
       "naverUrl": "https://m.stock.naver.com/domestic/stock/182480/analysis",
       "tossUrl": "https://tossinvest.com/_ul/kIzzOD",
       "priceUpdatedAt": "2026-10-02"
@@ -1148,7 +1239,7 @@
       "key": "371460",
       "ticker": "371460",
       "name": "Ⓣ 차이나전기차SOLACTIVE",
-      "currentPrice": 9095,
+      "currentPrice": 8970,
       "naverUrl": "https://m.stock.naver.com/domestic/stock/371460/analysis",
       "tossUrl": "https://tossinvest.com/_ul/kIzz2C",
       "priceUpdatedAt": "2026-10-02"
@@ -1157,7 +1248,7 @@
       "key": "466940",
       "ticker": "466940",
       "name": "Ⓣ 은행고배당플러스TOP10",
-      "currentPrice": 25770,
+      "currentPrice": 25885,
       "naverUrl": "https://m.stock.naver.com/domestic/stock/466940/analysis",
       "tossUrl": "https://tossinvest.com/_ul/k4ikeF",
       "priceUpdatedAt": "2026-10-02"
@@ -1166,7 +1257,7 @@
       "key": "441640",
       "ticker": "441640",
       "name": "Ⓚ 미국배당커버드콜액티브",
-      "currentPrice": 12155,
+      "currentPrice": 12165,
       "naverUrl": "https://m.stock.naver.com/domestic/stock/441640/analysis",
       "tossUrl": "https://tossinvest.com/_ul/kQyzsB",
       "priceUpdatedAt": "2026-10-02"
@@ -1175,7 +1266,7 @@
       "key": "329650",
       "ticker": "329650",
       "name": "Ⓚ TRF3070",
-      "currentPrice": 13950,
+      "currentPrice": 13980,
       "naverUrl": "https://m.stock.naver.com/domestic/stock/329650/analysis",
       "tossUrl": "https://tossinvest.com/_ul/kIzzuC",
       "priceUpdatedAt": "2026-10-02",
@@ -1185,7 +1276,7 @@
       "key": "379800",
       "ticker": "379800",
       "name": "Ⓚ 미국S&P500",
-      "currentPrice": 23575,
+      "currentPrice": 23540,
       "naverUrl": "https://m.stock.naver.com/domestic/stock/379800/analysis",
       "tossUrl": "https://tossinvest.com/_ul/kUSkeF",
       "priceUpdatedAt": "2026-10-02"
