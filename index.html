@@ -26,6 +26,8 @@
     --red:#e2635a;
     --red-dim:#3a1e1c;
     --lime:#a3e635;
+    --bar-up:#f2574d;
+    --bar-down:#4a9af0;
     --divider-gray:#3a4149;
   }
   body.light-theme{
@@ -46,6 +48,8 @@
     --red:#c33a2f;
     --red-dim:#fcebe9;
     --lime:#65a30d;
+    --bar-up:#e5382c;
+    --bar-down:#2f80ed;
     --divider-gray:#f2f2f2;
   }
   html{
@@ -245,7 +249,7 @@
   .lg-line{display:inline-block;width:14px;height:0;border-top:2px solid var(--mint);}
   .lg-dash{display:inline-block;width:14px;height:0;border-top:2px dashed var(--text3);}
   .lg-dot{display:inline-block;width:14px;height:0;border-top:2px dotted var(--gold);}
-  .lg-bar{display:inline-block;width:8px;height:10px;background:linear-gradient(var(--red) 50%, var(--blue) 50%);opacity:0.45;border-radius:1px;}
+  .lg-bar{display:inline-block;width:8px;height:10px;background:linear-gradient(var(--bar-up) 50%, var(--bar-down) 50%);opacity:0.65;border-radius:1px;}
   .trend-pl-label{
     position:absolute;
     left:0;
@@ -735,7 +739,12 @@ background: var(--surface2);
     display:flex;
     gap:8px;
     margin-top:10px;
-    flex-wrap:wrap;
+  }
+  .json-actions button{
+    flex:1;
+    padding-left:0;
+    padding-right:0;
+    white-space:nowrap;
   }
   .json-error{
     color:var(--red);
@@ -1150,17 +1159,15 @@ background: var(--surface2);
   <div class="panel-title mt-40">JSON 편집</div>
   <div class="json-panel" id="jsonPanel">
     <div class="fs-12 text-dim mb-8">
-      stock.json 파일로 내보내서 보관해두세요. 데이터가 사라지면 그 파일을 다시 가져오면 복원됩니다. 아래 텍스트를 직접 고친 뒤 '적용'을 눌러도 됩니다.
+      stock.json 파일로 내보내서 보관해두세요. 데이터가 사라지면 그 파일을 다시 가져오면 복원됩니다. 아래 텍스트를 직접 고친 뒤 '저장'을 눌러도 됩니다.
     </div>
     <textarea id="jsonTextarea" spellcheck="false"></textarea>
     <div class="json-error" id="jsonError">JSON 형식이 올바르지 않습니다. 콤마, 괄호를 확인해주세요.</div>
     <div class="json-actions">
-      <button class="btn-primary" onclick="exportJsonFile()">stock.json 내보내기</button>
-      <button class="btn-primary" onclick="triggerImportFile()">stock.json 가져오기</button>
-    </div>
-    <div class="json-actions">
-      <button class="btn-ghost" onclick="applyJson()">텍스트 적용하고 저장</button>
-      <button class="btn-ghost" onclick="copyJson()">복사(클립보드)</button>
+      <button class="btn-ghost" onclick="exportJsonFile()">내보내기</button>
+      <button class="btn-ghost" onclick="triggerImportFile()">가져오기</button>
+      <button class="btn-ghost" onclick="applyJson()">저장</button>
+      <button class="btn-ghost" onclick="copyJson()">복사</button>
     </div>
     <input type="file" id="importFileInput" accept="application/json,.json" class="hidden">
   </div>
@@ -2231,13 +2238,13 @@ function renderAssetTrend(){
       const oyOf = v => h - pad - ((v - omin)/ospan)*(h - 2*pad);
       const zyN = oyOf(0);
       const spacing = plUnit ? (w - 2*pad)/Math.max(1, plBars.length) : (w - 2*pad)/Math.max(1, values.length - 1);
-      const bw = Math.max(2, spacing * 0.5);
+      const bw = Math.max(2, spacing * 0.3);
       const bars = plBars.map(q=>{
         const y = oyOf(q.d);
         const top = Math.min(y, zyN);
         const bh = Math.max(1, Math.abs(y - zyN));
-        const col = q.d < 0 ? 'var(--blue)' : 'var(--red)';
-        return `<rect x="${(xOf(q.i) - bw/2).toFixed(1)}" y="${top.toFixed(1)}" width="${bw.toFixed(1)}" height="${bh.toFixed(1)}" fill="${col}" opacity="0.35"></rect>`;
+        const col = q.d < 0 ? 'var(--bar-down)' : 'var(--bar-up)';
+        return `<rect x="${(xOf(q.i) - bw/2).toFixed(1)}" y="${top.toFixed(1)}" width="${bw.toFixed(1)}" height="${bh.toFixed(1)}" fill="${col}" opacity="0.65"></rect>`;
       }).join('');
       plOverlaySvg = `
           <line x1="${pad}" y1="${zyN.toFixed(1)}" x2="${w-pad}" y2="${zyN.toFixed(1)}" stroke="var(--text3)" stroke-width="1" stroke-dasharray="2 3" opacity="0.6" vector-effect="non-scaling-stroke"></line>
