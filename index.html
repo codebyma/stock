@@ -2454,12 +2454,20 @@ function breakdownFilterSort(items){
   return list;
 }
 
-// 종목별 '실제로 받은 배당금'(최근 12개월)이 전체 받은 배당금에서 차지하는 비중(%)
-function dividendShareInfo(key){
-  const items = allItemsBreakdown();
-  const total = items.reduce((s,i)=>s+dividendTTMForKey(i.key),0);
+// 종목 상세 시트의 '배당률'과 같은 기준: 최근 12개월 실제 받은 배당금 ÷ 총 투자원금
+// (같은 종목을 여러 계좌에 보유하면 계좌 전체를 합쳐서 계산)
+function dividendYieldForItem(item){
+  if(!item.cost) return null;
+  const ttm = dividendTTMForKey(item.key);
+  if(ttm <= 0) return null;
+  return (ttm / item.cost) * 100;
+}
+
+// 전체 받은 배당금(최근 12개월) 중 이 종목이 차지하는 비중(%)
+function dividendShareForKey(key){
+  const total = allItemsBreakdown().reduce((s,i)=>s+dividendTTMForKey(i.key),0);
   if(total <= 0) return null;
-  return (dividendTTMForKey(key)/total)*100;
+  return (dividendTTMForKey(key) / total) * 100;
 }
 
 function breakdownRowHtml(item, grandTotal){
@@ -2473,7 +2481,8 @@ function breakdownRowHtml(item, grandTotal){
 
   const cat = catalogByKey(item.key);
   const currentPrice = cat ? (cat.currentPrice||0) : 0;
-  const divShare = dividendShareInfo(item.key);
+  const divYield = dividendYieldForItem(item);
+  const divShare = divYield!==null ? dividendShareForKey(item.key) : null;
 
   let rebalHtml = '';
   if(hasTarget && grandTotal){
@@ -2495,7 +2504,7 @@ function breakdownRowHtml(item, grandTotal){
         <div class="breakdown-name-block">
           <div class="breakdown-name">${escapeHtml(item.name)}${item.ticker ? ' <span class="suffix-text text-dim">('+escapeHtml(item.ticker)+')</span>' : ''}${stalePriceBadgeHtml(cat)}</div>
           <div class="breakdown-price-line">평가금액 ${fmtWon(item.value)} · 현재가 <span class="price-highlight"><span class="won-sign">₩</span>${currentPrice.toLocaleString('ko-KR')}</span></div>
-          <div class="breakdown-price-line">총 ${item.quantity.toLocaleString('ko-KR')}주${hasTarget ? ' · 목표 '+target+'%' : ''}${divShare!==null ? ' · <span class="text-gold">배당 '+divShare.toFixed(1)+'%</span>' : ''}</div>
+          <div class="breakdown-price-line">총 ${item.quantity.toLocaleString('ko-KR')}주${hasTarget ? ' · 목표 '+target+'%' : ''}${divYield!==null ? ' · <span class="text-gold">배당 '+fmtPctPlain(divYield)+(divShare!==null ? ' ('+divShare.toFixed(1)+'%)' : '')+'</span>' : ''}</div>
         </div>
         <div class="breakdown-right">
           <span class="breakdown-ratio num">${ratio.toFixed(2)}%</span>
@@ -2566,7 +2575,7 @@ function renderBreakdown(){
 
   const hasDivData = items.some(i=>dividendTTMForKey(i.key) > 0);
   const divHint = hasDivData
-    ? `<div class="hint-text mt-4">배당 비중은 최근 12개월 동안 실제로 받은 배당금 기준이에요.</div>`
+    ? `<div class="hint-text mt-4">배당은 최근 12개월 동안 실제로 받은 배당금 ÷ 총 투자원금 기준이고, 괄호 안은 전체 받은 배당금 중 이 종목의 비중이에요.</div>`
     : '';
 
   el.innerHTML = `
