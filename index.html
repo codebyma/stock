@@ -2454,6 +2454,14 @@ function breakdownFilterSort(items){
   return list;
 }
 
+// 종목별 '실제로 받은 배당금'(최근 12개월)이 전체 받은 배당금에서 차지하는 비중(%)
+function dividendShareInfo(key){
+  const items = allItemsBreakdown();
+  const total = items.reduce((s,i)=>s+dividendTTMForKey(i.key),0);
+  if(total <= 0) return null;
+  return (dividendTTMForKey(key)/total)*100;
+}
+
 function breakdownRowHtml(item, grandTotal){
   const pl = item.value - item.cost;
   const plPct = item.cost ? (pl/item.cost)*100 : null;
@@ -2465,6 +2473,7 @@ function breakdownRowHtml(item, grandTotal){
 
   const cat = catalogByKey(item.key);
   const currentPrice = cat ? (cat.currentPrice||0) : 0;
+  const divShare = dividendShareInfo(item.key);
 
   let rebalHtml = '';
   if(hasTarget && grandTotal){
@@ -2486,7 +2495,7 @@ function breakdownRowHtml(item, grandTotal){
         <div class="breakdown-name-block">
           <div class="breakdown-name">${escapeHtml(item.name)}${item.ticker ? ' <span class="suffix-text text-dim">('+escapeHtml(item.ticker)+')</span>' : ''}${stalePriceBadgeHtml(cat)}</div>
           <div class="breakdown-price-line">평가금액 ${fmtWon(item.value)} · 현재가 <span class="price-highlight"><span class="won-sign">₩</span>${currentPrice.toLocaleString('ko-KR')}</span></div>
-          <div class="breakdown-price-line">총 ${item.quantity.toLocaleString('ko-KR')}주${hasTarget ? ' · 목표 '+target+'%' : ''}</div>
+          <div class="breakdown-price-line">총 ${item.quantity.toLocaleString('ko-KR')}주${hasTarget ? ' · 목표 '+target+'%' : ''}${divShare!==null ? ' · <span class="text-gold">배당 '+divShare.toFixed(1)+'%</span>' : ''}</div>
         </div>
         <div class="breakdown-right">
           <span class="breakdown-ratio num">${ratio.toFixed(2)}%</span>
@@ -2555,11 +2564,16 @@ function renderBreakdown(){
        <div class="hint-text mt-4">매수·매도 금액은 지금 총 평가금액을 유지한 채 목표비율에 맞추는 기준으로 계산돼요. 목표비율 차이가 1%p 미만이면 근접한 것으로 봐요.</div>`
     : '';
 
+  const hasDivData = items.some(i=>dividendTTMForKey(i.key) > 0);
+  const divHint = hasDivData
+    ? `<div class="hint-text mt-4">배당 비중은 최근 12개월 동안 실제로 받은 배당금 기준이에요.</div>`
+    : '';
+
   el.innerHTML = `
     <div class="section-divider-gray spaced-top"></div>
     <div class="breakdown-wrap">
       <div class="breakdown-title mt-40" id="breakdownToggle">전체 포트폴리오 비율</div>
-      ${breakdownOpen ? `${toolbarHtml}<div class="breakdown-card" id="breakdownRowsContainer">${rowsHtml}</div>${targetSumHint}<div class="button-row center mt-12"><button class="text-link-btn" onclick="openBuySimSheet()">매수 시뮬레이션</button></div>` : ''}
+      ${breakdownOpen ? `${toolbarHtml}<div class="breakdown-card" id="breakdownRowsContainer">${rowsHtml}</div>${targetSumHint}${divHint}<div class="button-row center mt-12"><button class="text-link-btn" onclick="openBuySimSheet()">매수 시뮬레이션</button></div>` : ''}
     </div>
   `;
   if(breakdownOpen){
@@ -2709,7 +2723,7 @@ function buildTargetSheetContent(key, sid){
     <div class="form-panel" id="divgrpform_${sid}">
       <div class="form-row">
         <div class="field">
-          <span class="field-label">배당일</span>
+          <span class="field-label">배당락일</span>
           <div class="date-display-wrap">
             <span class="date-display-text" id="divgrp_date_${sid}_display" data-placeholder="날짜 선택">날짜 선택</span>
             <input type="date" id="divgrp_date_${sid}" class="date-native-hidden" onchange="syncDateDisplay(this)">
@@ -2871,7 +2885,7 @@ function openGroupDividendForm(key, sid){
 async function applyGroupDividend(key, sid){
   const date = document.getElementById(`divgrp_date_${sid}`).value;
   const perShare = parseFloat(document.getElementById(`divgrp_amount_${sid}`).value) || 0;
-  if(!date){ showToast('배당일을 선택해주세요'); return; }
+  if(!date){ showToast('배당락일을 선택해주세요'); return; }
   if(!perShare){ showToast('주당 배당금을 입력해주세요'); return; }
   const cat = catalogByKey(key);
   const stockList = stocksMatchingKey(key).map(s=>({ accountId:s.accountId, quantity:quantityAsOfDate(s, date) }));
