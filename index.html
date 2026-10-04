@@ -359,6 +359,49 @@
     align-items:center;
     justify-content:space-between;
   }
+  .title-actions{display:flex;gap:8px;align-items:stretch;}
+  .add-btn.icon-btn{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:0 10px;
+  }
+  .buy-filter{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    margin:4px 0 8px;
+  }
+  /* .date-display-wrap / .btn-ghost 가 뒤에 정의돼 있어서, 두 클래스로 우선순위를 올려 높이를 맞춤 */
+  .buy-filter .buy-filter-date{
+    flex:1;
+    min-width:0;
+    height:42px;
+    padding:0 10px;
+  }
+  .buy-filter .buy-filter-date .date-display-text{font-size:15px;}
+  .buy-filter-tilde{color:var(--text3);font-size:13px;}
+  .buy-filter .buy-filter-reset{
+    flex:none;
+    height:42px;
+    padding:0 14px;
+    font-size:14px;
+    white-space:nowrap;
+    border-radius:7px;
+  }
+  .buy-filter-sum{font-size:12px;color:var(--text2);padding:2px 0 6px;}
+  .bs-group{margin-top:20px;}
+  .bs-group-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;font-size:16px;font-weight:600;color:var(--text1);}
+  .bs-group-sub{font-size:11.5px;color:var(--text3);margin-top:6px;}
+  .bs-acc{margin-top:2px;}
+  .bs-group-sub + .bs-acc{margin-top:14px;}
+  .bs-acc-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;font-size:13px;color:var(--text2);padding-bottom:4px;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+  .bs-chev{display:inline-block;width:12px;color:var(--text3);transition:transform .15s ease;}
+  .bs-acc.open .bs-chev{transform:rotate(90deg);}
+  .bs-acc-body{display:none;}
+  .bs-acc.open .bs-acc-body{display:block;background:var(--surface2);border-radius:8px;padding:6px 12px;margin:4px 0 8px;}
+  .bs-line{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12.5px;color:var(--text2);padding:3px 0;}
+  .bs-line .amt{color:var(--text1);}
   .add-btn{
     background:none;
     border:1px solid var(--border-strong);
@@ -1131,7 +1174,10 @@ background: var(--surface2);
   <div class="section-divider-gray flush-top"></div>
   <div class="section-title mt-40">
     <span id="accountsLabel">계좌</span>
-    <button class="add-btn" id="addAccountBtn">계좌 추가</button>
+    <div class="title-actions">
+      <button class="add-btn icon-btn" id="buySearchBtn" aria-label="매수내역 검색"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></button>
+      <button class="add-btn" id="addAccountBtn">계좌 추가</button>
+    </div>
   </div>
   <div class="form-panel" id="accountForm">
     <div class="form-row hidden" id="accountOwnerRow">
@@ -3083,6 +3129,23 @@ function refreshStockDetailSheetIfOpen(stockId){
   });
 }
 
+// ===== 매수내역 검색용 공통 헬퍼 =====
+function normalizeRange(range){
+  let from = (range && range.from) || '';
+  let to = (range && range.to) || '';
+  if(from && to && from > to){ const t = from; from = to; to = t; }
+  return { from, to };
+}
+function filterByRange(list, range){
+  const r = normalizeRange(range);
+  return (list||[]).filter(e=>{
+    const d = e.date || '';
+    return (!r.from || d >= r.from) && (!r.to || d <= r.to);
+  });
+}
+function buyAmountOf(b){
+  return b.amount != null ? b.amount : (b.quantity||0) * (b.price||0);
+}
 function buildStockDetailHtml(stock){
   const keyEsc = stock.key.replace(/'/g,"\\'");
   const hasBuys = stock.buys && stock.buys.length>0;
@@ -3562,6 +3625,130 @@ function escapeHtml(str){
 document.getElementById('addAccountBtn').onclick = ()=>{
   toggleForm('accountForm');
 };
+
+// ===== 전체 계좌 탭: 매수내역 날짜 검색 =====
+let buySearch = { from:'', to:'' };
+function collectPurchases(){
+  const accIds = new Set(accountsForOwner(currentOwner).map(a=>a.id));
+  const multiOwner = (DATA.owners||[]).length > 1 && currentOwner === 'ALL';
+  const rows = [];
+  (DATA.stocks||[]).forEach(st=>{
+    if(!accIds.has(st.accountId)) return;
+    const acc = DATA.accounts.find(a=>a.id===st.accountId);
+    const owner = acc ? (DATA.owners||[]).find(o=>o.id===acc.ownerId) : null;
+    (st.buys||[]).forEach(b=>{
+      rows.push({
+        key: st.key,
+        accId: st.accountId,
+        date: b.date || '',
+        name: catalogFor(st).name,
+        qty: b.quantity || 0,
+        price: b.price || 0,
+        amount: buyAmountOf(b),
+        place: (multiOwner && owner ? owner.name + ' · ' : '') + (acc ? acc.name : '')
+      });
+    });
+  });
+  rows.sort((a,b)=> b.date.localeCompare(a.date) || a.name.localeCompare(b.name));
+  return rows;
+}
+let bsAccRows = {}; // 계좌 묶음 id -> 매수 줄 데이터 (펼칠 때만 화면에 그림)
+function bsLineHtml(r){
+  return `
+    <div class="bs-line">
+      <span>${fmtDateDot(r.date)} · ${r.qty.toLocaleString('ko-KR')}주${r.price ? ' · 주당 <span class="won-sign">₩</span>'+r.price.toLocaleString('ko-KR') : ''}</span>
+      <span class="amt num">${fmtWon(r.amount)}</span>
+    </div>`;
+}
+function toggleBsAcc(id){
+  const box = document.getElementById('bsacc_'+id);
+  if(!box) return;
+  const body = box.querySelector('.bs-acc-body');
+  if(!box.classList.contains('open') && !body.dataset.loaded){
+    body.innerHTML = (bsAccRows[id] || []).map(bsLineHtml).join('');
+    body.dataset.loaded = '1';
+  }
+  box.classList.toggle('open');
+}
+function buySearchResultsHtml(){
+  const rows = filterByRange(collectPurchases(), buySearch);
+  bsAccRows = {};
+  if(!rows.length) return `<div class="empty-hint text-dim">해당 기간의 매수 내역이 없어요</div>`;
+  const sum = (arr, f)=>arr.reduce((t,r)=>t+f(r),0);
+
+  // 종목별로 묶고, 그 안에서 계좌별로 나눈다 (금액 큰 순)
+  const byStock = new Map();
+  rows.forEach(r=>{
+    if(!byStock.has(r.key)) byStock.set(r.key, []);
+    byStock.get(r.key).push(r);
+  });
+  let accSeq = 0;
+  const groups = [...byStock.values()].map(list=>{
+    const byAcc = new Map();
+    list.forEach(r=>{
+      if(!byAcc.has(r.accId)) byAcc.set(r.accId, []);
+      byAcc.get(r.accId).push(r);
+    });
+    const accs = [...byAcc.values()]
+      .map(a=>({ place: a[0].place, rows: a, amount: sum(a, r=>r.amount), qty: sum(a, r=>r.qty) }))
+      .sort((x,y)=> y.amount - x.amount);
+    return { name: list[0].name, accs, count: list.length, qty: sum(list, r=>r.qty), amount: sum(list, r=>r.amount) };
+  }).sort((x,y)=> y.amount - x.amount);
+
+  const html = groups.map(g=>`
+    <div class="bs-group">
+      <div class="bs-group-head"><span>${escapeHtml(g.name)}</span><span class="num">${fmtWon(g.amount)}</span></div>
+      <div class="bs-group-sub">${g.count}건 · ${g.qty.toLocaleString('ko-KR')}주</div>
+      ${g.accs.map(a=>{
+        const id = 'a' + (accSeq++);
+        bsAccRows[id] = a.rows;
+        return `
+        <div class="bs-acc" id="bsacc_${id}">
+          <div class="bs-acc-head" onclick="toggleBsAcc('${id}')"><span><span class="bs-chev">›</span>${escapeHtml(a.place || '(계좌 없음)')} <span class="text-dim">${a.rows.length}건</span></span><span class="num">${fmtWon(a.amount)}</span></div>
+          <div class="bs-acc-body"></div>
+        </div>`;
+      }).join('')}
+    </div>`).join('');
+
+  return `<div class="buy-filter-sum">${rows.length}건 · ${sum(rows, r=>r.qty).toLocaleString('ko-KR')}주 · ${fmtWon(sum(rows, r=>r.amount))}</div>${html}`;
+}
+function threeMonthsAgoStr(){
+  const d = new Date();
+  const day = d.getDate();
+  d.setMonth(d.getMonth() - 3);
+  if(d.getDate() !== day) d.setDate(0); // 말일이 없는 달이면 그 달 말일로
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function openBuySearchSheet(){
+  // 내역이 많아져도 가볍게 열리도록 기본은 최근 3개월만 보여준다 (초기화 = 전체 기간)
+  buySearch = { from: threeMonthsAgoStr(), to:'' };
+  const one = (kind, ph, val)=>`
+    <div class="date-display-wrap buy-filter-date">
+      <span class="date-display-text${val ? ' has-value' : ''}" id="bs_${kind}_display" data-placeholder="${ph}">${val ? fmtDateDot(val) : ph}</span>
+      <input type="date" id="bs_${kind}" class="date-native-hidden" value="${val}" onchange="syncDateDisplay(this);onBuySearchChange()">
+    </div>`;
+  openSheet('매수내역 검색', `
+    <div class="sim-hint">기본은 최근 3개월이에요. 기간을 바꾸거나, 초기화를 눌러 전체 기간을 볼 수 있어요. 계좌를 누르면 날짜별 내역이 펼쳐져요.</div>
+    <div class="buy-filter">${one('from','시작일',buySearch.from)}<span class="buy-filter-tilde">~</span>${one('to','종료일','')}<button class="btn-ghost buy-filter-reset" onclick="clearBuySearch()">초기화</button></div>
+    <div id="buySearchResults">${buySearchResultsHtml()}</div>
+  `);
+}
+function onBuySearchChange(){
+  buySearch = {
+    from: document.getElementById('bs_from').value,
+    to: document.getElementById('bs_to').value
+  };
+  document.getElementById('buySearchResults').innerHTML = buySearchResultsHtml();
+}
+function clearBuySearch(){
+  ['bs_from','bs_to'].forEach(id=>{
+    const el = document.getElementById(id);
+    el.value = '';
+    syncDateDisplay(el);
+  });
+  onBuySearchChange();
+}
+document.getElementById('buySearchBtn').onclick = openBuySearchSheet;
 
 async function submitAccount(){
   const nameEl = document.getElementById('newAccountName');
