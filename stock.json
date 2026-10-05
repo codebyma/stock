@@ -661,7 +661,7 @@
       "sells": []
     }
   ],
-  "lastPriceUpdate": "2026-10-02 21:05 (KST)",
+  "lastPriceUpdate": "2026-10-05 13:40 (KST)",
   "snapshots": [
     {
       "date": "2026-09-02",
@@ -1161,7 +1161,7 @@
       "currentPrice": 25780,
       "naverUrl": "https://m.stock.naver.com/domestic/stock/360750/analysis",
       "tossUrl": "https://tossinvest.com/_ul/kUSDQA",
-      "priceUpdatedAt": "2026-10-02"
+      "priceUpdatedAt": "2026-10-05"
     },
     {
       "key": "133690",
@@ -1170,7 +1170,7 @@
       "currentPrice": 183055,
       "naverUrl": "https://m.stock.naver.com/domestic/stock/133690/analysis",
       "tossUrl": "https://tossinvest.com/_ul/kUyScA",
-      "priceUpdatedAt": "2026-10-02"
+      "priceUpdatedAt": "2026-10-05"
     },
     {
       "key": "381180",
@@ -1179,7 +1179,7 @@
       "currentPrice": 45260,
       "naverUrl": "https://m.stock.naver.com/domestic/stock/381180/analysis",
       "tossUrl": "https://tossinvest.com/_ul/kgSKyD",
-      "priceUpdatedAt": "2026-10-02"
+      "priceUpdatedAt": "2026-10-05"
     },
     {
       "key": "305080",
@@ -1188,7 +1188,7 @@
       "currentPrice": 11675,
       "naverUrl": "https://m.stock.naver.com/domestic/stock/305080/analysis",
       "tossUrl": "https://tossinvest.com/_ul/kIzzKD",
-      "priceUpdatedAt": "2026-10-02"
+      "priceUpdatedAt": "2026-10-05"
     },
     {
       "key": "304660",
@@ -1197,7 +1197,7 @@
       "currentPrice": 6880,
       "naverUrl": "https://m.stock.naver.com/domestic/stock/304660/analysis",
       "tossUrl": "https://tossinvest.com/_ul/kIzzeG",
-      "priceUpdatedAt": "2026-10-02"
+      "priceUpdatedAt": "2026-10-05"
     },
     {
       "key": "458730",
@@ -1206,7 +1206,7 @@
       "currentPrice": 14055,
       "naverUrl": "https://m.stock.naver.com/domestic/stock/458730/analysis",
       "tossUrl": "https://tossinvest.com/_ul/kUi3QA",
-      "priceUpdatedAt": "2026-10-02"
+      "priceUpdatedAt": "2026-10-05"
     },
     {
       "key": "319640",
@@ -1215,7 +1215,7 @@
       "currentPrice": 24575,
       "naverUrl": "https://m.stock.naver.com/domestic/stock/319640/analysis",
       "tossUrl": "https://tossinvest.com/_ul/kIzzaD",
-      "priceUpdatedAt": "2026-10-02"
+      "priceUpdatedAt": "2026-10-05"
     },
     {
       "key": "0008S0",
@@ -1224,7 +1224,7 @@
       "currentPrice": 9300,
       "naverUrl": "https://m.stock.naver.com/domestic/stock/0008S0/analysis",
       "tossUrl": "https://tossinvest.com/_ul/kUSDQA",
-      "priceUpdatedAt": "2026-10-02"
+      "priceUpdatedAt": "2026-10-05"
     },
     {
       "key": "182480",
@@ -1233,7 +1233,7 @@
       "currentPrice": 12755,
       "naverUrl": "https://m.stock.naver.com/domestic/stock/182480/analysis",
       "tossUrl": "https://tossinvest.com/_ul/kIzzOD",
-      "priceUpdatedAt": "2026-10-02"
+      "priceUpdatedAt": "2026-10-05"
     },
     {
       "key": "371460",
@@ -1242,7 +1242,7 @@
       "currentPrice": 8915,
       "naverUrl": "https://m.stock.naver.com/domestic/stock/371460/analysis",
       "tossUrl": "https://tossinvest.com/_ul/kIzz2C",
-      "priceUpdatedAt": "2026-10-02"
+      "priceUpdatedAt": "2026-10-05"
     },
     {
       "key": "466940",
@@ -1251,7 +1251,7 @@
       "currentPrice": 25900,
       "naverUrl": "https://m.stock.naver.com/domestic/stock/466940/analysis",
       "tossUrl": "https://tossinvest.com/_ul/k4ikeF",
-      "priceUpdatedAt": "2026-10-02"
+      "priceUpdatedAt": "2026-10-05"
     },
     {
       "key": "441640",
@@ -1260,7 +1260,7 @@
       "currentPrice": 12120,
       "naverUrl": "https://m.stock.naver.com/domestic/stock/441640/analysis",
       "tossUrl": "https://tossinvest.com/_ul/kQyzsB",
-      "priceUpdatedAt": "2026-10-02"
+      "priceUpdatedAt": "2026-10-05"
     },
     {
       "key": "329650",
@@ -1269,7 +1269,7 @@
       "currentPrice": 13980,
       "naverUrl": "https://m.stock.naver.com/domestic/stock/329650/analysis",
       "tossUrl": "https://tossinvest.com/_ul/kIzzuC",
-      "priceUpdatedAt": "2026-10-02",
+      "priceUpdatedAt": "2026-10-05",
       "isSafe": true
     },
     {
@@ -1279,7 +1279,7 @@
       "currentPrice": 23430,
       "naverUrl": "https://m.stock.naver.com/domestic/stock/379800/analysis",
       "tossUrl": "https://tossinvest.com/_ul/kUSkeF",
-      "priceUpdatedAt": "2026-10-02"
+      "priceUpdatedAt": "2026-10-05"
     }
   ],
   "pensionAccountIds": [
