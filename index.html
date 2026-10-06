@@ -2473,6 +2473,7 @@ async function submitSnapshotForm(){
 }
 
 async function deleteSnapshot(date){
+  LOCAL_DELETED_SNAPSHOT_DATES.add(date);
   DATA.snapshots = DATA.snapshots.filter(x=>x.date!==date);
   await saveData();
   render();
@@ -3022,6 +3023,7 @@ async function applyGroupPrice(key, sid){
   if(!cat){ showToast('종목 정보를 찾을 수 없어요'); return; }
   cat.currentPrice = num;
   cat.priceUpdatedAt = new Date().toISOString().slice(0,10);
+  LOCAL_EDITED_PRICE_KEYS.add(key);
   const count = stocksMatchingKey(key).length;
   closeForm(`grpform_${sid}`);
   await saveData();
@@ -3999,6 +4001,40 @@ function showGithubSaveInfo(evt){
   toggleTooltip(evt.currentTarget, 'GitHub 저장', '현재 데이터를 GitHub 저장소의 stock.json에 바로 커밋해요. 최초 1회만 위의 "저장 설정"을 입력하면, 이후엔 이 브라우저에서 버튼 한 번으로 저장돼요.');
 }
 
+// ===== GitHub 저장 전 원격(Actions 갱신분) 병합 =====
+const LOCAL_EDITED_PRICE_KEYS = new Set();      // 이 세션에서 직접 현재가를 수정한 종목
+const LOCAL_DELETED_SNAPSHOT_DATES = new Set(); // 이 세션에서 직접 삭제한 스냅샷 날짜
+function base64ToUtf8(b64){
+  return decodeURIComponent(escape(atob(String(b64).replace(/\s/g,''))));
+}
+function mergeRemoteIntoLocal(remote){
+  const info = { prices:0, snaps:0 };
+  // 현재가: 원격이 더 최신이면 원격 값을 채택 (같은 날이면 내가 직접 고친 종목만 내 값 유지)
+  (DATA.stockCatalog||[]).forEach(cat=>{
+    const r = (remote.stockCatalog||[]).find(x=>x.key===cat.key);
+    if(!r) return;
+    const rd = r.priceUpdatedAt || '', ld = cat.priceUpdatedAt || '';
+    const remoteNewer = rd > ld || (rd === ld && rd && !LOCAL_EDITED_PRICE_KEYS.has(cat.key));
+    if(remoteNewer && (r.currentPrice !== cat.currentPrice || rd !== ld)){
+      cat.currentPrice = r.currentPrice;
+      cat.priceUpdatedAt = r.priceUpdatedAt || null;
+      info.prices++;
+    }
+  });
+  if((remote.lastPriceUpdate||'') > (DATA.lastPriceUpdate||'')) DATA.lastPriceUpdate = remote.lastPriceUpdate;
+  // 스냅샷: 날짜 기준 합집합 (같은 날짜는 내 것 유지, 내가 삭제한 날짜는 다시 살리지 않음)
+  ensureDataShape();
+  const have = new Set(DATA.snapshots.map(x=>x.date));
+  (remote.snapshots||[]).forEach(sn=>{
+    if(!sn || !sn.date || have.has(sn.date) || LOCAL_DELETED_SNAPSHOT_DATES.has(sn.date)) return;
+    DATA.snapshots.push(sn); info.snaps++;
+  });
+  DATA.snapshots.sort((a,b)=>a.date.localeCompare(b.date));
+  // 오늘 스냅샷은 병합된 현재가 기준으로 다시 계산
+  if(DATA.snapshots.some(x=>x.date===todayKST())) upsertSnapshot();
+  return info;
+}
+
 async function pushToGithub(){
   const { repo, path, token } = loadGithubSettings();
   const statusEl = document.getElementById('githubSaveStatus');
@@ -4013,10 +4049,26 @@ async function pushToGithub(){
     const getRes = await fetch(apiUrl, {
       headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github+json' }
     });
-    let sha;
+    let sha, mergeInfo = null;
     if(getRes.ok){
       const getData = await getRes.json();
       sha = getData.sha;
+      // 최신 원격 데이터를 읽어 병합 (읽지 못하면 덮어쓰기 위험이 있어 저장 중단)
+      let remote;
+      try{
+        if(getData.content){
+          remote = JSON.parse(base64ToUtf8(getData.content));
+        } else {
+          const rawRes = await fetch(apiUrl, { headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.raw+json' } });
+          if(!rawRes.ok) throw new Error('raw ' + rawRes.status);
+          remote = JSON.parse(await rawRes.text());
+        }
+      }catch(parseErr){
+        throw new Error('원격 stock.json을 읽지 못해 저장을 중단했어요');
+      }
+      mergeInfo = mergeRemoteIntoLocal(remote);
+      await saveData();
+      render();
     } else if(getRes.status !== 404){
       throw new Error(`파일 조회 실패 (${getRes.status})`);
     }
@@ -4039,7 +4091,8 @@ async function pushToGithub(){
       throw new Error(err.message || `저장 실패 (${putRes.status})`);
     }
     statusEl.textContent = '저장 완료 · ' + new Date().toLocaleTimeString('ko-KR');
-    showToast('GitHub에 저장했어요');
+    const mergedNote = (mergeInfo && (mergeInfo.prices || mergeInfo.snaps)) ? ` (최신 시세 ${mergeInfo.prices}건·스냅샷 ${mergeInfo.snaps}건 합침)` : '';
+    showToast('GitHub에 저장했어요' + mergedNote);
   }catch(e){
     statusEl.textContent = '저장 실패: ' + e.message;
     showToast('GitHub 저장에 실패했어요');
