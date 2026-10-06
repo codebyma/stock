@@ -1250,7 +1250,8 @@ background: var(--surface2);
     </div>
   </div>
 
-  <button class="action-btn-prominent full-width mt-12" onclick="pushToGithub()">GitHub에 저장</button>
+  <div class="form-row mt-12" style="margin-bottom:0"><input type="text" id="gh_commit_msg" placeholder="커밋 메시지 (비워두면 기본 메시지)" maxlength="100" autocomplete="off"></div>
+  <button class="action-btn-prominent full-width mt-8" onclick="pushToGithub()">GitHub에 저장</button>
   <div id="githubSaveStatus" class="panel-caption mt-8"></div>
 </div>
 
@@ -4072,6 +4073,8 @@ async function pushToGithub(){
     } else if(getRes.status !== 404){
       throw new Error(`파일 조회 실패 (${getRes.status})`);
     }
+    const msgInput = document.getElementById('gh_commit_msg');
+    const commitMsg = (msgInput && msgInput.value.trim()) || 'chore: stock.json 업데이트 (앱에서 자동 저장)';
     const content = utf8ToBase64(JSON.stringify(DATA, null, 2));
     const putRes = await fetch(apiUrl, {
       method: 'PUT',
@@ -4081,7 +4084,7 @@ async function pushToGithub(){
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        message: 'chore: stock.json 업데이트 (앱에서 자동 저장)',
+        message: commitMsg,
         content,
         sha
       })
@@ -4091,6 +4094,7 @@ async function pushToGithub(){
       throw new Error(err.message || `저장 실패 (${putRes.status})`);
     }
     statusEl.textContent = '저장 완료 · ' + new Date().toLocaleTimeString('ko-KR');
+    const mi = document.getElementById('gh_commit_msg'); if(mi) mi.value = '';
     const mergedNote = (mergeInfo && (mergeInfo.prices || mergeInfo.snaps)) ? ` (최신 시세 ${mergeInfo.prices}건·스냅샷 ${mergeInfo.snaps}건 합침)` : '';
     showToast('GitHub에 저장했어요' + mergedNote);
   }catch(e){
