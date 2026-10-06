@@ -1037,6 +1037,8 @@ background: var(--surface2);
   .realized-sum-row .num{color:var(--text1);font-weight:500;}
   .realized-sum-note{font-size:11.5px;color:var(--text3);margin-top:6px;}
   .snap-count{font-size:13px;font-weight:400;color:var(--text2);}
+  .snap-restore{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12.5px;color:var(--text3);margin:0 0 8px;}
+  .snap-restore-bottom{margin:16px 0 4px;padding-top:12px;border-top:1px solid var(--border);}
   .snap-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:4px 0 8px;}
   .snap-head-btns{display:flex;gap:6px;}
   .snap-prune-btn{height:34px;padding:0 12px;font-size:13px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;font-family:inherit;}
@@ -1428,6 +1430,7 @@ function migrateStockCatalog(){
 function ensureDataShape(){
   if(!DATA.targets) DATA.targets = {};
   if(!Array.isArray(DATA.snapshots)) DATA.snapshots = [];
+  if(!Array.isArray(DATA.snapshotsArchive)) DATA.snapshotsArchive = [];
   if(!Array.isArray(DATA.dividends)) DATA.dividends = [];
   migrateStockCatalog();
 }
@@ -2413,6 +2416,7 @@ function buildSnapshotSheetHtml(){
       </div>
     </div>
     ${rows || '<div class="empty-hint">아직 기록이 없어요</div>'}
+    ${(DATA.snapshotsArchive||[]).length ? `<div class="snap-restore snap-restore-bottom"><span>정리한 기록 ${DATA.snapshotsArchive.length}개 보관 중</span><button class="snap-prune-btn" onclick="restoreSnapshotArchive()">복구</button></div>` : ''}
   `;
 }
 
@@ -2438,11 +2442,36 @@ async function pruneSnapshots(days){
     if(!plan.remove.length){ showToast('정리할 기록이 없어요'); return; }
     plan.remove.forEach(d=>LOCAL_DELETED_SNAPSHOT_DATES.add(d));
     const rm = new Set(plan.remove);
+    // 원본은 보관함으로 옮겨둠 (언제든 복구 가능)
+    const archived = new Set(DATA.snapshotsArchive.map(x=>x.date));
+    DATA.snapshots.filter(sn=>rm.has(sn.date) && !archived.has(sn.date)).forEach(sn=>DATA.snapshotsArchive.push(sn));
+    DATA.snapshotsArchive.sort((x,y)=>x.date.localeCompare(y.date));
     DATA.snapshots = DATA.snapshots.filter(sn=>!rm.has(sn.date));
     await saveData();
     render();
     openSnapshotSheet();
-    showToast(`${plan.remove.length}개 삭제했어요 · GitHub에 저장하면 반영돼요`);
+    showToast(`${plan.remove.length}개를 정리했어요 · 보관함에서 복구할 수 있어요`);
+  }catch(e){
+    showToast('오류: ' + (e && e.message ? e.message : e));
+  }
+}
+
+async function restoreSnapshotArchive(){
+  try{
+    ensureDataShape();
+    const n = DATA.snapshotsArchive.length;
+    if(!n){ showToast('복구할 기록이 없어요'); return; }
+    const have = new Set(DATA.snapshots.map(x=>x.date));
+    DATA.snapshotsArchive.forEach(sn=>{
+      LOCAL_DELETED_SNAPSHOT_DATES.delete(sn.date);
+      if(!have.has(sn.date)) DATA.snapshots.push(sn);
+    });
+    DATA.snapshots.sort((a,b)=>a.date.localeCompare(b.date));
+    DATA.snapshotsArchive = [];
+    await saveData();
+    render();
+    openSnapshotSheet();
+    showToast(`${n}개를 복구했어요`);
   }catch(e){
     showToast('오류: ' + (e && e.message ? e.message : e));
   }
@@ -4005,8 +4034,9 @@ function mergeRemoteIntoLocal(remote){
   // 스냅샷: 날짜 기준 합집합 (같은 날짜는 내 것 유지, 내가 삭제한 날짜는 다시 살리지 않음)
   ensureDataShape();
   const have = new Set(DATA.snapshots.map(x=>x.date));
+  const archived = new Set((DATA.snapshotsArchive||[]).map(x=>x.date));
   (remote.snapshots||[]).forEach(sn=>{
-    if(!sn || !sn.date || have.has(sn.date) || LOCAL_DELETED_SNAPSHOT_DATES.has(sn.date)) return;
+    if(!sn || !sn.date || have.has(sn.date) || LOCAL_DELETED_SNAPSHOT_DATES.has(sn.date) || archived.has(sn.date)) return;
     DATA.snapshots.push(sn); info.snaps++;
   });
   DATA.snapshots.sort((a,b)=>a.date.localeCompare(b.date));
