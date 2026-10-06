@@ -1032,6 +1032,12 @@ background: var(--surface2);
   .suffix-text{font-weight:400;font-size:12px;}
   .hint-text{font-size:11.5px;color:var(--text3);padding:2px 4px 2px;}
   .stat-footnote{font-size:11px;color:var(--text2);margin:6px 0 2px;}
+  .realized-sum{margin:12px 0 8px;padding:12px 14px;background:var(--surface2);border-radius:10px;}
+  .realized-sum-row{display:flex;justify-content:space-between;align-items:center;font-size:14px;color:var(--text2);padding:3px 0;}
+  .realized-sum-row .num{color:var(--text1);font-weight:500;}
+  .realized-sum-note{font-size:11.5px;color:var(--text3);margin-top:6px;}
+  .realized-tabs{margin:4px 0 12px;}
+  .realized-tabs .range-tab{height:42px;padding:0;font-size:14px;border-radius:10px;}
   .sim-hint{font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.5;}
   .sim-row{padding:12px 0;border-bottom:1px solid var(--border);}
   .sim-row:last-child{border-bottom:none;}
@@ -2636,7 +2642,7 @@ function renderBreakdown(){
     <div class="section-divider-gray spaced-top"></div>
     <div class="breakdown-wrap">
       <div class="breakdown-title mt-40" id="breakdownToggle">전체 포트폴리오 비율</div>
-      ${breakdownOpen ? `${toolbarHtml}<div class="breakdown-card" id="breakdownRowsContainer">${rowsHtml}</div>${targetSumHint}${divHint}<div class="button-row center mt-12"><button class="text-link-btn" onclick="openBuySimSheet()">매수 시뮬레이션</button></div>` : ''}
+      ${breakdownOpen ? `${toolbarHtml}<div class="breakdown-card" id="breakdownRowsContainer">${rowsHtml}</div>${targetSumHint}${divHint}<div class="button-row center mt-12"><button class="text-link-btn" onclick="openBuySimSheet()">매수 시뮬레이션</button><button class="text-link-btn" onclick="openRealizedSheet()">실현손익</button></div>` : ''}
     </div>
   `;
   if(breakdownOpen){
@@ -2834,6 +2840,109 @@ function openTargetSheet(key, sid){
 }
 
 // ===== 매수 시뮬레이션(전체 종목 한 번에) =====
+
+// ===== 실현손익 (평균법: 매도 시점 평균매입단가 기준) =====
+let realizedYear = 'ALL';
+function realizedTrades(ownerId){
+  const out = [];
+  stocksForOwner(ownerId).forEach(stock=>{
+    const cat = catalogFor(stock);
+    const txns = [
+      ...(stock.buys||[]).map(b=>({ date:b.date||'', quantity:b.quantity||0, amount:b.amount||0, type:'buy' })),
+      ...(stock.sells||[]).map(x=>({ date:x.date||'', quantity:x.quantity||0, price:x.price||0, amount:(x.amount!=null ? x.amount : (x.quantity||0)*(x.price||0)), type:'sell' }))
+    ].sort((a,b)=> (a.date||'').localeCompare(b.date||'') || (a.type==='buy'?-1:1));
+    let qty = 0, cost = 0;
+    txns.forEach(t=>{
+      if(t.type==='buy'){ cost += t.amount; qty += t.quantity; return; }
+      const avg = qty>0 ? cost/qty : 0;
+      const sellQty = Math.min(t.quantity, qty);
+      const costOut = avg * sellQty;
+      out.push({
+        key: stock.key, name: cat.name, accountId: stock.accountId,
+        date: t.date, qty: t.quantity, price: t.price, proceeds: t.amount,
+        cost: costOut, pl: t.amount - costOut,
+        incomplete: t.quantity > qty + 1e-9
+      });
+      cost -= costOut; qty -= sellQty;
+    });
+  });
+  return out;
+}
+function realizedSheetBodyHtml(){
+  const all = realizedTrades(currentOwner);
+  const years = Array.from(new Set(all.map(t=>(t.date||'').slice(0,4)).filter(Boolean))).sort().reverse();
+  if(realizedYear!=='ALL' && !years.includes(realizedYear)) realizedYear = 'ALL';
+  const trades = all.filter(t=> realizedYear==='ALL' || (t.date||'').startsWith(realizedYear));
+
+  const chips = ['ALL', ...years].map(y=>
+    `<button class="range-tab${y===realizedYear?' active':''}" onclick="setRealizedYear('${y}')">${y==='ALL'?'전체':y+'년'}</button>`
+  ).join('');
+
+  if(!all.length){
+    return `<div class="sim-hint">아직 기록된 매도 내역이 없어요. 종목 상세에서 매도를 입력하면 여기에 실현손익이 쌓여요.</div>`;
+  }
+
+  const proceeds = trades.reduce((a,t)=>a+t.proceeds,0);
+  const cost = trades.reduce((a,t)=>a+t.cost,0);
+  const pl = proceeds - cost;
+  const plPct = cost>0 ? pl/cost*100 : null;
+  const divTotal = recordsForOwner(currentOwner)
+    .filter(r=> realizedYear==='ALL' || (r.month||'').startsWith(realizedYear))
+    .reduce((a,r)=>a+(r.total||0),0);
+  const earned = pl + divTotal;
+
+  const byKey = {};
+  trades.forEach(t=>{ (byKey[t.key] = byKey[t.key] || { name:t.name, list:[] }).list.push(t); });
+  const groups = Object.values(byKey).map(g=>{
+    g.pl = g.list.reduce((a,t)=>a+t.pl,0);
+    g.cost = g.list.reduce((a,t)=>a+t.cost,0);
+    g.list.sort((a,b)=> (b.date||'').localeCompare(a.date||''));
+    return g;
+  }).sort((a,b)=> b.pl - a.pl);
+
+  const accName = id => { const a = DATA.accounts.find(x=>x.id===id); return a ? a.name : ''; };
+  const sign = n => n>0 ? '+' : (n<0 ? '-' : '');
+
+  const rows = groups.map(g=>{
+    const gp = g.cost>0 ? g.pl/g.cost*100 : null;
+    const lines = g.list.map(t=>`
+      <div class="bs-line">
+        <span class="text-dim">${fmtDateDot(t.date)} · ${accName(t.accountId)} · ${t.qty.toLocaleString('ko-KR')}주 × ${fmtWon(t.price||0)}${t.incomplete?' · 매수기록 부족':''}</span>
+        <span class="num ${plClass(t.pl)}">${fmtPL(t.pl)}</span>
+      </div>`).join('');
+    return `
+      <div class="sim-row">
+        <div class="sim-row-head">
+          <span class="sim-row-name">${escapeHtml(g.name)}</span>
+          <span class="num ${plClass(g.pl)}">${fmtPL(g.pl)}${gp===null?'':` (${fmtPercent(gp)})`}</span>
+        </div>
+        ${lines}
+      </div>`;
+  }).join('');
+
+  return `
+    <div class="range-tabs realized-tabs">${chips}</div>
+    <div class="summary" style="padding:8px 0 4px">
+      <div class="metric"><div class="label">실현손익</div><div class="value num ${plClass(pl)}">${fmtPL(pl)}</div><div class="label mt-6">${plPct===null?'':fmtPercent(plPct)}</div></div>
+      <div class="metric"><div class="label">배당 포함</div><div class="value num ${plClass(earned)}">${fmtPL(earned)}</div><div class="label mt-6">배당 ${fmtWon(divTotal)}</div></div>
+    </div>
+    <div class="realized-sum">
+      <div class="realized-sum-row"><span>매도금액</span><span class="num">${fmtWon(proceeds)}</span></div>
+      <div class="realized-sum-row"><span>매도원가</span><span class="num">${fmtWon(cost)}</span></div>
+      <div class="realized-sum-note">매도 시점의 평균매입단가 기준</div>
+    </div>
+    ${rows || '<div class="panel-empty">선택한 기간에 매도 내역이 없어요.</div>'}
+  `;
+}
+function openRealizedSheet(){
+  openSheet('실현손익', `<div id="realizedBody">${realizedSheetBodyHtml()}</div>`);
+}
+function setRealizedYear(y){
+  realizedYear = y;
+  const el = document.getElementById('realizedBody');
+  if(el) el.innerHTML = realizedSheetBodyHtml();
+}
+
 function openBuySimSheet(){
   const items = allItemsBreakdown().slice().sort((a,b)=> b.value - a.value);
   if(!items.length){ showToast('보유 종목이 없어요'); return; }
