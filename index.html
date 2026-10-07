@@ -1065,6 +1065,29 @@ background: var(--surface2);
   }
   .sim-input::placeholder{color:var(--text3);}
   .divider-top{border-top:1px solid var(--border);}
+  /* 연금 홈 */
+  .pension-entry{
+    margin:10px 20px 0;
+    background:var(--surface1);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:14px;
+    cursor:pointer;
+  }
+  .pension-entry:active{transform:scale(0.99);}
+  .pension-entry-head{display:flex;align-items:center;justify-content:space-between;}
+  .pension-entry-title{font-size:12px;color:var(--text2);}
+  .pension-entry-value{font-size:19px;font-weight:500;color:var(--text1);margin-top:6px;display:flex;align-items:baseline;gap:8px;}
+  .pension-entry-pl{font-size:13px;}
+  .pension-bar{height:8px;border-radius:4px;background:var(--surface2);overflow:hidden;}
+  .pension-bar > div{height:100%;border-radius:4px;}
+  .pension-acc-card{background:var(--surface2);border-radius:10px;padding:12px 14px;margin-top:10px;}
+  .pension-badge{font-size:10.5px;font-weight:400;border:1px solid var(--border-strong);border-radius:4px;padding:1px 6px;color:var(--text2);margin-left:6px;}
+  .pension-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+  .pension-chip{background:none;border:1px solid var(--border-strong);color:var(--text1);border-radius:14px;padding:5px 11px;font-size:12px;cursor:pointer;}
+  .pension-chip.rec{border-color:var(--blue);color:var(--blue);}
+  .pension-chip:active{transform:scale(0.97);}
+  .pension-settings{margin-top:14px;}
   .pension-sum{
     padding:12px 14px;
     border-radius:10px;
@@ -1169,6 +1192,8 @@ background: var(--surface2);
 <div class="owner-tabs" id="ownerTabs"></div>
 
 <div class="summary" id="summary"></div>
+
+<div id="pensionEntry"></div>
 
 <div id="assetTrendSection"></div>
 
@@ -1435,6 +1460,7 @@ function ensureDataShape(){
   if(!DATA.pension.rates) DATA.pension.rates = {};
   if(!DATA.pension.types) DATA.pension.types = {};
   if(!DATA.pension.paid) DATA.pension.paid = {};
+  if(!DATA.pension.log) DATA.pension.log = {};
   if(!Array.isArray(DATA.dividends)) DATA.dividends = [];
   migrateStockCatalog();
 }
@@ -1473,6 +1499,7 @@ function render(){
   if(!jsonDirty) refreshJsonView();
   renderOwnerTabs();
   renderSummary();
+  renderPensionEntry();
   renderDividendCalendar();
   renderAssetTrend();
   renderBreakdown();
@@ -2660,7 +2687,7 @@ function renderBreakdown(){
     <div class="section-divider-gray spaced-top"></div>
     <div class="breakdown-wrap">
       <div class="breakdown-title mt-40" id="breakdownToggle">전체 포트폴리오 비율</div>
-      ${breakdownOpen ? `${toolbarHtml}<div class="breakdown-card" id="breakdownRowsContainer">${rowsHtml}</div>${targetSumHint}${divHint}<div class="button-row center mt-12"><button class="text-link-btn" onclick="openBuySimSheet()">매수 시뮬레이션</button><button class="text-link-btn" onclick="openRealizedSheet()">실현손익</button><button class="text-link-btn" onclick="openPensionLimitSheet()">연금 납입</button></div>` : ''}
+      ${breakdownOpen ? `${toolbarHtml}<div class="breakdown-card" id="breakdownRowsContainer">${rowsHtml}</div>${targetSumHint}${divHint}<div class="button-row center mt-12"><button class="text-link-btn" onclick="openBuySimSheet()">매수 시뮬레이션</button><button class="text-link-btn" onclick="openRealizedSheet()">실현손익</button></div>` : ''}
     </div>
   `;
   if(breakdownOpen){
@@ -2859,14 +2886,31 @@ function openTargetSheet(key, sid){
 
 // ===== 매수 시뮬레이션(전체 종목 한 번에) =====
 
-// ===== 연금 납입 현황 (연금저축·IRP 세액공제 한도) =====
+// ===== 연금 홈 (연금저축·IRP 세액공제 한도 + 납입 기록) =====
 const PENSION_DEDUCT_PENSION = 6000000;   // 연금저축 단독 세액공제 한도
 const PENSION_DEDUCT_TOTAL   = 9000000;   // 연금저축+IRP 합산 세액공제 한도
 const PENSION_PAY_LIMIT      = 18000000;  // 연 납입한도
+let pensionFormAcc = null;        // 납입 추가 폼이 열린 계좌 id
+let pensionShowSettings = false;  // 설정(계좌 유형·공제율) 펼침 여부
 function pensionYear(){ return todayKST().slice(0,4); }
-function pensionPaidOf(accId){
+function pensionScopeOwners(){
+  return (DATA.owners||[]).filter(o=>(currentOwner==='ALL' || o.id===currentOwner) && accountsForOwner(o.id).length);
+}
+function pensionTypedAccounts(ownerId){
+  return accountsForOwner(ownerId).filter(a=>{ const t = DATA.pension.types[a.id]; return t==='PENSION' || t==='IRP'; });
+}
+function pensionTypeLabel(t){ return t==='IRP' ? 'IRP' : '연금저축'; }
+// 예전 방식(올해 납입액을 한 번에 입력)으로 저장된 값 — '기존 입력분'으로 계속 합산
+function pensionLegacyOf(accId){
   const v = ((DATA.pension.paid||{})[accId]||{})[pensionYear()];
   return typeof v==='number' ? v : 0;
+}
+function pensionLogsOf(accId){
+  const y = pensionYear();
+  return ((DATA.pension.log||{})[accId]||[]).filter(l=>String(l.date||'').startsWith(y));
+}
+function pensionPaidOf(accId){
+  return pensionLegacyOf(accId) + pensionLogsOf(accId).reduce((s,l)=>s+(l.amount||0),0);
 }
 function pensionCalcOwner(ownerId){
   const accs = accountsForOwner(ownerId);
@@ -2890,9 +2934,54 @@ function pensionCalcOwner(ownerId){
     remainingLimit: Math.max(0, PENSION_PAY_LIMIT - (pension + irp))
   };
 }
+
+// ---- 메인 화면 진입 카드 ----
+function renderPensionEntry(){
+  const el = document.getElementById('pensionEntry');
+  if(!el) return;
+  ensureDataShape();
+  const owners = pensionScopeOwners();
+  if(!owners.length){ el.innerHTML = ''; return; }
+  let accs = [], deductible = 0, cap = 0, refund = 0, remaining = 0, perMonth = 0, typedOwners = 0;
+  owners.forEach(o=>{
+    const c = pensionCalcOwner(o.id);
+    if(!c.typed) return;
+    typedOwners++;
+    accs = accs.concat(pensionTypedAccounts(o.id));
+    deductible += c.deductible; cap += PENSION_DEDUCT_TOTAL; refund += c.refund; remaining += c.remaining; perMonth = c.perMonth;
+  });
+  const chevron = `<svg class="row-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 6 15 12 9 18"></polyline></svg>`;
+  if(!accs.length){
+    el.innerHTML = `
+      <div class="pension-entry" onclick="openPensionLimitSheet()">
+        <div class="pension-entry-head"><span class="pension-entry-title">연금</span>${chevron}</div>
+        <div class="fs-11-5 text-dim mt-8">연금저축·IRP 계좌를 지정하면 세액공제 한도를 관리해 드려요</div>
+      </div>`;
+    return;
+  }
+  const total = accs.reduce((s,a)=>s+accountTotal(a.id),0);
+  const cost = accs.reduce((s,a)=>s+accountCostBasis(a.id),0);
+  const pl = total - cost;
+  const plPct = cost ? pl/cost*100 : null;
+  const pct = cap ? Math.min(100, deductible/cap*100) : 0;
+  const done = remaining===0;
+  const tail = done
+    ? `<span style="color:var(--mint)">올해 세액공제 한도를 모두 채웠어요</span>`
+    : (typedOwners===1 && perMonth ? `월 ${perMonth.toLocaleString('ko-KR')}원씩 넣으면 한도가 채워져요` : `남은 공제 한도 ${fmtWon(remaining)}`);
+  el.innerHTML = `
+    <div class="pension-entry" onclick="openPensionLimitSheet()">
+      <div class="pension-entry-head"><span class="pension-entry-title">연금</span>${chevron}</div>
+      <div class="pension-entry-value num">${fmtWon(Math.round(total))}${plPct!==null ? `<span class="pension-entry-pl ${plClass(pl)}">${fmtPercent(plPct)}</span>` : ''}</div>
+      <div class="pension-bar mt-12"><div style="width:${pct.toFixed(1)}%;background:${done?'var(--mint)':'var(--blue)'}"></div></div>
+      <div class="entry-row no-border-bottom pb-0 mt-8"><span class="text-dim">올해 세액공제 ${fmtWonCompact(deductible)} / ${fmtWonCompact(cap)}</span><span class="num">예상 환급 ${fmtWon(refund)}</span></div>
+      <div class="fs-11-5 text-dim mt-8">${tail}</div>
+    </div>`;
+}
+
+// ---- 연금 홈 시트 ----
 function pensionSummaryHtml(ownerId){
   const c = pensionCalcOwner(ownerId);
-  if(!c.typed) return `<div class="panel-caption mt-0">계좌 유형을 선택하고 올해 납입액을 입력하면 계산돼요.</div>`;
+  if(!c.typed) return `<div class="panel-caption mt-0">아래 '설정'에서 연금저축·IRP 계좌를 지정해 주세요.</div>`;
   const pct = Math.min(100, c.deductible / PENSION_DEDUCT_TOTAL * 100);
   const done = c.remaining===0;
   return `
@@ -2901,9 +2990,7 @@ function pensionSummaryHtml(ownerId){
         <span class="text-dim">세액공제 대상</span>
         <span class="amt num">${fmtWon(c.deductible)} <span class="text-dim fs-11-5">/ 900만</span></span>
       </div>
-      <div style="height:8px;border-radius:4px;background:var(--surface2);margin:10px 0 12px;overflow:hidden">
-        <div style="height:100%;width:${pct.toFixed(1)}%;background:${done?'var(--mint)':'var(--blue)'};border-radius:4px"></div>
-      </div>
+      <div class="pension-bar" style="margin:10px 0 12px"><div style="width:${pct.toFixed(1)}%;background:${done?'var(--mint)':'var(--blue)'}"></div></div>
       <div class="entry-row no-border-bottom pb-0"><span class="text-dim">예상 환급액 (${c.rate}%)</span><span class="amt num">${fmtWon(c.refund)}</span></div>
       ${done ? `<div class="fs-11-5 mt-8" style="color:var(--mint)">세액공제 한도를 모두 채웠어요</div>` : `
       <div class="entry-row no-border-bottom pb-0 mt-8"><span class="text-dim">남은 공제 한도</span><span class="amt num">${fmtWon(c.remaining)}</span></div>
@@ -2912,74 +2999,162 @@ function pensionSummaryHtml(ownerId){
       <div class="fs-11-5 text-dim mt-8">총 납입 ${c.total.toLocaleString('ko-KR')}원 / 납입한도 1,800만원 (남은 ${c.remainingLimit.toLocaleString('ko-KR')}원)</div>
     </div>`;
 }
+function pensionAddFormHtml(accId, perMonth){
+  const chips = [[100000,'+10만'],[300000,'+30만'],[500000,'+50만'],[1000000,'+100만']]
+    .map(([n,l])=>`<button class="pension-chip" onclick="pensionQuickAmt(${n})">${l}</button>`).join('');
+  const rec = perMonth ? `<button class="pension-chip rec" onclick="pensionSetAmt(${perMonth})">월 권장 ${fmtWonCompact(perMonth)}</button>` : '';
+  return `
+    <div class="mt-12">
+      <div class="pension-chips">${rec}${chips}</div>
+      <div class="form-row mb-0">
+        <div class="field"><span class="field-label">납입일</span><input type="date" id="pensionAddDate" value="${todayKST()}"></div>
+        <div class="field"><span class="field-label">금액</span><input type="text" inputmode="numeric" id="pensionAddAmt" placeholder="0" oninput="formatMoneyInput(this)"></div>
+      </div>
+      <div class="button-row mt-12" style="justify-content:flex-end">
+        <button class="btn-ghost" onclick="closePensionAdd()">취소</button>
+        <button class="add-btn" onclick="addPensionLog('${accId}')">추가</button>
+      </div>
+    </div>`;
+}
+function pensionOwnerBlockHtml(o){
+  const c = pensionCalcOwner(o.id);
+  const accs = pensionTypedAccounts(o.id);
+  const y = pensionYear();
+
+  // 계좌 카드
+  const cards = accs.map(a=>{
+    const t = DATA.pension.types[a.id];
+    const total = accountTotal(a.id), cost = accountCostBasis(a.id), pl = total - cost;
+    const pct = cost ? pl/cost*100 : null;
+    return `
+      <div class="pension-acc-card">
+        <div class="entry-row no-border-bottom pb-0"><span class="text-strong fs-13">${escapeHtml(a.name)}<span class="pension-badge">${pensionTypeLabel(t)}</span></span><span class="amt num">${fmtWon(Math.round(total))}</span></div>
+        <div class="entry-row no-border-bottom pb-0 mt-8"><span class="text-dim">평가손익</span><span class="num ${plClass(pl)}">${fmtPL(pl)}${pct!==null ? ' ('+fmtPercent(pct)+')' : ''}</span></div>
+        <div class="entry-row no-border-bottom pb-0 mt-8"><span class="text-dim">${y}년 납입</span><span class="amt num">${fmtWon(pensionPaidOf(a.id))}</span></div>
+        ${pensionFormAcc===a.id ? pensionAddFormHtml(a.id, c.perMonth) : `<div class="button-row mt-12"><button class="add-btn" onclick="openPensionAdd('${a.id}')">납입 추가</button></div>`}
+      </div>`;
+  }).join('');
+
+  // 납입 기록
+  const entries = [];
+  accs.forEach(a=>{
+    pensionLogsOf(a.id).forEach(l=>entries.push({ id:l.id, date:l.date, amount:l.amount, accId:a.id, accName:a.name }));
+  });
+  entries.sort((x,z)=>String(z.date||'').localeCompare(String(x.date||'')));
+  const legacyRows = accs.filter(a=>pensionLegacyOf(a.id)>0).map(a=>`
+      <div class="entry-row"><span>기존 입력분 · ${escapeHtml(a.name)}</span><span class="entry-right"><span class="amt num">${fmtWon(pensionLegacyOf(a.id))}</span><span class="del-icon" onclick="removePensionLegacy('${a.id}')">🗑️</span></span></div>`).join('');
+  const logRows = entries.map(e=>`
+      <div class="entry-row"><span>${fmtDateDot(e.date)} · ${escapeHtml(e.accName)}</span><span class="entry-right"><span class="amt num">${fmtWon(e.amount)}</span><span class="del-icon" onclick="removePensionLog('${e.accId}','${e.id}')">🗑️</span></span></div>`).join('');
+  const logHtml = accs.length ? `
+      <div class="panel-title sub-title mt-20 mb-4">${y}년 납입 기록</div>
+      ${(logRows||legacyRows) ? logRows + legacyRows : `<div class="empty-hint">아직 납입 기록이 없어요. 계좌의 '납입 추가'로 기록해 보세요.</div>`}` : '';
+
+  // 설정
+  const showSet = pensionShowSettings || !accs.length;
+  const rate = DATA.pension.rates[o.id] || 16.5;
+  const settings = showSet ? `
+      <div class="pension-settings">
+        <div class="form-row mb-0">
+          <div class="field">
+            <span class="field-label">세액공제율</span>
+            <select onchange="setPensionRate('${o.id}', this.value)">
+              <option value="16.5"${rate===16.5?' selected':''}>16.5% (총급여 5,500만원 이하)</option>
+              <option value="13.2"${rate===13.2?' selected':''}>13.2% (총급여 5,500만원 초과)</option>
+            </select>
+          </div>
+        </div>
+        ${accountsForOwner(o.id).map(a=>{
+          const t = DATA.pension.types[a.id] || '';
+          return `<div class="form-row mb-0 mt-12"><div class="field"><span class="field-label">${escapeHtml(a.name)} · 계좌 유형</span>
+            <select onchange="setPensionType('${a.id}', this.value)">
+              <option value=""${t===''?' selected':''}>해당 없음</option>
+              <option value="PENSION"${t==='PENSION'?' selected':''}>연금저축</option>
+              <option value="IRP"${t==='IRP'?' selected':''}>IRP</option>
+            </select></div></div>`;
+        }).join('')}
+      </div>` : '';
+  const settingsToggle = accs.length ? `<div class="button-row center mt-20"><button class="text-link-btn" onclick="togglePensionSettings()">${pensionShowSettings?'설정 닫기':'설정'}</button></div>` : '';
+
+  return `
+      <div class="panel-title sub-title mt-20 mb-4">${escapeHtml(o.name)}</div>
+      <div class="mt-14" id="pensionSummary_${o.id}">${pensionSummaryHtml(o.id)}</div>
+      ${cards}
+      ${logHtml}
+      ${settingsToggle}
+      ${settings}`;
+}
 function buildPensionLimitHtml(){
   ensureDataShape();
-  const owners = (DATA.owners||[]).filter(o=>(currentOwner==='ALL' || o.id===currentOwner) && accountsForOwner(o.id).length);
+  const owners = pensionScopeOwners();
   if(!owners.length) return `<div class="empty-hint">등록된 계좌가 없어요</div>`;
-  const body = owners.map(o=>{
-    const rows = accountsForOwner(o.id).map(a=>{
-      const t = DATA.pension.types[a.id] || '';
-      const paid = pensionPaidOf(a.id);
-      return `
-        <div class="mt-14">
-          <div class="fs-13 text-strong mb-4">${escapeHtml(a.name)}</div>
-          <div class="form-row mb-0">
-            <div class="field">
-              <span class="field-label">계좌 유형</span>
-              <select onchange="setPensionType('${a.id}', this.value)">
-                <option value=""${t===''?' selected':''}>해당 없음</option>
-                <option value="PENSION"${t==='PENSION'?' selected':''}>연금저축</option>
-                <option value="IRP"${t==='IRP'?' selected':''}>IRP</option>
-              </select>
-            </div>
-            ${t ? `<div class="field">
-              <span class="field-label">${pensionYear()}년 납입액</span>
-              <input type="text" inputmode="numeric" value="${paid?paid.toLocaleString('ko-KR'):''}" placeholder="0" oninput="formatMoneyInput(this);setPensionPaid('${a.id}', '${o.id}', this.value)">
-            </div>` : ''}
-          </div>
-        </div>`;
-    }).join('');
-    return `
-      <div class="panel-title sub-title mt-20 mb-4">${escapeHtml(o.name)}</div>
-      <div class="form-row mb-0">
-        <div class="field">
-          <span class="field-label">세액공제율</span>
-          <select onchange="setPensionRate('${o.id}', this.value)">
-            <option value="16.5"${(DATA.pension.rates[o.id]||16.5)===16.5?' selected':''}>16.5% (총급여 5,500만원 이하)</option>
-            <option value="13.2"${DATA.pension.rates[o.id]===13.2?' selected':''}>13.2% (총급여 5,500만원 초과)</option>
-          </select>
-        </div>
-      </div>
-      ${rows}
-      <div class="mt-14" id="pensionSummary_${o.id}">${pensionSummaryHtml(o.id)}</div>`;
-  }).join('<div class="pension-owner-divider"></div>');
+  const body = owners.map(pensionOwnerBlockHtml).join('<div class="pension-owner-divider"></div>');
   return `
     <div class="panel-caption mt-0">연금저축은 600만원, 연금저축+IRP는 합산 900만원까지 세액공제돼요. 납입은 연 1,800만원까지 가능해요. (${pensionYear()}년 기준)</div>
     ${body}`;
 }
-function openPensionLimitSheet(){ openSheet('연금 납입 현황', buildPensionLimitHtml()); }
+function openPensionLimitSheet(){
+  pensionFormAcc = null;
+  pensionShowSettings = false;
+  openSheet('연금', buildPensionLimitHtml());
+}
+function refreshPensionSheet(){
+  const sheet = document.getElementById('bottomSheet');
+  if(!sheet.classList.contains('open') || document.getElementById('sheetTitle').textContent!=='연금') return;
+  const body = document.getElementById('sheetBody');
+  const st = body.scrollTop;
+  body.innerHTML = buildPensionLimitHtml();
+  body.scrollTop = st;
+}
+function pensionChanged(){
+  saveData();
+  refreshPensionSheet();
+  renderPensionEntry();
+}
+function togglePensionSettings(){ pensionShowSettings = !pensionShowSettings; refreshPensionSheet(); }
+function openPensionAdd(accId){ pensionFormAcc = accId; refreshPensionSheet(); }
+function closePensionAdd(){ pensionFormAcc = null; refreshPensionSheet(); }
+function pensionAmtValue(){
+  const el = document.getElementById('pensionAddAmt');
+  return el ? (parseInt(el.value.replace(/[^0-9]/g,''),10) || 0) : 0;
+}
+function pensionSetAmt(n){
+  const el = document.getElementById('pensionAddAmt');
+  if(el) el.value = n ? Number(n).toLocaleString('ko-KR') : '';
+}
+function pensionQuickAmt(n){ pensionSetAmt(pensionAmtValue() + n); }
+function addPensionLog(accId){
+  ensureDataShape();
+  const amount = pensionAmtValue();
+  const dateEl = document.getElementById('pensionAddDate');
+  const date = (dateEl && dateEl.value) || todayKST();
+  if(!amount){ showToast('납입 금액을 입력해 주세요'); return; }
+  if(!DATA.pension.log[accId]) DATA.pension.log[accId] = [];
+  DATA.pension.log[accId].push({ id: uid('pl'), date, amount });
+  pensionFormAcc = null;
+  pensionChanged();
+  showToast('납입 내역을 추가했어요');
+}
+function removePensionLog(accId, logId){
+  ensureDataShape();
+  DATA.pension.log[accId] = (DATA.pension.log[accId]||[]).filter(l=>l.id!==logId);
+  pensionChanged();
+  showToast('납입 기록을 삭제했어요');
+}
+function removePensionLegacy(accId){
+  ensureDataShape();
+  if(DATA.pension.paid[accId]) delete DATA.pension.paid[accId][pensionYear()];
+  pensionChanged();
+  showToast('기존 입력분을 삭제했어요');
+}
 function setPensionType(accId, val){
   ensureDataShape();
   if(val) DATA.pension.types[accId] = val; else delete DATA.pension.types[accId];
-  saveData();
-  document.getElementById('sheetBody').innerHTML = buildPensionLimitHtml();
+  pensionChanged();
 }
 function setPensionRate(ownerId, val){
   ensureDataShape();
   DATA.pension.rates[ownerId] = parseFloat(val) || 16.5;
-  saveData();
-  const el = document.getElementById('pensionSummary_'+ownerId);
-  if(el) el.innerHTML = pensionSummaryHtml(ownerId);
-}
-function setPensionPaid(accId, ownerId, text){
-  ensureDataShape();
-  const n = parseInt(String(text).replace(/[^0-9]/g,''),10) || 0;
-  const y = pensionYear();
-  DATA.pension.paid[accId] = DATA.pension.paid[accId] || {};
-  if(n) DATA.pension.paid[accId][y] = n; else delete DATA.pension.paid[accId][y];
-  saveData();
-  const el = document.getElementById('pensionSummary_'+ownerId);
-  if(el) el.innerHTML = pensionSummaryHtml(ownerId);
+  pensionChanged();
 }
 
 // ===== 실현손익 (평균법: 매도 시점 평균매입단가 기준) =====
