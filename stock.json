@@ -659,6 +659,30 @@
         }
       ],
       "sells": []
+    },
+    {
+      "id": "stk_rndneb2",
+      "accountId": "acc_aioddia",
+      "key": "304660",
+      "quantity": 0,
+      "buys": [],
+      "sells": []
+    },
+    {
+      "id": "stk_ngxphfh",
+      "accountId": "acc_aioddia",
+      "key": "0043B0",
+      "quantity": 24,
+      "buys": [
+        {
+          "id": "tx_r979g1r",
+          "date": "2026-10-06",
+          "quantity": 24,
+          "price": 103880,
+          "amount": 2493120
+        }
+      ],
+      "sells": []
     }
   ],
   "lastPriceUpdate": "2026-10-06 21:58 (KST)",
@@ -971,6 +995,19 @@
         "me": 19843403,
         "wife": 55599566,
         "ALL": 75442969
+      }
+    },
+    {
+      "date": "2026-10-07",
+      "totals": {
+        "me": 29353070,
+        "wife": 92930055,
+        "ALL": 122283125
+      },
+      "costs": {
+        "me": 22336523,
+        "wife": 55599566,
+        "ALL": 77936089
       }
     }
   ],
@@ -1293,11 +1330,19 @@
       "naverUrl": "https://m.stock.naver.com/domestic/stock/379800/analysis",
       "tossUrl": "https://tossinvest.com/_ul/kUSkeF",
       "priceUpdatedAt": "2026-10-06"
+    },
+    {
+      "key": "0043B0",
+      "ticker": "0043B0",
+      "name": "Ⓣ 머나마켓액티브",
+      "currentPrice": 0,
+      "priceUpdatedAt": null
     }
   ],
   "pensionAccountIds": [
     "acc_aioddia",
     "acc_1ynxc3d",
     "acc_5ma36fu"
-  ]
+  ],
+  "snapshotsArchive": []
 }
