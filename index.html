@@ -2396,7 +2396,11 @@ function buildSnapshotSheetHtml(){
     const v = sn.totals[currentOwner];
     const prev = snaps[i+1]; // 배열이 최신순이라 다음 항목이 직전(더 과거) 기록
     const prevV = prev ? prev.totals[currentOwner] : null;
-    const pct = (prevV !== null && prevV !== 0) ? ((v - prevV) / prevV) * 100 : null;
+    // 원금 추가분을 뺀 증감: (평가금액 변화) − (원금 변화), 직전 평가금액 대비
+    const cNow = (sn.costs && typeof sn.costs[currentOwner]==='number') ? sn.costs[currentOwner] : null;
+    const cPrev = (prev && prev.costs && typeof prev.costs[currentOwner]==='number') ? prev.costs[currentOwner] : null;
+    const pct = (prevV !== null && prevV !== 0 && cNow !== null && cPrev !== null)
+      ? (((v - prevV) - (cNow - cPrev)) / prevV) * 100 : null;
     const pctHtml = pct !== null ? ` <span class="num ${plClass(pct)}">(${fmtPercent(pct)})</span>` : '';
     return `
       <div class="entry-row snap-row">
