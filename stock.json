@@ -1000,9 +1000,9 @@
     {
       "date": "2026-10-07",
       "totals": {
-        "me": 29353070,
+        "me": 31847078,
         "wife": 92930055,
-        "ALL": 122283125
+        "ALL": 124777133
       },
       "costs": {
         "me": 22336523,
@@ -1335,8 +1335,8 @@
       "key": "0043B0",
       "ticker": "0043B0",
       "name": "Ⓣ 머나마켓액티브",
-      "currentPrice": 0,
-      "priceUpdatedAt": null
+      "currentPrice": 103917,
+      "priceUpdatedAt": "2026-10-07"
     }
   ],
   "pensionAccountIds": [
