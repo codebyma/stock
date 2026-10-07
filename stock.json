@@ -669,13 +669,13 @@
       "sells": []
     },
     {
-      "id": "stk_ngxphfh",
-      "accountId": "acc_aioddia",
+      "id": "stk_sz31946",
+      "accountId": "acc_1q4nsbn",
       "key": "0043B0",
       "quantity": 24,
       "buys": [
         {
-          "id": "tx_r979g1r",
+          "id": "tx_5mvrfig",
           "date": "2026-10-06",
           "quantity": 24,
           "price": 103880,
