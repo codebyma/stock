@@ -1461,6 +1461,8 @@ function ensureDataShape(){
   if(!DATA.pension.types) DATA.pension.types = {};
   if(!DATA.pension.paid) DATA.pension.paid = {};
   if(!DATA.pension.log) DATA.pension.log = {};
+  if(!DATA.pension.targets) DATA.pension.targets = {};
+  if(!DATA.pension.budget) DATA.pension.budget = {};
   if(!Array.isArray(DATA.dividends)) DATA.dividends = [];
   migrateStockCatalog();
 }
@@ -3031,7 +3033,7 @@ function pensionOwnerBlockHtml(o){
         <div class="entry-row no-border-bottom pb-0"><span class="text-strong fs-13">${escapeHtml(a.name)}<span class="pension-badge">${pensionTypeLabel(t)}</span></span><span class="amt num">${fmtWon(Math.round(total))}</span></div>
         <div class="entry-row no-border-bottom pb-0 mt-8"><span class="text-dim">평가손익</span><span class="num ${plClass(pl)}">${fmtPL(pl)}${pct!==null ? ' ('+fmtPercent(pct)+')' : ''}</span></div>
         <div class="entry-row no-border-bottom pb-0 mt-8"><span class="text-dim">${y}년 납입</span><span class="amt num">${fmtWon(pensionPaidOf(a.id))}</span></div>
-        ${pensionFormAcc===a.id ? pensionAddFormHtml(a.id, c.perMonth) : `<div class="button-row mt-12"><button class="add-btn" onclick="openPensionAdd('${a.id}')">납입 추가</button></div>`}
+        ${pensionFormAcc===a.id ? pensionAddFormHtml(a.id, c.perMonth) : `<div class="button-row mt-12"><button class="add-btn" onclick="openPensionAdd('${a.id}')">납입 추가</button><button class="add-btn" onclick="openPensionGuide('${a.id}')">매수 가이드</button></div>`}
       </div>`;
   }).join('');
 
@@ -3109,6 +3111,178 @@ function pensionChanged(){
   saveData();
   refreshPensionSheet();
   renderPensionEntry();
+}
+// ---- 매수 가이드 (신규 납입금만으로 목표 비중에 맞추기) ----
+let pensionGuideAcc = null;
+function pensionGuideHoldings(accId){
+  const map = {};
+  stocksForAccount(accId).forEach(st=>{
+    const v = stockTotal(st);
+    if(!(st.quantity>0)) return;
+    const cat = catalogFor(st);
+    const k = st.key;
+    if(!map[k]) map[k] = { key:k, name:cat.name, ticker:cat.ticker, price:cat.currentPrice||0, value:0 };
+    map[k].value += v;
+  });
+  return Object.values(map).sort((a,b)=>b.value-a.value);
+}
+function pensionGuideTarget(accId, key){
+  const v = ((DATA.pension.targets||{})[accId]||{})[key];
+  return (typeof v==='number' && v>0) ? v : 0;
+}
+// 매도 없이 budget만큼 매수해서 (목표비중 × 최종 총액) 에 가장 가깝게 — 물 채우기(water-filling) 방식
+function pensionGuideCompute(accId, budget){
+  const hold = pensionGuideHoldings(accId);
+  const total = hold.reduce((s,h)=>s+h.value,0);
+  const rows = hold.map(h=>({ ...h, target: pensionGuideTarget(accId,h.key), buy:0, shares:0, amount:0 }));
+  const targeted = rows.filter(r=>r.target>0);
+  const targetSum = targeted.reduce((s,r)=>s+r.target,0);
+  if(budget>0 && targeted.length){
+    const f = L => targeted.reduce((s,r)=>s+Math.max(0, r.target/100*L - r.value),0);
+    let lo = 0, hi = Math.min(...targeted.map(r=>(budget + r.value)/(r.target/100)));
+    for(let i=0;i<80;i++){ const mid=(lo+hi)/2; if(f(mid) < budget) lo = mid; else hi = mid; }
+    targeted.forEach(r=>{
+      r.buy = Math.max(0, r.target/100*hi - r.value);
+      if(r.price>0){ r.shares = Math.floor(r.buy / r.price); r.amount = r.shares * r.price; }
+      else { r.amount = r.buy; }
+    });
+    // 남는 돈으로 부족분이 가장 큰 종목부터 1주씩 더 채움
+    let residual = budget - targeted.reduce((s,r)=>s+r.amount,0);
+    for(let guard=0; guard<500; guard++){
+      const cand = targeted.filter(r=>r.price>0 && r.price<=residual).sort((a,b)=>(b.buy-b.amount)-(a.buy-a.amount))[0];
+      if(!cand || (cand.buy - cand.amount) <= 0) break;
+      cand.shares++; cand.amount += cand.price; residual -= cand.price;
+    }
+  }
+  const spent = rows.reduce((s,r)=>s+r.amount,0);
+  const after = total + spent;
+  rows.forEach(r=>{
+    r.nowPct = total ? r.value/total*100 : 0;
+    r.afterPct = after ? (r.value + r.amount)/after*100 : 0;
+  });
+  return { rows, total, spent, left: Math.max(0, budget - spent), targetSum, hasTarget: targeted.length>0 };
+}
+function pensionGuideBudget(){
+  const el = document.getElementById('pgBudget');
+  return el ? (parseInt(el.value.replace(/[^0-9]/g,''),10) || 0) : 0;
+}
+function pensionGuideResultHtml(){
+  const accId = pensionGuideAcc;
+  const budget = pensionGuideBudget();
+  const r = pensionGuideCompute(accId, budget);
+  if(!r.rows.length) return `<div class="empty-hint">이 계좌에 보유 종목이 없어요</div>`;
+  const warn = r.targetSum > 100.0001
+    ? `<div class="panel-caption warning">목표 비중 합계가 ${r.targetSum.toFixed(1)}%로 100%를 넘어요</div>`
+    : (r.hasTarget ? `<div class="panel-caption">목표 합계 ${r.targetSum.toFixed(1)}%${r.targetSum<99.9999 ? ' · 지정하지 않은 종목은 매수 대상에서 빠져요' : ''}</div>` : '');
+  if(!r.hasTarget) return `<div class="panel-title sub-title mt-20 mb-4">이번 달 매수 가이드</div><div class="empty-hint">위에서 종목별 목표 비중을 입력하면 가이드가 나와요.</div>`;
+  if(!budget) return `<div class="panel-title sub-title mt-20 mb-4">이번 달 매수 가이드</div>${warn}<div class="empty-hint">이번 달 납입 예정액을 입력해 주세요.</div>`;
+  const rowsHtml = r.rows.filter(x=>x.target>0).map(x=>{
+    const buyTxt = x.amount>0
+      ? `${fmtWon(Math.round(x.amount))}${x.price>0 ? ` · ${x.shares}주` : ''}`
+      : '<span class="text-dim">매수 없음</span>';
+    return `
+      <div class="sim-row">
+        <div class="sim-row-head"><span class="sim-row-name">${escapeHtml(x.name)}</span><span class="num amt">${buyTxt}</span></div>
+        <div class="fs-11-5 text-dim">현재 ${x.nowPct.toFixed(1)}% → 매수 후 <span style="color:var(--mint)">${x.afterPct.toFixed(1)}%</span> (목표 ${x.target}%)</div>
+      </div>`;
+  }).join('');
+  return `
+    <div class="panel-title sub-title mt-20 mb-4">이번 달 매수 가이드</div>
+    ${warn}
+    ${rowsHtml}
+    <div class="pension-sum pension-sum-owner mt-14">
+      <div class="entry-row no-border-bottom pb-0"><span class="text-dim">매수 합계</span><span class="amt num">${fmtWon(Math.round(r.spent))}</span></div>
+      <div class="entry-row no-border-bottom pb-0 mt-8"><span class="text-dim">남는 금액 (주 단위 절사)</span><span class="amt num">${fmtWon(Math.round(r.left))}</span></div>
+    </div>
+    <div class="button-row mt-12" style="justify-content:flex-end"><button class="add-btn" onclick="addGuideToPensionLog()">납입 기록에 ${fmtWon(budget)} 추가</button></div>`;
+}
+function openPensionGuide(accId){
+  ensureDataShape();
+  pensionGuideAcc = accId;
+  const acc = DATA.accounts.find(a=>a.id===accId) || { name:'', ownerId:null };
+  const hold = pensionGuideHoldings(accId);
+  const c = pensionCalcOwner(acc.ownerId);
+  const saved = DATA.pension.budget[accId];
+  const budget = (typeof saved==='number' && saved>0) ? saved : (c.perMonth || 0);
+  const total = hold.reduce((s,h)=>s+h.value,0);
+  const rows = hold.map((h,i)=>{
+    const t = pensionGuideTarget(accId, h.key);
+    return `
+      <div class="sim-row">
+        <div class="sim-row-head"><span class="sim-row-name">${escapeHtml(h.name)}</span><span class="sim-row-ratio num">현재 ${total?(h.value/total*100).toFixed(1):'0.0'}%</span></div>
+        <input type="number" inputmode="decimal" step="0.1" min="0" placeholder="목표 비중 %" class="sim-input" value="${t||''}" oninput="setPensionGuideTarget(${i}, this.value)">
+      </div>`;
+  }).join('');
+  const chips = [[100000,'+10만'],[300000,'+30만'],[500000,'+50만']].map(([n,l])=>`<button class="pension-chip" onclick="pensionGuideQuick(${n})">${l}</button>`).join('');
+  const rec = c.perMonth ? `<button class="pension-chip rec" onclick="pensionGuideSet(${c.perMonth})">월 권장 ${fmtWonCompact(c.perMonth)}</button>` : '';
+  openSheet('매수 가이드 · ' + acc.name, `
+    <div class="sim-hint">이번 달 납입금만으로 목표 비중에 최대한 가깝게 맞춰요. 보유 종목을 팔 필요는 없어요.</div>
+    <div class="field-label" style="margin-bottom:12px">이번 달 납입 예정액</div>
+    <div class="pension-chips">${rec}${chips}</div>
+    <input type="text" inputmode="numeric" class="sim-input" id="pgBudget" placeholder="0" value="${budget?budget.toLocaleString('ko-KR'):''}" oninput="formatMoneyInput(this);pensionGuideChanged()">
+    <div class="mt-20 mb-4" style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+      <div class="panel-title sub-title" style="margin:0">종목별 목표 비중</div>
+      ${hold.length ? `<button class="pension-chip" style="flex:none;white-space:nowrap" onclick="importGlobalTargetsToGuide()">전체 목표 비중 불러오기</button>` : ''}
+    </div>
+    ${rows || '<div class="empty-hint">이 계좌에 보유 종목이 없어요</div>'}
+    <div id="pgResult">${''}</div>
+  `, null, ()=>{ pensionGuideAcc = null; openSheet('연금', buildPensionLimitHtml()); });
+  pensionGuideChanged(true);
+}
+function pensionGuideChanged(skipSave){
+  if(!pensionGuideAcc) return;
+  if(!skipSave){
+    DATA.pension.budget[pensionGuideAcc] = pensionGuideBudget();
+    saveData();
+  }
+  const el = document.getElementById('pgResult');
+  if(el) el.innerHTML = pensionGuideResultHtml();
+}
+function importGlobalTargetsToGuide(){
+  const accId = pensionGuideAcc;
+  if(!accId) return;
+  ensureDataShape();
+  const hold = pensionGuideHoldings(accId);
+  const picked = hold.filter(h=>typeof DATA.targets[h.key]==='number' && DATA.targets[h.key]>0);
+  if(!picked.length){ showToast('전체 목표 비중에 이 계좌 종목이 없어요'); return; }
+  const hasOwn = hold.some(h=>pensionGuideTarget(accId,h.key)>0);
+  if(hasOwn && !confirm('이 계좌에 입력한 목표 비중을 전체 목표 비중으로 바꿀까요?')) return;
+  // 이 계좌 종목만 골라서 합계가 100%가 되도록 비율을 맞춰요
+  const sum = picked.reduce((s,h)=>s+DATA.targets[h.key],0);
+  const t = {};
+  picked.forEach(h=>{ t[h.key] = Math.round(DATA.targets[h.key]/sum*1000)/10; });
+  DATA.pension.targets[accId] = t;
+  DATA.pension.budget[accId] = pensionGuideBudget();
+  saveData();
+  openPensionGuide(accId);
+  showToast('전체 목표 비중을 불러왔어요');
+}
+function pensionGuideSet(n){
+  const el = document.getElementById('pgBudget');
+  if(el) el.value = n ? Number(n).toLocaleString('ko-KR') : '';
+  pensionGuideChanged();
+}
+function pensionGuideQuick(n){ pensionGuideSet(pensionGuideBudget() + n); }
+function setPensionGuideTarget(idx, val){
+  ensureDataShape();
+  const h = pensionGuideHoldings(pensionGuideAcc)[idx];
+  if(!h) return;
+  const n = parseFloat(val);
+  if(!DATA.pension.targets[pensionGuideAcc]) DATA.pension.targets[pensionGuideAcc] = {};
+  if(n>0) DATA.pension.targets[pensionGuideAcc][h.key] = n; else delete DATA.pension.targets[pensionGuideAcc][h.key];
+  saveData();
+  pensionGuideChanged(true);
+}
+function addGuideToPensionLog(){
+  const accId = pensionGuideAcc;
+  const amount = pensionGuideBudget();
+  if(!accId || !amount){ showToast('납입 예정액을 입력해 주세요'); return; }
+  ensureDataShape();
+  if(!DATA.pension.log[accId]) DATA.pension.log[accId] = [];
+  DATA.pension.log[accId].push({ id: uid('pl'), date: todayKST(), amount });
+  saveData();
+  renderPensionEntry();
+  showToast('납입 기록에 추가했어요');
 }
 function togglePensionSettings(){ pensionShowSettings = !pensionShowSettings; refreshPensionSheet(); }
 function openPensionAdd(accId){ pensionFormAcc = accId; refreshPensionSheet(); }
