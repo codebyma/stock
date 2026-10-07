@@ -1344,5 +1344,21 @@
     "acc_1ynxc3d",
     "acc_5ma36fu"
   ],
-  "snapshotsArchive": []
+  "snapshotsArchive": [],
+  "pension": {
+    "rates": {
+      "me": 13.2,
+      "wife": 13.2
+    },
+    "types": {
+      "acc_aioddia": "PENSION",
+      "acc_1ynxc3d": "PENSION",
+      "acc_5ma36fu": "PENSION"
+    },
+    "paid": {
+      "acc_aioddia": {
+        "2026": 2100000
+      }
+    }
+  }
 }
