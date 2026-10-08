@@ -1209,6 +1209,17 @@
 </style>
 </head>
 <body>
+<script>
+(function(){
+  var light;
+  try{
+    var saved = localStorage.getItem('theme-pref');
+    if(saved === 'light' || saved === 'dark') light = (saved === 'light');
+  }catch(e){}
+  if(light === undefined) light = !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches);
+  document.body.classList.toggle('light-theme', light);
+})();
+</script>
 
 <div class="app-header">
   <div class="app-title">주식 현황</div>
@@ -4765,22 +4776,30 @@ function applyTheme(){
     btn.setAttribute('aria-label', isLightTheme ? '다크 모드로 전환' : '라이트 모드로 전환');
   }
 }
-async function loadThemePref(){
-  if(hasWindowStorage){
-    try{
-      const res = await window.storage.get('theme-pref', false);
-      if(res && res.value === 'light') isLightTheme = true;
-    }catch(e){ /* 저장된 값 없음 */ }
-  }
+const themeMQ = window.matchMedia ? window.matchMedia('(prefers-color-scheme: light)') : null;
+function getSavedTheme(){
+  try{
+    const v = localStorage.getItem('theme-pref');
+    return (v === 'light' || v === 'dark') ? v : null;
+  }catch(e){ return null; }
+}
+function loadThemePref(){
+  const saved = getSavedTheme();
+  if(saved) isLightTheme = (saved === 'light');
+  else isLightTheme = !!(themeMQ && themeMQ.matches); // 저장값 없으면 폰 설정 따름
   applyTheme();
 }
-document.getElementById('themeToggleBtn').onclick = async ()=>{
+document.getElementById('themeToggleBtn').onclick = ()=>{
   isLightTheme = !isLightTheme;
   applyTheme();
-  if(hasWindowStorage){
-    try{ await window.storage.set('theme-pref', isLightTheme ? 'light' : 'dark', false); }catch(e){}
-  }
+  try{ localStorage.setItem('theme-pref', isLightTheme ? 'light' : 'dark'); }catch(e){}
 };
+// 직접 바꾼 적 없을 때만 폰의 다크/라이트 설정 변경을 실시간 반영
+if(themeMQ){
+  const onSysChange = ()=>{ if(!getSavedTheme()) loadThemePref(); };
+  if(themeMQ.addEventListener) themeMQ.addEventListener('change', onSysChange);
+  else if(themeMQ.addListener) themeMQ.addListener(onSysChange);
+}
 loadThemePref();
 
 function loadGithubSettings(){
