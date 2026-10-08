@@ -240,12 +240,14 @@
   .trend-minmax .num{color:var(--text2);}
   .trend-legend{
     display:flex;
-    gap:12px;
+    flex-wrap:wrap;
+    gap:6px 12px;
     font-size:11px;
     color:var(--text3);
     margin-top:6px;
   }
-  .trend-legend span{display:inline-flex;align-items:center;gap:5px;}
+  .trend-legend span{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;}
+  .trend-legend i{flex:none;}
   .lg-line{display:inline-block;width:14px;height:0;border-top:2px solid var(--mint);}
   .lg-dash{display:inline-block;width:14px;height:0;border-top:2px dashed var(--text3);}
   .lg-dot{display:inline-block;width:14px;height:0;border-top:2px dotted var(--gold);}
@@ -2166,6 +2168,10 @@ function showTrendTip(i){
   dot.style.display = 'block';
   let rows = `<div class="trend-tip-date">${fmtDateDot(snap.date)}</div>
     <div class="trend-tip-row"><span>평가금액</span><span class="num">${fmtWon(v)}</span></div>`;
+  if(c.adjValues && c.adjValues[i] !== null && c.adjValues[i] !== undefined){
+    rows += `
+    <div class="trend-tip-row"><span>원금 증가 제외</span><span class="num" style="color:var(--blue)">${fmtWon(c.adjValues[i])}</span></div>`;
+  }
   if(cost !== null){
     const pl = v - cost;
     const pct = cost ? (pl / cost) * 100 : null;
@@ -2284,8 +2290,11 @@ function renderAssetTrend(){
       : [];
     const hasTotalReturn = hasDividendData && totalReturnValues.some((v,i)=> v !== values[i]);
 
+    // 원금 증가 제외 평가금액: 추가 매수·입금으로 늘어난 원금을 뺀 값 (기간 첫 기록의 투자원금을 기준으로 고정)
+    const baseCost = costs.find(c=>c!==null);
+    const adjValues = costs.map((c,i)=> (c===null || baseCost===undefined) ? null : values[i] - (c - baseCost));
     const w = 600, h = 140, pad = 8;
-    const all = values.concat(costs.filter(c=>c!==null)).concat(totalReturnValues);
+    const all = values.concat(costs.filter(c=>c!==null)).concat(totalReturnValues).concat(adjValues.filter(v=>v!==null));
     const min = Math.min(...all);
     const max = Math.max(...all);
     const span = (max - min) || 1;
@@ -2297,7 +2306,9 @@ function renderAssetTrend(){
     const costPts = costs.map((c,i)=> c===null ? null : `${xOf(i).toFixed(1)},${yOf(c).toFixed(1)}`).filter(Boolean);
     const hasCost = costPts.length >= 2;
     const totalReturnPts = totalReturnValues.map((v,i)=>`${xOf(i).toFixed(1)},${yOf(v).toFixed(1)}`);
-    trendChart = { snaps, costs, totalReturnValues: hasTotalReturn ? totalReturnValues : null, points, w, h };
+    const adjPts = adjValues.map((v,i)=> v===null ? null : `${xOf(i).toFixed(1)},${yOf(v).toFixed(1)}`).filter(Boolean);
+    const hasAdj = adjPts.length >= 2;
+    trendChart = { snaps, costs, totalReturnValues: hasTotalReturn ? totalReturnValues : null, adjValues: hasAdj ? adjValues : null, points, w, h };
 
     const first = values[0];
     const firstDelta = values[values.length-1] - first;
@@ -2387,6 +2398,7 @@ function renderAssetTrend(){
           <polygon points="${areaPoints}" fill="${areaColor}" opacity="0.6"></polygon>
           ${hasCost ? `<polyline points="${costPts.join(' ')}" fill="none" stroke="var(--text3)" stroke-width="1.5" stroke-dasharray="4 3" stroke-linejoin="round" vector-effect="non-scaling-stroke"></polyline>` : ''}
           <polyline points="${polyPoints}" fill="none" stroke="${lineColor}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"></polyline>
+          ${hasAdj ? `<polyline points="${adjPts.join(' ')}" fill="none" stroke="var(--blue)" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"></polyline>` : ''}
           ${hasTotalReturn ? `<polyline points="${totalReturnPts.join(' ')}" fill="none" stroke="var(--gold)" stroke-width="1.8" stroke-dasharray="1 3.5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"></polyline>` : ''}
           ${plOverlaySvg}
         </svg>
@@ -2398,7 +2410,7 @@ function renderAssetTrend(){
         <span>${fmtDateDot(snaps[0].date)}</span>
         <span>${fmtDateDot(snaps[snaps.length-1].date)}</span>
       </div>
-      ${hasCost || hasTotalReturn || (canPl && plOverlay) ? `<div class="trend-legend"><span><i class="lg-line"></i>평가금액</span>${hasCost ? `<span><i class="lg-dash"></i>투자원금</span>` : ''}${hasTotalReturn ? `<span><i class="lg-dot"></i>배당 포함 총수익</span>` : ''}${canPl && plOverlay ? `<span><i class="lg-bar"></i>직전 대비 손익${plUnit} (왼쪽 축)</span>` : ''}</div>` : ''}
+      ${hasCost || hasAdj || hasTotalReturn || (canPl && plOverlay) ? `<div class="trend-legend"><span><i class="lg-line"></i>평가금액</span>${hasAdj ? `<span><i class="lg-line" style="border-top-color:var(--blue)"></i>원금 증가 제외</span>` : ''}${hasCost ? `<span><i class="lg-dash"></i>투자원금</span>` : ''}${hasTotalReturn ? `<span><i class="lg-dot"></i>배당 포함 총수익</span>` : ''}${canPl && plOverlay ? `<span><i class="lg-bar"></i>직전 대비 손익${plUnit} (왼쪽 축)</span>` : ''}</div>` : ''}
       ${canPl ? `<div class="pl-toggle-row"><button class="range-tab${plOverlay ? ' active' : ''}" style="flex:none;padding:6px 12px;" onclick="togglePlOverlay()">직전 대비 손익 보기</button></div>` : ''}
     `;
 
@@ -3134,7 +3146,7 @@ const PENSION_TIPS = {
   budget: '이번 달 연금 계좌에 넣을 돈이에요. "월 권장"은 올해 세액공제 한도(900만원)를 연말까지 채우려면 매달 필요한 금액이에요.',
   target: '계좌 안에서 각 종목이 차지했으면 하는 비율(%)이에요. 합계는 100% 이하로 넣어 주세요. 비워 두면 그 종목은 이번 달 매수 대상에서 빠져요.',
   left:   '주 단위로만 살 수 있어서 남는 잔돈이에요. 다음 달 납입금에 합쳐서 쓰면 돼요.',
-  age:    '나이는 저절로 늘어나지 않아요. 해마다 현재 나이를 직접 바꿔 주세요.',
+  age:    '태어난 해를 넣으면 현재 나이를 자동으로 계산해요. (올해 − 출생년도라서 생일은 반영하지 않아요)',
   stop:   '이 나이까지만 매달 납입하고, 그 뒤로는 추가 납입 없이 굴리기만 한다고 계산해요.',
   end:    '이 나이까지 자산이 딱 바닥나도록 매달 같은 금액을 받는다고 가정해요. 오래 받을수록 월 수령액은 줄어요.',
   rate:   '연금 자산의 연 평균 수익률 가정이에요. 결과 아래에서 이 값 ±2%p인 경우도 같이 보여줘요.',
@@ -3211,7 +3223,7 @@ const PENSION_HELP = {
     지금 연금 자산에 매달 납입을 이어가면 <b>은퇴 후 월 얼마를 받을 수 있는지</b> 미리 계산해 줘요.
     <div class="ph-h">이렇게 쓰세요</div>
     <ol>
-      <li><b>나이</b>를 넣어요. 현재 나이, 납입을 멈출 나이, 연금을 받기 시작할 나이(만 55세 이상), 다 받을 나이예요.</li>
+      <li><b>출생년도</b>를 넣으면 현재 나이는 자동으로 계산돼요. 이어서 납입을 멈출 나이, 연금을 받기 시작할 나이(만 55세 이상), 다 받을 나이를 넣어요.</li>
       <li><b>월 납입액</b>과 <b>예상 수익률</b>을 넣어요. 현재 연금 자산은 연금저축·IRP 계좌에서 자동으로 가져와요.</li>
       <li>값을 바꾸면 결과가 바로 바뀌어요. 입력한 값은 자동 저장돼요.</li>
     </ol>
@@ -3223,7 +3235,7 @@ const PENSION_HELP = {
     </ul>
     <div class="ph-h">알아두세요</div>
     <ul>
-      <li><b>현재 나이는 매년 직접</b> 바꿔 주세요.</li>
+      <li>나이는 출생년도로 자동 계산돼서 해마다 바꿀 필요가 없어요. 생일은 반영하지 않아 실제 만 나이와 1살 차이 날 수 있어요.</li>
       <li>단순 추정이에요. 연금수령한도, 다른 소득, 세액공제 받지 않은 원금은 반영하지 않아요.</li>
     </ul>`
 };
@@ -3418,7 +3430,8 @@ function addGuideToPensionLog(){
 // ---- 은퇴 시뮬레이터 ----
 let pensionSimOwner = null;
 const PENSION_SIM_CAP = 15000000; // 사적연금 분리과세 기준 (연 수령액)
-function pensionSimDefaults(){ return { age:40, stopAge:55, startAge:55, endAge:85, monthly:750000, rate:5, infl:2 }; }
+function pensionSimYear(){ return parseInt(todayKST().slice(0,4),10); }
+function pensionSimDefaults(){ return { birthYear: pensionSimYear()-40, stopAge:55, startAge:55, endAge:85, monthly:750000, rate:5, infl:2 }; }
 function pensionSimBalance(ownerId){
   return pensionTypedAccounts(ownerId).reduce((s,a)=>s+accountTotal(a.id),0);
 }
@@ -3467,8 +3480,10 @@ function pensionSimRead(){
     const v = el ? parseFloat(String(el.value).replace(/,/g,'')) : NaN;
     return isNaN(v) ? def : v;
   };
+  const birth = Math.round(num('psBirth', d.birthYear));
   return {
-    age: Math.round(num('psAge', d.age)),
+    birthYear: birth,
+    age: pensionSimYear() - birth,
     stopAge: Math.round(num('psStop', d.stopAge)),
     startAge: Math.round(num('psStart', d.startAge)),
     endAge: Math.round(num('psEnd', d.endAge)),
@@ -3504,6 +3519,7 @@ function pensionSimResultHtml(){
   const p = pensionSimRead();
   const bal = pensionSimBalance(ownerId);
   const warns = [];
+  if(p.age < 15 || p.age > 100) return `<div class="empty-hint">출생년도를 확인해 주세요</div>`;
   if(p.endAge <= Math.max(p.startAge,p.age)) return `<div class="empty-hint">수령 종료 나이는 수령 시작 나이보다 커야 해요</div>`;
   if(p.startAge < 55) warns.push('연금 수령은 만 55세부터 가능해요');
   if(p.startAge < p.age) warns.push('수령 시작 나이가 현재 나이보다 낮아서 현재 나이부터 받는 것으로 계산했어요');
@@ -3537,6 +3553,7 @@ function pensionSimResultHtml(){
       </div>`;
   }).join('');
   return `
+    <div class="fs-11-5 text-dim mt-12">현재 나이 ${p.age}세 (${pensionSimYear()} − ${p.birthYear}년생)</div>
     ${warns.map(w=>`<div class="panel-caption warning">${w}</div>`).join('')}
     <div class="pension-sum pension-sum-owner mt-14">
       <div class="entry-row no-border-bottom pb-0"><span class="text-dim">수령 시작(${base.startAge}세) 예상 자산</span><span class="amt num">${fmtWon(Math.round(base.startBal))}</span></div>
@@ -3556,14 +3573,16 @@ function openPensionSim(ownerId){
   ensureDataShape();
   pensionSimOwner = ownerId;
   const owner = (DATA.owners||[]).find(o=>o.id===ownerId) || { name:'' };
-  const p = Object.assign(pensionSimDefaults(), DATA.pension.sim[ownerId] || {});
+  const saved = DATA.pension.sim[ownerId] || {};
+  const p = Object.assign(pensionSimDefaults(), saved);
+  if(saved.birthYear===undefined && typeof saved.age==='number') p.birthYear = pensionSimYear() - saved.age;
   const bal = pensionSimBalance(ownerId);
   const f = (label, id, val, extra)=>`<div class="field"><span class="field-label">${label}${extra&&extra.tip?pensionTipBtn(extra.tip):''}</span><input type="${extra&&extra.money?'text':'number'}" inputmode="${extra&&extra.dec?'decimal':'numeric'}" ${extra&&extra.step?`step="${extra.step}"`:''} id="${id}" value="${extra&&extra.money?Number(val).toLocaleString('ko-KR'):val}" oninput="${extra&&extra.money?'formatMoneyInput(this);':''}pensionSimChanged()"></div>`;
   openSheet('은퇴 시뮬레이터 · ' + owner.name, `
     <div class="sim-hint">지금 연금 자산에 매달 납입을 이어가면 은퇴 후 월 얼마를 받을 수 있는지 계산해요.</div>
     ${pensionHelpHtml('sim')}
     <div class="entry-row no-border-bottom pb-0"><span class="text-dim">현재 연금 자산</span><span class="amt num">${fmtWon(Math.round(bal))}</span></div>
-    <div class="form-row mt-12">${f('현재 나이','psAge',p.age,{tip:'age'})}${f('납입 중단 나이','psStop',p.stopAge,{tip:'stop'})}</div>
+    <div class="form-row mt-12">${f('출생년도','psBirth',p.birthYear,{tip:'age'})}${f('납입 중단 나이','psStop',p.stopAge,{tip:'stop'})}</div>
     <div class="form-row mt-12">${f('수령 시작 나이','psStart',p.startAge)}${f('수령 종료 나이','psEnd',p.endAge,{tip:'end'})}</div>
     <div class="form-row mt-12">${f('월 납입액','psMonthly',p.monthly,{money:true})}${f('예상 수익률(연 %)','psRate',p.rate,{dec:true,step:'0.1',tip:'rate'})}</div>
     <div class="form-row mt-12">${f('물가상승률(연 %)','psInfl',p.infl,{dec:true,step:'0.1',tip:'infl'})}<div class="field"></div></div>
