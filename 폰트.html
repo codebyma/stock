@@ -34,6 +34,7 @@
     --fs-display:28px;  /* 앱 대타이틀 */
     --fs-title:24px;    /* 섹션·시트 타이틀 */
     --fs-num:20px;      /* 핵심 숫자 강조 */
+    --fs-lead:18px;     /* 포트폴리오 카드 종목명 */
     --fs-body:16px;     /* 기본 본문·입력·종목명 */
     --fs-sub:14px;      /* 버튼·탭·목록 행 */
     --fs-caption:13px;  /* 라벨·설명·보조 */
@@ -196,7 +197,7 @@
     -webkit-user-select:none;
   }
   .trend-svg-wrap svg{display:block;}
-  .range-tabs{display:flex;gap:6px;margin:10px 0 8px;}
+  .range-tabs{display:flex;gap:6px;margin:16px 0 10px;}
   .range-tab{
     flex:1;
     padding:6px 0;
@@ -264,7 +265,7 @@
     gap:6px 12px;
     font-size:var(--fs-caption);
     color:var(--text3);
-    margin-top:6px;
+    margin-top:12px;
   }
   .trend-legend span{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;}
   .trend-legend i{flex:none;}
@@ -280,7 +281,8 @@
     pointer-events:none;
   }
   .trend-pl-label.bottom{transform:translateY(-100%);}
-  .pl-toggle-row{display:flex;justify-content:flex-end;margin-top:10px;}
+  .trend-actions{display:flex;gap:8px;margin-top:16px;}
+  .trend-actions .range-tab{padding:10px 0;}
   .snap-row{cursor:pointer;}
   .trend-caption-row{
     display:flex;
@@ -289,14 +291,20 @@
     color:var(--text2);
     margin-top:4px;
   }
+  #trendLatestTrigger{margin:8px 0 16px;}
   .trend-latest{
-    font-size:var(--fs-num);
-    font-weight:600;
+    font-size:var(--fs-display);
+    font-weight:500;
+    line-height:1.2;
     color:var(--text1);
-    margin-bottom:2px;
   }
-  .trend-latest-delta{font-size:var(--fs-caption);margin-bottom:2px;}
-  .trend-first-delta{font-size:var(--fs-caption);color:var(--text3);margin-bottom:8px;}
+  /* 기록 대비 증감: 왼쪽 라벨 / 오른쪽 값(위: 증감, 아래: 순수 손익) */
+  .trend-compare{display:flex;flex-direction:column;gap:8px;}
+  .tc-row{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:2px 12px;}
+  .tc-label{font-size:var(--fs-caption);color:var(--text3);}
+  .tc-val{display:flex;align-items:baseline;gap:10px;margin-left:auto;white-space:nowrap;}
+  .tc-main{font-size:var(--fs-sub);}
+  .tc-sub{font-size:var(--fs-caption);color:var(--text3);}
 
   .breakdown-wrap{padding:0 20px;}
   .breakdown-card{
@@ -309,23 +317,21 @@
     margin:22px 0 10px;
   }
   .breakdown-row{
-    padding:14px 0;
+    padding:22px 0;
   }
-  .breakdown-top{
-    display:flex;
-    justify-content:space-between;
-    align-items:flex-start;
-    gap:10px;
-    margin-bottom:8px;
-  }
-  .breakdown-name-block{min-width:0;flex:1;}
-  .breakdown-name{font-weight:400;color:var(--text1);font-size:var(--fs-body);}
-  .breakdown-price-line{font-size:var(--fs-caption);color:var(--text2);margin-top:3px;}
-  .breakdown-name + .breakdown-price-line{margin-top:7px;}
+  .breakdown-name{font-size:var(--fs-lead);font-weight:400;line-height:1.3;color:var(--text1);}
+  .breakdown-name .suffix-text{margin-left:4px;color:var(--text3);}
+  .breakdown-hero{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin:6px 0 12px;}
+  .breakdown-ratio{font-size:var(--fs-body);font-weight:500;line-height:1.2;color:var(--text1);font-family:'Roboto',sans-serif;}
+  .breakdown-ratio-group{display:flex;align-items:baseline;gap:4px;min-width:0;}
+  .breakdown-target{font-size:var(--fs-caption);color:var(--text3);white-space:nowrap;}
+  .breakdown-target .bt-v{color:var(--text1);}
+  .breakdown-pl{font-size:var(--fs-sub);font-weight:400;line-height:1.3;text-align:right;font-family:'Roboto',sans-serif;}
+  /* 보조 정보: 항목 단위로 묶여 한 줄에 못 들어가면 항목 단위로만 줄바꿈 */
+  .breakdown-meta{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:12px;font-size:var(--fs-caption);color:var(--text1);}
+  .bm-item{white-space:nowrap;}
+  .bm-k{color:var(--text3);margin-right:5px;}
   .price-highlight{color:var(--mint);font-weight:400;}
-  .breakdown-right{display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0;}
-  .breakdown-ratio{font-size:var(--fs-sub);font-weight:600;color:var(--text1);font-family:'Roboto',sans-serif;}
-  .breakdown-pl{font-size:var(--fs-caption);line-height:1.3;font-family:'Roboto',sans-serif;}
   .breakdown-bar-track{
     position:relative;
     height:6px;
@@ -1053,7 +1059,7 @@
   .metric.full-row{grid-column:1 / -1;}
   .value-sub{font-size:var(--fs-caption);font-weight:400;margin-top:2px;}
   .suffix-text{font-weight:400;font-size:var(--fs-caption);}
-  .hint-text{font-size:var(--fs-caption);color:var(--text3);padding:2px 4px 2px;}
+  .hint-text{font-size:var(--fs-caption);color:var(--text3);padding:2px 0;}
   .stat-footnote{font-size:var(--fs-caption);color:var(--text2);margin:6px 0 2px;}
   .realized-sum{margin:12px 0 8px;padding:12px 14px;background:var(--surface2);border-radius:10px;}
   .realized-sum-row{display:flex;justify-content:space-between;align-items:center;font-size:var(--fs-sub);color:var(--text2);padding:3px 0;}
@@ -2253,6 +2259,10 @@ function bindTrendChartEvents(){
   }
 }
 
+function trendCompareRowHtml(label, delta, pct, pure){
+  return `<div class="tc-row"><span class="tc-label">${label}</span><span class="tc-val"><span class="tc-main num ${plClass(delta)}">${fmtPL(delta)}${pct!==null ? ' ('+fmtPercent(pct)+')' : ''}</span>${pure!==null ? `<span class="tc-sub num"><span class="tc-k">순수</span> <span class="${plClass(pure)}">${fmtPL(pure)}</span></span>` : ''}</span></div>`;
+}
+
 function renderAssetTrend(){
   const el = document.getElementById('assetTrendSection');
   const allSnaps = (DATA.snapshots||[]).filter(s=> s.totals && typeof s.totals[currentOwner] === 'number');
@@ -2289,10 +2299,9 @@ function renderAssetTrend(){
   const allCosts = allSnaps.map(s=> (s.costs && typeof s.costs[currentOwner] === 'number') ? s.costs[currentOwner] : null);
   const lastCost = allCosts[allCosts.length-1];
   const prevCost = allCosts[allCosts.length-2];
-  let purePrevInline = '';
+  let purePrev = null;
   if(lastCost !== null && prevCost !== null){
-    const pure = (last - lastCost) - (prev - prevCost);
-    purePrevInline = ` · <span class="${plClass(pure)}">순수 ${fmtPL(pure)}</span>`;
+    purePrev = (last - lastCost) - (prev - prevCost);
   }
 
   // 기간 필터
@@ -2307,6 +2316,7 @@ function renderAssetTrend(){
   ).join('')}</div>`;
 
   let periodHtml = '';
+  let plToggleBtnHtml = '';
   let chartHtml = '';
   let minmaxText = '';
   trendChart = null;
@@ -2349,12 +2359,11 @@ function renderAssetTrend(){
     const maxV = Math.max(...values);
     const minV = Math.min(...values);
     const lastIdx = values.length - 1;
-    let pureFirstInline = '';
+    let pureFirst = null;
     if(costs[0] !== null && costs[lastIdx] !== null){
-      const pureFirst = (values[lastIdx] - costs[lastIdx]) - (values[0] - costs[0]);
-      pureFirstInline = ` · 순수 ${fmtPL(pureFirst)}`;
+      pureFirst = (values[lastIdx] - costs[lastIdx]) - (values[0] - costs[0]);
     }
-    periodHtml = `<div class="trend-first-delta num">${fmtPL(firstDelta)}${firstDeltaPct!==null ? ' ('+fmtPercent(firstDeltaPct)+')' : ''}${pureFirstInline} · ${firstLabel}</div>`;
+    periodHtml = trendCompareRowHtml(firstLabel, firstDelta, firstDeltaPct, pureFirst);
     minmaxText = `최고 ${fmtWon(maxV)}<br>최저 ${fmtWon(minV)}`;
 
     // 기간 전체 흐름이 마이너스면 선·영역을 빨간 계열로, 아니면 민트 계열로
@@ -2443,8 +2452,8 @@ function renderAssetTrend(){
         <span>${fmtDateDot(snaps[snaps.length-1].date)}</span>
       </div>
       ${hasCost || hasAdj || hasTotalReturn || (canPl && plOverlay) ? `<div class="trend-legend"><span><i class="lg-line"></i>평가금액</span>${hasAdj ? `<span><i class="lg-line" style="border-top-color:var(--blue)"></i>원금 증가 제외</span>` : ''}${hasCost ? `<span><i class="lg-dash"></i>투자원금</span>` : ''}${hasTotalReturn ? `<span><i class="lg-dot"></i>배당 포함 총수익</span>` : ''}${canPl && plOverlay ? `<span><i class="lg-bar"></i>직전 대비 손익${plUnit} (왼쪽 축)</span>` : ''}</div>` : ''}
-      ${canPl ? `<div class="pl-toggle-row"><button class="range-tab${plOverlay ? ' active' : ''}" style="flex:none;padding:6px 12px;" onclick="togglePlOverlay()">직전 대비 손익 보기</button></div>` : ''}
     `;
+    plToggleBtnHtml = canPl ? `<button class="range-tab${plOverlay ? ' active' : ''}" onclick="togglePlOverlay()">직전 대비 손익 보기</button>` : '';
 
   }
 
@@ -2455,11 +2464,13 @@ function renderAssetTrend(){
         ${saveBtnHtml}
       </div>
       <span class="title-info-trigger" id="trendLatestTrigger" onclick="toggleTrendMinmax(event)"><span class="trend-latest num">${fmtWon(last)}</span><svg class="row-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left:-3px;margin-top:-2px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg></span>
-      <div class="trend-latest-delta num ${plClass(delta)}">${fmtPL(delta)}${deltaPct!==null ? ' ('+fmtPercent(deltaPct)+')' : ''}${purePrevInline} · ${prevLabel}</div>
-      ${periodHtml}
+      <div class="trend-compare">
+        ${trendCompareRowHtml(prevLabel, delta, deltaPct, purePrev)}
+        ${periodHtml}
+      </div>
       ${rangeTabsHtml}
       ${chartHtml}
-      ${manageHtml}
+      <div class="trend-actions">${plToggleBtnHtml}<button class="range-tab" onclick="openSnapshotSheet()">스냅샷 기록 관리</button></div>
     </div>
   `;
   bindTrendChartEvents();
@@ -2667,20 +2678,20 @@ function breakdownRowHtml(item, grandTotal){
 
   return `
     <div class="breakdown-row cursor-pointer" onclick="openTargetSheet('${keyEsc}','${sid}')">
-      <div class="breakdown-top">
-        <div class="breakdown-name-block">
-          <div class="breakdown-name">${escapeHtml(item.name)}${item.ticker ? ' <span class="suffix-text text-dim">('+escapeHtml(item.ticker)+')</span>' : ''}${stalePriceBadgeHtml(cat)}</div>
-          <div class="breakdown-price-line">평가금액 ${fmtWon(item.value)} · 현재가 <span class="price-highlight"><span class="won-sign">₩</span>${currentPrice.toLocaleString('ko-KR')}</span></div>
-          <div class="breakdown-price-line">총 ${item.quantity.toLocaleString('ko-KR')}주${hasTarget ? ' · 목표 '+target+'%' : ''}${divYield!==null ? ' · <span class="text-gold">배당 '+fmtPctPlain(divYield)+'</span>' : ''}</div>
-        </div>
-        <div class="breakdown-right">
-          <span class="breakdown-ratio num">${ratio.toFixed(2)}%</span>
-          <div class="breakdown-pl num ${plClass(pl)}">${fmtPL(pl)}${plPct!==null ? ' ('+fmtPercent(plPct)+')' : ''}</div>
-        </div>
+      <div class="breakdown-name">${escapeHtml(item.name)}${item.ticker ? ' <span class="suffix-text">('+escapeHtml(item.ticker)+')</span>' : ''}${stalePriceBadgeHtml(cat)}</div>
+      <div class="breakdown-hero">
+        <span class="breakdown-ratio-group"><span class="breakdown-ratio num">${ratio.toFixed(2)}%</span>${hasTarget ? `<span class="breakdown-target">(<span class="bm-k">목표</span><span class="bt-v">${target}%</span>)</span>` : ''}</span>
+        <span class="breakdown-pl num ${plClass(pl)}">${fmtPL(pl)}${plPct!==null ? ' ('+fmtPercent(plPct)+')' : ''}</span>
       </div>
       <div class="breakdown-bar-track">
         <div class="breakdown-bar-fill" style="--w:${ratio}%;"></div>
         ${hasTarget ? `<div class="breakdown-bar-target" style="--tw:${Math.min(100,Math.max(0,target))}%;"></div>` : ''}
+      </div>
+      <div class="breakdown-meta">
+        <span class="bm-item"><span class="bm-k">평가금액</span>${fmtWon(item.value)}</span>
+        <span class="bm-item"><span class="bm-k">현재가</span><span class="price-highlight"><span class="won-sign">₩</span>${currentPrice.toLocaleString('ko-KR')}</span></span>
+        <span class="bm-item"><span class="bm-k">총</span>${item.quantity.toLocaleString('ko-KR')}주</span>
+        ${divYield!==null ? `<span class="bm-item"><span class="bm-k">배당</span><span class="text-gold">${fmtPctPlain(divYield)}</span></span>` : ''}
       </div>
       ${rebalHtml}
     </div>
