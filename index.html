@@ -1065,6 +1065,21 @@ background: var(--surface2);
   }
   .sim-input::placeholder{color:var(--text3);}
   .divider-top{border-top:1px solid var(--border);}
+  /* 연금 도움말 */
+  .tip-q{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;border:1px solid var(--border-strong);color:var(--text2);font-size:10.5px;font-weight:500;margin-left:5px;cursor:pointer;vertical-align:middle;flex:none;}
+  .tip-q:active{background:var(--surface2);}
+  #pensionTip{position:fixed;left:0;top:0;box-sizing:border-box;background:var(--surface2);border:1px solid var(--border-strong);border-radius:12px;padding:12px 14px;font-size:12.5px;line-height:1.55;color:var(--text1);box-shadow:0 6px 24px rgba(0,0,0,0.35);z-index:320;display:none;}
+  #pensionTip .tip-arrow{position:absolute;width:10px;height:10px;background:var(--surface2);border:1px solid var(--border-strong);transform:rotate(45deg);}
+  #pensionTip.below .tip-arrow{top:-6px;border-right:none;border-bottom:none;}
+  #pensionTip.above .tip-arrow{bottom:-6px;border-left:none;border-top:none;}
+  .pension-help{margin:0 0 14px;}
+  .pension-help-toggle{display:flex;align-items:center;justify-content:space-between;width:100%;background:var(--surface2);border:none;border-radius:10px;padding:10px 12px;color:var(--text1);font-size:13px;cursor:pointer;text-align:left;}
+  .pension-help-body{display:none;background:var(--surface2);border-radius:0 0 10px 10px;margin-top:-6px;padding:14px 12px 12px;font-size:12.5px;line-height:1.6;color:var(--text2);}
+  .pension-help-body b{color:var(--text1);font-weight:500;}
+  .pension-help-body ol,.pension-help-body ul{margin:6px 0 10px;padding-left:18px;}
+  .pension-help-body li{margin-bottom:3px;}
+  .pension-help-body .ph-h{color:var(--text1);font-weight:500;margin-top:10px;}
+  .pension-help-body .ph-h:first-child{margin-top:0;}
   /* 연금 홈 */
   .pension-entry{
     margin:10px 20px 0;
@@ -1462,6 +1477,7 @@ function ensureDataShape(){
   if(!DATA.pension.paid) DATA.pension.paid = {};
   if(!DATA.pension.log) DATA.pension.log = {};
   if(!DATA.pension.targets) DATA.pension.targets = {};
+  if(!DATA.pension.sim) DATA.pension.sim = {};
   if(!DATA.pension.budget) DATA.pension.budget = {};
   if(!Array.isArray(DATA.dividends)) DATA.dividends = [];
   migrateStockCatalog();
@@ -3081,6 +3097,7 @@ function pensionOwnerBlockHtml(o){
       <div class="panel-title sub-title mt-20 mb-4">${escapeHtml(o.name)}</div>
       <div class="mt-14" id="pensionSummary_${o.id}">${pensionSummaryHtml(o.id)}</div>
       ${cards}
+      ${accs.length ? `<div class="button-row mt-12"><button class="add-btn" onclick="openPensionSim('${o.id}')">은퇴 시뮬레이터</button></div>` : ''}
       ${logHtml}
       ${settingsToggle}
       ${settings}`;
@@ -3111,6 +3128,119 @@ function pensionChanged(){
   saveData();
   refreshPensionSheet();
   renderPensionEntry();
+}
+// ---- 도움말 (사용 방법 + ? 툴팁) ----
+const PENSION_TIPS = {
+  budget: '이번 달 연금 계좌에 넣을 돈이에요. "월 권장"은 올해 세액공제 한도(900만원)를 연말까지 채우려면 매달 필요한 금액이에요.',
+  target: '계좌 안에서 각 종목이 차지했으면 하는 비율(%)이에요. 합계는 100% 이하로 넣어 주세요. 비워 두면 그 종목은 이번 달 매수 대상에서 빠져요.',
+  left:   '주 단위로만 살 수 있어서 남는 잔돈이에요. 다음 달 납입금에 합쳐서 쓰면 돼요.',
+  age:    '나이는 저절로 늘어나지 않아요. 해마다 현재 나이를 직접 바꿔 주세요.',
+  stop:   '이 나이까지만 매달 납입하고, 그 뒤로는 추가 납입 없이 굴리기만 한다고 계산해요.',
+  end:    '이 나이까지 자산이 딱 바닥나도록 매달 같은 금액을 받는다고 가정해요. 오래 받을수록 월 수령액은 줄어요.',
+  rate:   '연금 자산의 연 평균 수익률 가정이에요. 결과 아래에서 이 값 ±2%p인 경우도 같이 보여줘요.',
+  infl:   '물가가 오르면 미래의 돈 가치는 줄어요. 이 값으로 미래 금액을 "지금 가치"로 환산해서 같이 보여줘요.',
+  cap:    '사적연금 연 수령액이 1,500만원 이하면 나이별 3.3~5.5% 세율로 끝나고, 넘으면 종합과세 또는 16.5% 분리과세 중 선택해요. 세액공제를 받지 않은 원금은 이 기준에서 빠져요.',
+  scen:   '수익률을 ±2%p 바꿨을 때의 결과예요. 실제 수익률이 어느 정도 범위일지 감을 잡는 용도예요.'
+};
+let pensionTipTimer = null;
+let pensionTipKey = null;
+function pensionTipBtn(key){ return `<span class="tip-q" onclick="event.stopPropagation();showPensionTip('${key}', this)">?</span>`; }
+// ? 버튼 바로 아래(공간이 없으면 위)에 말풍선을 띄우고, 같은 버튼을 다시 누르면 닫아요
+function showPensionTip(key, btn){
+  const el = document.getElementById('pensionTip');
+  if(!el || !PENSION_TIPS[key]) return;
+  if(el.style.display==='block' && pensionTipKey===key){ hidePensionTip(); return; }
+  pensionTipKey = key;
+  el.innerHTML = '<span class="tip-text"></span><span class="tip-arrow"></span>';
+  el.firstChild.textContent = PENSION_TIPS[key];
+  const vw = window.innerWidth, vh = window.innerHeight, gap = 10, edge = 12;
+  el.style.visibility = 'hidden';
+  el.style.display = 'block';
+  el.style.width = Math.min(300, vw - edge*2) + 'px';
+  const r = btn ? btn.getBoundingClientRect() : { left:vw/2, right:vw/2, top:vh/2, bottom:vh/2, width:0 };
+  const w = el.offsetWidth, h = el.offsetHeight;
+  const cx = r.left + r.width/2;
+  let left = Math.max(edge, Math.min(cx - w/2, vw - w - edge));
+  const spaceBelow = vh - r.bottom - edge, spaceAbove = r.top - edge;
+  const below = (h + gap <= spaceBelow) || (spaceBelow >= spaceAbove && h + gap > spaceAbove);
+  let top = below ? r.bottom + gap : r.top - gap - h;
+  top = Math.max(edge, Math.min(top, vh - h - edge));
+  el.className = below ? 'below' : 'above';
+  el.style.left = left + 'px';
+  el.style.top = top + 'px';
+  const arrow = el.querySelector('.tip-arrow');
+  arrow.style.left = Math.max(14, Math.min(cx - left - 5, w - 24)) + 'px';
+  el.style.visibility = 'visible';
+  clearTimeout(pensionTipTimer);
+  pensionTipTimer = setTimeout(hidePensionTip, 10000);
+}
+function hidePensionTip(){
+  const el = document.getElementById('pensionTip');
+  if(el) el.style.display = 'none';
+  pensionTipKey = null;
+  clearTimeout(pensionTipTimer);
+}
+// 다른 곳을 누르거나 화면이 스크롤되면 닫아요
+document.addEventListener('click', ()=>{ if(pensionTipKey) hidePensionTip(); });
+document.addEventListener('scroll', ()=>{ if(pensionTipKey) hidePensionTip(); }, true);
+const PENSION_HELP = {
+  guide: `
+    <div class="ph-h">이 화면은 뭘 해주나요?</div>
+    이번 달 납입금으로 <b>어떤 종목을 몇 주 사면</b> 목표 비중에 가장 가까워지는지 계산해 줘요. 보유 종목을 팔 필요는 없어요.
+    <div class="ph-h">이렇게 쓰세요</div>
+    <ol>
+      <li><b>이번 달 납입 예정액</b>을 넣어요. (월 권장 버튼으로 바로 넣을 수도 있어요)</li>
+      <li><b>종목별 목표 비중</b>을 넣어요. 전체 포트폴리오 목표가 있으면 <b>전체 목표 비중 불러오기</b>가 편해요.</li>
+      <li>아래 <b>이번 달 매수 가이드</b>에서 종목별 매수 금액과 주수를 확인해요.</li>
+      <li>실제로 납입하고 매수한 뒤 <b>납입 기록에 추가</b>를 눌러 올해 납입액에 반영해요.</li>
+    </ol>
+    <div class="ph-h">결과 읽는 법</div>
+    <ul>
+      <li><b>현재 → 매수 후 (목표)</b>: 지금 비중이 이번 달 매수 후 어떻게 바뀌는지 보여줘요.</li>
+      <li><b>남는 금액</b>: 주 단위로 못 사는 잔돈이에요.</li>
+    </ul>
+    <div class="ph-h">알아두세요</div>
+    <ul>
+      <li>목표 비중은 <b>계좌별로 한 번만</b> 저장돼요. 다음 달엔 납입액만 확인하면 돼요.</li>
+      <li>목표를 비워 둔 종목은 매수 대상에서 빠지고, 지금 보유한 종목만 정할 수 있어요.</li>
+      <li>가격은 앱에 저장된 현재가 기준이라 실제 체결가와 차이가 날 수 있어요.</li>
+      <li><b>납입 기록에 추가</b>는 누를 때마다 기록이 쌓여요. 실제 납입 후 한 번만 눌러 주세요.</li>
+    </ul>`,
+  sim: `
+    <div class="ph-h">이 화면은 뭘 해주나요?</div>
+    지금 연금 자산에 매달 납입을 이어가면 <b>은퇴 후 월 얼마를 받을 수 있는지</b> 미리 계산해 줘요.
+    <div class="ph-h">이렇게 쓰세요</div>
+    <ol>
+      <li><b>나이</b>를 넣어요. 현재 나이, 납입을 멈출 나이, 연금을 받기 시작할 나이(만 55세 이상), 다 받을 나이예요.</li>
+      <li><b>월 납입액</b>과 <b>예상 수익률</b>을 넣어요. 현재 연금 자산은 연금저축·IRP 계좌에서 자동으로 가져와요.</li>
+      <li>값을 바꾸면 결과가 바로 바뀌어요. 입력한 값은 자동 저장돼요.</li>
+    </ol>
+    <div class="ph-h">결과 읽는 법</div>
+    <ul>
+      <li><b>월 예상 수령액</b>: 수령 기간 동안 매달 같은 금액을 받는다고 본 값이에요. "지금 가치"는 물가를 반영한 체감 금액이에요.</li>
+      <li><b>낮음 / 보통 / 높음</b>: 수익률을 ±2%p 바꿨을 때 결과예요. 하나의 숫자보다 범위로 보세요.</li>
+      <li><b>연 1,500만원 판정</b>: 이하면 나이별 3.3~5.5%로 세금이 끝나고, 넘으면 종합과세 또는 16.5% 분리과세를 골라요. 넘으면 종료 나이를 몇 세로 늘려야 하는지도 알려줘요.</li>
+    </ul>
+    <div class="ph-h">알아두세요</div>
+    <ul>
+      <li><b>현재 나이는 매년 직접</b> 바꿔 주세요.</li>
+      <li>단순 추정이에요. 연금수령한도, 다른 소득, 세액공제 받지 않은 원금은 반영하지 않아요.</li>
+    </ul>`
+};
+let pensionHelpOpen = { guide:false, sim:false };
+function pensionHelpHtml(kind){
+  const open = pensionHelpOpen[kind];
+  return `
+    <div class="pension-help">
+      <button class="pension-help-toggle" onclick="togglePensionHelp('${kind}')"><span>ⓘ 사용 방법</span><span id="phelpArrow_${kind}">${open?'▴':'▾'}</span></button>
+      <div class="pension-help-body" id="phelpBody_${kind}" style="display:${open?'block':'none'}">${PENSION_HELP[kind]}</div>
+    </div>`;
+}
+function togglePensionHelp(kind){
+  pensionHelpOpen[kind] = !pensionHelpOpen[kind];
+  const b = document.getElementById('phelpBody_'+kind), a = document.getElementById('phelpArrow_'+kind);
+  if(b) b.style.display = pensionHelpOpen[kind] ? 'block' : 'none';
+  if(a) a.textContent = pensionHelpOpen[kind] ? '▴' : '▾';
 }
 // ---- 매수 가이드 (신규 납입금만으로 목표 비중에 맞추기) ----
 let pensionGuideAcc = null;
@@ -3192,7 +3322,7 @@ function pensionGuideResultHtml(){
     ${rowsHtml}
     <div class="pension-sum pension-sum-owner mt-14">
       <div class="entry-row no-border-bottom pb-0"><span class="text-dim">매수 합계</span><span class="amt num">${fmtWon(Math.round(r.spent))}</span></div>
-      <div class="entry-row no-border-bottom pb-0 mt-8"><span class="text-dim">남는 금액 (주 단위 절사)</span><span class="amt num">${fmtWon(Math.round(r.left))}</span></div>
+      <div class="entry-row no-border-bottom pb-0 mt-8"><span class="text-dim">남는 금액 (주 단위 절사)${pensionTipBtn('left')}</span><span class="amt num">${fmtWon(Math.round(r.left))}</span></div>
     </div>
     <div class="button-row mt-12" style="justify-content:flex-end"><button class="add-btn" onclick="addGuideToPensionLog()">납입 기록에 ${fmtWon(budget)} 추가</button></div>`;
 }
@@ -3217,11 +3347,12 @@ function openPensionGuide(accId){
   const rec = c.perMonth ? `<button class="pension-chip rec" onclick="pensionGuideSet(${c.perMonth})">월 권장 ${fmtWonCompact(c.perMonth)}</button>` : '';
   openSheet('매수 가이드 · ' + acc.name, `
     <div class="sim-hint">이번 달 납입금만으로 목표 비중에 최대한 가깝게 맞춰요. 보유 종목을 팔 필요는 없어요.</div>
-    <div class="field-label" style="margin-bottom:12px">이번 달 납입 예정액</div>
+    ${pensionHelpHtml('guide')}
+    <div class="field-label" style="margin-bottom:12px">이번 달 납입 예정액${pensionTipBtn('budget')}</div>
     <div class="pension-chips">${rec}${chips}</div>
     <input type="text" inputmode="numeric" class="sim-input" id="pgBudget" placeholder="0" value="${budget?budget.toLocaleString('ko-KR'):''}" oninput="formatMoneyInput(this);pensionGuideChanged()">
     <div class="mt-20 mb-4" style="display:flex;align-items:center;justify-content:space-between;gap:8px">
-      <div class="panel-title sub-title" style="margin:0">종목별 목표 비중</div>
+      <div class="panel-title sub-title" style="margin:0">종목별 목표 비중${pensionTipBtn('target')}</div>
       ${hold.length ? `<button class="pension-chip" style="flex:none;white-space:nowrap" onclick="importGlobalTargetsToGuide()">전체 목표 비중 불러오기</button>` : ''}
     </div>
     ${rows || '<div class="empty-hint">이 계좌에 보유 종목이 없어요</div>'}
@@ -3283,6 +3414,172 @@ function addGuideToPensionLog(){
   saveData();
   renderPensionEntry();
   showToast('납입 기록에 추가했어요');
+}
+// ---- 은퇴 시뮬레이터 ----
+let pensionSimOwner = null;
+const PENSION_SIM_CAP = 15000000; // 사적연금 분리과세 기준 (연 수령액)
+function pensionSimDefaults(){ return { age:40, stopAge:55, startAge:55, endAge:85, monthly:750000, rate:5, infl:2 }; }
+function pensionSimBalance(ownerId){
+  return pensionTypedAccounts(ownerId).reduce((s,a)=>s+accountTotal(a.id),0);
+}
+function pensionSimPmt(startBal, nMonths, ratePct){
+  const rm = Math.pow(1+ratePct/100, 1/12) - 1;
+  return rm>0 ? startBal*rm/(1-Math.pow(1+rm,-nMonths)) : startBal/nMonths;
+}
+function pensionSimRun(p, bal, ratePct){
+  const rm = Math.pow(1+ratePct/100, 1/12) - 1;
+  const startAge = Math.max(p.startAge, p.age);
+  const accM  = Math.round((startAge - p.age) * 12);
+  const stopM = Math.max(0, Math.round((p.stopAge - p.age) * 12));
+  const n = Math.max(1, Math.round((p.endAge - startAge) * 12));
+  const points = [{ age:p.age, v:bal }];
+  let b = bal;
+  for(let m=1; m<=accM; m++){
+    b = b*(1+rm) + (m<=stopM ? p.monthly : 0);
+    if(m%12===0) points.push({ age:p.age+m/12, v:b });
+  }
+  if(accM%12!==0) points.push({ age:startAge, v:b });
+  const startBal = b;
+  const pmt = pensionSimPmt(startBal, n, ratePct);
+  let c = startBal;
+  for(let m=1; m<=n; m++){
+    c = c*(1+rm) - pmt;
+    if(m%12===0) points.push({ age:startAge+m/12, v:Math.max(0,c) });
+  }
+  if(n%12!==0) points.push({ age:p.endAge, v:0 });
+  return { startBal, pmt, points, startAge };
+}
+function pensionSimMinEnd(startBal, startAge, ratePct){
+  for(let end=startAge+1; end<=110; end++){
+    if(pensionSimPmt(startBal, (end-startAge)*12, ratePct)*12 <= PENSION_SIM_CAP) return end;
+  }
+  return null;
+}
+function pensionSimTaxRate(age){ return age>=80 ? 3.3 : (age>=70 ? 4.4 : 5.5); }
+function pensionSimCompact(n){
+  if(n>=100000000) return (n/100000000).toFixed(1).replace(/\.0$/,'')+'억';
+  return Math.round(n/10000).toLocaleString('ko-KR')+'만';
+}
+function pensionSimRead(){
+  const d = pensionSimDefaults();
+  const num = (id, def)=>{
+    const el = document.getElementById(id);
+    const v = el ? parseFloat(String(el.value).replace(/,/g,'')) : NaN;
+    return isNaN(v) ? def : v;
+  };
+  return {
+    age: Math.round(num('psAge', d.age)),
+    stopAge: Math.round(num('psStop', d.stopAge)),
+    startAge: Math.round(num('psStart', d.startAge)),
+    endAge: Math.round(num('psEnd', d.endAge)),
+    monthly: Math.max(0, Math.round(num('psMonthly', d.monthly))),
+    rate: Math.max(0, num('psRate', d.rate)),
+    infl: Math.max(0, num('psInfl', d.infl))
+  };
+}
+function pensionSimChartHtml(runs, p, startAge){
+  const W=320, H=170, L=8, R=8, T=14, B=24;
+  const maxV = Math.max(1, ...runs.flatMap(r=>r.run.points.map(pt=>pt.v)));
+  const x0 = p.age, x1 = p.endAge;
+  const X = a => L + (a-x0)/(x1-x0) * (W-L-R);
+  const Y = v => T + (1 - v/maxV) * (H-T-B);
+  const lines = runs.map(r=>{
+    const pts = r.run.points.map(pt=>`${X(pt.age).toFixed(1)},${Y(pt.v).toFixed(1)}`).join(' ');
+    return `<polyline points="${pts}" fill="none" style="stroke:${r.color}" stroke-width="${r.w}" stroke-linejoin="round" stroke-linecap="round"/>`;
+  }).join('');
+  const sx = X(startAge);
+  return `
+    <svg viewBox="0 0 ${W} ${H}" width="100%" style="display:block">
+      <line x1="${L}" y1="${H-B}" x2="${W-R}" y2="${H-B}" style="stroke:var(--border-strong)" stroke-width="1"/>
+      <line x1="${sx.toFixed(1)}" y1="${T}" x2="${sx.toFixed(1)}" y2="${H-B}" style="stroke:var(--text3)" stroke-width="1" stroke-dasharray="3 3"/>
+      ${lines}
+      <text x="${L}" y="${T-3}" font-size="9" style="fill:var(--text2)">최대 ${pensionSimCompact(maxV)}</text>
+      <text x="${L}" y="${H-8}" font-size="9" style="fill:var(--text2)">${x0}세</text>
+      <text x="${sx.toFixed(1)}" y="${H-8}" font-size="9" text-anchor="middle" style="fill:var(--text2)">${startAge}세 수령 시작</text>
+      <text x="${W-R}" y="${H-8}" font-size="9" text-anchor="end" style="fill:var(--text2)">${x1}세</text>
+    </svg>`;
+}
+function pensionSimResultHtml(){
+  const ownerId = pensionSimOwner;
+  const p = pensionSimRead();
+  const bal = pensionSimBalance(ownerId);
+  const warns = [];
+  if(p.endAge <= Math.max(p.startAge,p.age)) return `<div class="empty-hint">수령 종료 나이는 수령 시작 나이보다 커야 해요</div>`;
+  if(p.startAge < 55) warns.push('연금 수령은 만 55세부터 가능해요');
+  if(p.startAge < p.age) warns.push('수령 시작 나이가 현재 나이보다 낮아서 현재 나이부터 받는 것으로 계산했어요');
+  if(p.stopAge < p.age) warns.push('납입 중단 나이가 현재 나이보다 낮아서 추가 납입 없이 계산했어요');
+  const lowRate = Math.max(0, p.rate-2), highRate = p.rate+2;
+  const sc = [
+    { name:'낮음', rate:lowRate,  color:'var(--text3)', w:1.5 },
+    { name:'보통', rate:p.rate,   color:'var(--blue)',  w:2.5 },
+    { name:'높음', rate:highRate, color:'var(--mint)',  w:1.5 }
+  ].map(x=>({ ...x, run: pensionSimRun(p, bal, x.rate) }));
+  const base = sc[1].run;
+  const yearsToStart = Math.max(0, base.startAge - p.age);
+  const deflator = Math.pow(1+p.infl/100, yearsToStart);
+  const annual = base.pmt*12;
+  const ok = annual <= PENSION_SIM_CAP;
+  let verdict;
+  if(ok){
+    verdict = `<span style="color:var(--mint)">연 1,500만원 이하예요</span> · 분리과세(연금소득세 약 ${pensionSimTaxRate(base.startAge)}%) 대상이에요`;
+  } else {
+    const minEnd = pensionSimMinEnd(base.startBal, base.startAge, p.rate);
+    verdict = `연 1,500만원을 넘어요 · 종합과세 또는 16.5% 분리과세 대상이에요` +
+      (minEnd ? `<div class="mt-8">수령 종료 나이를 <b>${minEnd}세</b>로 늘리면 1,500만원 안에 들어와요</div>`
+              : `<div class="mt-8">종료 나이를 110세까지 늘려도 넘어요. 수령을 여러 해로 나눠 받는 방법을 고려해 보세요</div>`);
+  }
+  const rows = sc.map(x=>{
+    const a = x.run.pmt*12;
+    return `
+      <div class="entry-row">
+        <span>${x.name} <span class="text-dim fs-11-5">${x.rate.toFixed(1).replace(/\.0$/,'')}%</span></span>
+        <span class="entry-right"><span class="text-dim fs-11-5">${pensionSimCompact(x.run.startBal)}</span><span class="amt num">월 ${fmtWon(Math.round(x.run.pmt))}</span></span>
+      </div>`;
+  }).join('');
+  return `
+    ${warns.map(w=>`<div class="panel-caption warning">${w}</div>`).join('')}
+    <div class="pension-sum pension-sum-owner mt-14">
+      <div class="entry-row no-border-bottom pb-0"><span class="text-dim">수령 시작(${base.startAge}세) 예상 자산</span><span class="amt num">${fmtWon(Math.round(base.startBal))}</span></div>
+      <div class="fs-11-5 text-dim" style="text-align:right">지금 가치로 약 ${fmtWon(Math.round(base.startBal/deflator))}</div>
+      <div class="entry-row no-border-bottom pb-0 mt-12"><span class="text-dim">월 예상 수령액</span><span class="amt num" style="font-size:18px">${fmtWon(Math.round(base.pmt))}</span></div>
+      <div class="fs-11-5 text-dim" style="text-align:right">지금 가치로 약 ${fmtWon(Math.round(base.pmt/deflator))} · 연 ${fmtWon(Math.round(annual))}</div>
+      <div class="fs-11-5 mt-12" style="line-height:1.5">${verdict}${pensionTipBtn('cap')}</div>
+    </div>
+    <div class="panel-title sub-title mt-20 mb-4">자산 흐름</div>
+    ${pensionSimChartHtml(sc, p, base.startAge)}
+    <div class="pension-chips" style="margin-top:8px">${sc.map(x=>`<span class="fs-11-5 text-dim"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${x.color};margin-right:4px"></span>${x.name}</span>`).join('')}</div>
+    <div class="panel-title sub-title mt-20 mb-4">수익률별 비교${pensionTipBtn('scen')}</div>
+    ${rows}
+    <div class="fs-11-5 text-dim mt-14" style="line-height:1.5">매달 말 납입·월복리, 수령 중에도 같은 수익률로 운용한다고 가정한 단순 추정이에요. 연금수령한도, 세액공제 받지 않은 원금(과세 제외), 다른 소득은 반영하지 않았어요.</div>`;
+}
+function openPensionSim(ownerId){
+  ensureDataShape();
+  pensionSimOwner = ownerId;
+  const owner = (DATA.owners||[]).find(o=>o.id===ownerId) || { name:'' };
+  const p = Object.assign(pensionSimDefaults(), DATA.pension.sim[ownerId] || {});
+  const bal = pensionSimBalance(ownerId);
+  const f = (label, id, val, extra)=>`<div class="field"><span class="field-label">${label}${extra&&extra.tip?pensionTipBtn(extra.tip):''}</span><input type="${extra&&extra.money?'text':'number'}" inputmode="${extra&&extra.dec?'decimal':'numeric'}" ${extra&&extra.step?`step="${extra.step}"`:''} id="${id}" value="${extra&&extra.money?Number(val).toLocaleString('ko-KR'):val}" oninput="${extra&&extra.money?'formatMoneyInput(this);':''}pensionSimChanged()"></div>`;
+  openSheet('은퇴 시뮬레이터 · ' + owner.name, `
+    <div class="sim-hint">지금 연금 자산에 매달 납입을 이어가면 은퇴 후 월 얼마를 받을 수 있는지 계산해요.</div>
+    ${pensionHelpHtml('sim')}
+    <div class="entry-row no-border-bottom pb-0"><span class="text-dim">현재 연금 자산</span><span class="amt num">${fmtWon(Math.round(bal))}</span></div>
+    <div class="form-row mt-12">${f('현재 나이','psAge',p.age,{tip:'age'})}${f('납입 중단 나이','psStop',p.stopAge,{tip:'stop'})}</div>
+    <div class="form-row mt-12">${f('수령 시작 나이','psStart',p.startAge)}${f('수령 종료 나이','psEnd',p.endAge,{tip:'end'})}</div>
+    <div class="form-row mt-12">${f('월 납입액','psMonthly',p.monthly,{money:true})}${f('예상 수익률(연 %)','psRate',p.rate,{dec:true,step:'0.1',tip:'rate'})}</div>
+    <div class="form-row mt-12">${f('물가상승률(연 %)','psInfl',p.infl,{dec:true,step:'0.1',tip:'infl'})}<div class="field"></div></div>
+    <div id="psResult"></div>
+  `, null, ()=>{ pensionSimOwner = null; openSheet('연금', buildPensionLimitHtml()); });
+  pensionSimChanged(true);
+}
+function pensionSimChanged(skipSave){
+  if(!pensionSimOwner) return;
+  if(!skipSave){
+    ensureDataShape();
+    DATA.pension.sim[pensionSimOwner] = pensionSimRead();
+    saveData();
+  }
+  const el = document.getElementById('psResult');
+  if(el) el.innerHTML = pensionSimResultHtml();
 }
 function togglePensionSettings(){ pensionShowSettings = !pensionShowSettings; refreshPensionSheet(); }
 function openPensionAdd(accId){ pensionFormAcc = accId; refreshPensionSheet(); }
@@ -4689,5 +4986,6 @@ document.getElementById('importFileInput').addEventListener('change', function(e
 
 loadData();
 </script>
+<div id="pensionTip" onclick="hidePensionTip()"></div>
 </body>
 </html>
