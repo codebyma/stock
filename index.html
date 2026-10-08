@@ -33,15 +33,15 @@
   body.light-theme{
     --bg:#ffffff;
     --surface1:#ffffff;
-    --surface2:#f7f8fa;
-    --border:#f0f1f3;
+    --surface2:#f1f3f6;
+    --border:#eceef2;
     --border-strong:#e5e7eb;
     --text1:#191f28;
     --text2:#444f5d;
-    --text3:#6b7684;
-    --mint:#178a5c;
+    --text3:#626c79;
+    --mint:#147c52;
     --mint-dim:#e6f7f0;
-    --gold:#a8720f;
+    --gold:#90620c;
     --gold-dim:#fbf3e2;
     --blue:#2f6fb0;
     --blue-dim:#eaf3fb;
@@ -51,6 +51,12 @@
     --bar-up:#e5382c;
     --bar-down:#2f80ed;
     --divider-gray:#f2f2f2;
+  }
+  /* 라이트 모드: 박스 안쪽에 옅은 배경을 깔아 바닥 페이지(흰색)와 구분 */
+  body.light-theme .metric,
+  body.light-theme .pension-entry{
+    background:#f4f6f9;
+    border-color:#e6e9ee;
   }
   html{
     -webkit-text-size-adjust:100%;
