@@ -2,13 +2,13 @@ name: Daily Asset Snapshot
 
 on:
   schedule:
-    # 평일 15:00 KST(=UTC 06:00)에 실행.
-    # UTC 06:00 → KST 15:00은 같은 날짜 내 시각이라 날짜가 안 밀림.
+    # 평일 16:00 KST(=UTC 07:00)에 실행.
+    # UTC 07:00 → KST 16:00은 같은 날짜 내 시각이라 날짜가 안 밀림.
     # (자정 근처 KST 스케줄과 달리 요일(1-5)을 그대로 써도 안전함)
     #
-    # 그날 마지막 시세 갱신(update-prices.yml, 15:00 KST)이 끝난 직후 시점이라
+    # 그날 마지막 시세 갱신(update-prices.yml, 16:00 KST)이 끝난 직후 시점이라
     # 해당 갱신분이 반영된 "오늘" 종가 기준 스냅샷이 그대로 저장됨.
-    - cron: '00 6 * * 1-5'
+    - cron: '00 7 * * 1-5'
   workflow_dispatch: {}   # 필요할 때 수동으로도 실행 가능 (Actions 탭 > Run workflow)
 
 permissions:
