@@ -144,8 +144,8 @@
     color:var(--text1);
     margin:22px 0 4px;
   }
-  .panel-caption{font-size:var(--fs-caption);color:var(--text3);margin-bottom:10px;}
-  .panel-empty{font-size:var(--fs-caption);color:var(--text3);padding:16px 0;}
+  .panel-caption{font-size:var(--fs-caption);color:var(--text2);margin-bottom:10px;}
+  .panel-empty{font-size:var(--fs-caption);color:var(--text2);padding:16px 0;}
 
   .div-chart-scroll{overflow-x:auto;padding-bottom:6px;}
   .div-chart{
@@ -180,7 +180,7 @@
   }
   .div-bar-label{
     font-size:var(--fs-micro);
-    color:var(--text3);
+    color:var(--text2);
     margin-top:6px;
     white-space:nowrap;
   }
@@ -255,7 +255,7 @@
   .trend-minmax{
     text-align:center;
     font-size:var(--fs-caption);
-    color:var(--text3);
+    color:var(--text2);
     margin-top:8px;
   }
   .trend-minmax .num{color:var(--text2);}
@@ -264,7 +264,7 @@
     flex-wrap:wrap;
     gap:6px 12px;
     font-size:var(--fs-caption);
-    color:var(--text3);
+    color:var(--text2);
     margin-top:12px;
   }
   .trend-legend span{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;}
@@ -281,8 +281,8 @@
     pointer-events:none;
   }
   .trend-pl-label.bottom{transform:translateY(-100%);}
-  .trend-actions{display:flex;gap:8px;margin-top:16px;}
-  .trend-actions .range-tab{padding:10px 0;}
+  .trend-actions{display:flex;justify-content:center;flex-wrap:wrap;gap:8px 24px;margin-top:20px;}
+  .text-link-btn.active{color:var(--mint);}
   .snap-row{cursor:pointer;}
   .trend-caption-row{
     display:flex;
@@ -293,7 +293,7 @@
   }
   #trendLatestTrigger{margin:8px 0 16px;}
   .trend-latest{
-    font-size:var(--fs-display);
+    font-size:var(--fs-num);
     font-weight:500;
     line-height:1.2;
     color:var(--text1);
@@ -301,10 +301,10 @@
   /* 기록 대비 증감: 왼쪽 라벨 / 오른쪽 값(위: 증감, 아래: 순수 손익) */
   .trend-compare{display:flex;flex-direction:column;gap:8px;}
   .tc-row{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:2px 12px;}
-  .tc-label{font-size:var(--fs-caption);color:var(--text3);}
+  .tc-label{font-size:var(--fs-caption);color:var(--text2);}
   .tc-val{display:flex;align-items:baseline;gap:10px;margin-left:auto;white-space:nowrap;}
   .tc-main{font-size:var(--fs-sub);}
-  .tc-sub{font-size:var(--fs-caption);color:var(--text3);}
+  .tc-sub{font-size:var(--fs-caption);color:var(--text2);}
 
   .breakdown-wrap{padding:0 20px;}
   .breakdown-card{
@@ -320,17 +320,17 @@
     padding:22px 0;
   }
   .breakdown-name{font-size:var(--fs-lead);font-weight:400;line-height:1.3;color:var(--text1);}
-  .breakdown-name .suffix-text{margin-left:4px;color:var(--text3);}
+  .breakdown-name .suffix-text{margin-left:4px;color:var(--text2);}
   .breakdown-hero{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin:6px 0 12px;}
   .breakdown-ratio{font-size:var(--fs-body);font-weight:500;line-height:1.2;color:var(--text1);font-family:'Roboto',sans-serif;}
   .breakdown-ratio-group{display:flex;align-items:baseline;gap:4px;min-width:0;}
-  .breakdown-target{font-size:var(--fs-caption);color:var(--text3);white-space:nowrap;}
+  .breakdown-target{font-size:var(--fs-caption);color:var(--text2);white-space:nowrap;}
   .breakdown-target .bt-v{color:var(--text1);}
   .breakdown-pl{font-size:var(--fs-sub);font-weight:400;line-height:1.3;text-align:right;font-family:'Roboto',sans-serif;}
   /* 보조 정보: 항목 단위로 묶여 한 줄에 못 들어가면 항목 단위로만 줄바꿈 */
   .breakdown-meta{display:flex;flex-wrap:wrap;gap:4px 14px;margin-top:12px;font-size:var(--fs-caption);color:var(--text1);}
   .bm-item{white-space:nowrap;}
-  .bm-k{color:var(--text3);margin-right:5px;}
+  .bm-k{color:var(--text2);margin-right:5px;}
   .price-highlight{color:var(--mint);font-weight:400;}
   .breakdown-bar-track{
     position:relative;
@@ -408,7 +408,7 @@
     padding:0 10px;
   }
   .buy-filter .buy-filter-date .date-display-text{font-size:var(--fs-body);}
-  .buy-filter-tilde{color:var(--text3);font-size:var(--fs-caption);}
+  .buy-filter-tilde{color:var(--text2);font-size:var(--fs-caption);}
   .buy-filter .buy-filter-reset{
     flex:none;
     height:42px;
@@ -420,11 +420,11 @@
   .buy-filter-sum{font-size:var(--fs-caption);color:var(--text2);padding:2px 0 6px;}
   .bs-group{margin-top:20px;}
   .bs-group-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;font-size:var(--fs-body);font-weight:600;color:var(--text1);}
-  .bs-group-sub{font-size:var(--fs-caption);color:var(--text3);margin-top:6px;}
+  .bs-group-sub{font-size:var(--fs-caption);color:var(--text2);margin-top:6px;}
   .bs-acc{margin-top:2px;}
   .bs-group-sub + .bs-acc{margin-top:14px;}
   .bs-acc-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;font-size:var(--fs-caption);color:var(--text2);padding-bottom:4px;cursor:pointer;-webkit-tap-highlight-color:transparent;}
-  .bs-chev{display:inline-block;width:12px;color:var(--text3);transition:transform .15s ease;}
+  .bs-chev{display:inline-block;width:12px;color:var(--text2);transition:transform .15s ease;}
   .bs-acc.open .bs-chev{transform:rotate(90deg);}
   .bs-acc-body{display:none;}
   .bs-acc.open .bs-acc-body{display:block;background:var(--surface2);border-radius:8px;padding:6px 12px;margin:4px 0 8px;}
@@ -456,7 +456,7 @@
     cursor:pointer;
   }
   .account-name{font-size:var(--fs-body);font-weight:400;color:var(--text1);}
-  .account-total{font-size:var(--fs-caption);color:var(--text3);margin-top:3px;}
+  .account-total{font-size:var(--fs-caption);color:var(--text2);margin-top:3px;}
   .account-body{
     display:none;
     padding:2px 20px 20px;
@@ -501,7 +501,7 @@
     color:var(--text2);
   }
   .row-chevron{
-    color:var(--text3);
+    color:var(--text2);
     margin-left:2px;
     flex-shrink:0;
   }
@@ -528,7 +528,7 @@
     font-size:var(--fs-caption);
     line-height:1;
   }
-  .empty-hint{font-size:var(--fs-caption);color:var(--text3);padding:6px 0;}
+  .empty-hint{font-size:var(--fs-caption);color:var(--text2);padding:6px 0;}
 
   .yield-grid{
     display:grid;
@@ -692,7 +692,7 @@
   }
   .date-display-text{
     font-size:var(--fs-body);
-    color:var(--text3);
+    color:var(--text2);
     pointer-events:none;
     white-space:nowrap;
   }
@@ -787,7 +787,7 @@
   .empty-state{
     text-align:center;
     padding:40px 20px;
-    color:var(--text3);
+    color:var(--text2);
     font-size:var(--fs-sub);
   }
   #assetTrendSection{padding-top:20px;}
@@ -827,7 +827,7 @@
   .json-error.show{display:block;}
   .save-status{
     font-size:var(--fs-caption);
-    color:var(--text3);
+    color:var(--text2);
     padding:4px 20px 0;
   }
   .app-header{
@@ -948,7 +948,7 @@
   .acc-stock-ticker{
     font-size:var(--fs-caption);
     font-weight:400;
-    color:var(--text3);
+    color:var(--text2);
     margin-left:4px;
   }
   .acc-stock-right{
@@ -1027,7 +1027,7 @@
     padding:16px 0 14px;
     font-size:var(--fs-body);
     font-weight:600;
-    color:var(--text3);
+    color:var(--text2);
     cursor:pointer;
     border-bottom:2px solid transparent;
     margin-bottom:-1px;
@@ -1059,14 +1059,14 @@
   .metric.full-row{grid-column:1 / -1;}
   .value-sub{font-size:var(--fs-caption);font-weight:400;margin-top:2px;}
   .suffix-text{font-weight:400;font-size:var(--fs-caption);}
-  .hint-text{font-size:var(--fs-caption);color:var(--text3);padding:2px 0;}
+  .hint-text{font-size:var(--fs-caption);color:var(--text2);padding:2px 0;}
   .stat-footnote{font-size:var(--fs-caption);color:var(--text2);margin:6px 0 2px;}
   .realized-sum{margin:12px 0 8px;padding:12px 14px;background:var(--surface2);border-radius:10px;}
   .realized-sum-row{display:flex;justify-content:space-between;align-items:center;font-size:var(--fs-sub);color:var(--text2);padding:3px 0;}
   .realized-sum-row .num{color:var(--text1);font-weight:500;}
-  .realized-sum-note{font-size:var(--fs-caption);color:var(--text3);margin-top:6px;}
+  .realized-sum-note{font-size:var(--fs-caption);color:var(--text2);margin-top:6px;}
   .snap-count{font-size:var(--fs-caption);font-weight:400;color:var(--text2);}
-  .snap-restore{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:var(--fs-caption);color:var(--text3);margin:0 0 8px;}
+  .snap-restore{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:var(--fs-caption);color:var(--text2);margin:0 0 8px;}
   .snap-restore-bottom{margin:16px 0 4px;padding-top:12px;border-top:1px solid var(--border);}
   .snap-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:4px 0 8px;}
   .snap-head-btns{display:flex;gap:6px;}
@@ -1170,7 +1170,7 @@
   .no-border-bottom{border-bottom:none !important;}
 
   .text-dim{color:var(--text2) !important;}
-  .text-faint{color:var(--text3) !important;}
+  .text-faint{color:var(--text2) !important;}
   .text-strong{color:var(--text1) !important;}
   .text-red{color:var(--red) !important;}
   .text-blue{color:var(--blue) !important;}
@@ -2428,7 +2428,7 @@ function renderAssetTrend(){
           <line x1="${pad}" y1="${zyN.toFixed(1)}" x2="${w-pad}" y2="${zyN.toFixed(1)}" stroke="var(--text3)" stroke-width="1" stroke-dasharray="2 3" opacity="0.6" vector-effect="non-scaling-stroke"></line>
           ${bars}`;
       const fmtSigned = v => (v > 0 ? '+' : '') + fmtWonCompact(v);
-      plOverlayLabels = `<div class="trend-pl-label" style="top:${oyOf(omax).toFixed(1)}px;color:${omax > 0 ? 'var(--red)' : 'var(--text3)'};">${fmtSigned(omax)}</div>` +
+      plOverlayLabels = `<div class="trend-pl-label" style="top:${oyOf(omax).toFixed(1)}px;color:${omax > 0 ? 'var(--red)' : 'var(--text2)'};">${fmtSigned(omax)}</div>` +
         (omin < 0 ? `<div class="trend-pl-label bottom" style="top:${oyOf(omin).toFixed(1)}px;color:var(--blue);">${fmtSigned(omin)}</div>` : '');
     }
 
@@ -2453,7 +2453,7 @@ function renderAssetTrend(){
       </div>
       ${hasCost || hasAdj || hasTotalReturn || (canPl && plOverlay) ? `<div class="trend-legend"><span><i class="lg-line"></i>평가금액</span>${hasAdj ? `<span><i class="lg-line" style="border-top-color:var(--blue)"></i>원금 증가 제외</span>` : ''}${hasCost ? `<span><i class="lg-dash"></i>투자원금</span>` : ''}${hasTotalReturn ? `<span><i class="lg-dot"></i>배당 포함 총수익</span>` : ''}${canPl && plOverlay ? `<span><i class="lg-bar"></i>직전 대비 손익${plUnit} (왼쪽 축)</span>` : ''}</div>` : ''}
     `;
-    plToggleBtnHtml = canPl ? `<button class="range-tab${plOverlay ? ' active' : ''}" onclick="togglePlOverlay()">직전 대비 손익 보기</button>` : '';
+    plToggleBtnHtml = canPl ? `<button class="text-link-btn${plOverlay ? ' active' : ''}" onclick="togglePlOverlay()">직전 대비 손익 보기</button>` : '';
 
   }
 
@@ -2470,7 +2470,7 @@ function renderAssetTrend(){
       </div>
       ${rangeTabsHtml}
       ${chartHtml}
-      <div class="trend-actions">${plToggleBtnHtml}<button class="range-tab" onclick="openSnapshotSheet()">스냅샷 기록 관리</button></div>
+      <div class="trend-actions">${plToggleBtnHtml}<button class="text-link-btn" onclick="openSnapshotSheet()">스냅샷 기록 관리</button></div>
     </div>
   `;
   bindTrendChartEvents();
