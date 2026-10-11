@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>주식 현황</title>
 <meta name="theme-color" content="#0f1115" media="(prefers-color-scheme: dark)">
-<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#f4f5f7" media="(prefers-color-scheme: light)">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
@@ -50,11 +50,11 @@
     --fs-micro:12px;    /* 공간 제약(막대 라벨·뱃지) 전용 */
   }
   body.light-theme{
-    --bg:#ffffff;
+    --bg:#f4f5f7;
     --surface1:#ffffff;
-    --surface2:#f1f3f6;
-    --border:#eceef2;
-    --border-strong:#e5e7eb;
+    --surface2:#e9ecf0;
+    --border:#e2e5ea;
+    --border-strong:#d6dae1;
     --text1:#191f28;
     --text2:#444f5d;
     --text3:#626c79;
@@ -69,16 +69,13 @@
     --lime:#65a30d;
     --bar-up:#e5382c;
     --bar-down:#2f80ed;
-    --divider-gray:#f2f2f2;
+    --divider-gray:#e2e5ea;
     --cta-bg:#00a38d;
     --cta-text:#ffffff;
   }
-  /* 라이트 모드: 박스 안쪽에 옅은 배경을 깔아 바닥 페이지(흰색)와 구분 */
-  body.light-theme .metric,
-  body.light-theme .pension-entry{
-    background:#f4f6f9;
-    border-color:#e6e9ee;
-  }
+  /* 라이트 모드: 바닥 페이지와 바텀시트는 아주 옅은 회색, 카드·입력 박스는 흰색/진한 회색으로 올려서 구분 */
+  body.light-theme .bottom-sheet,
+  body.light-theme .bottom-sheet2{background:var(--bg);}
   html{
     -webkit-text-size-adjust:100%;
     text-size-adjust:100%;
@@ -276,7 +273,9 @@
     color:var(--text2);
     margin-top:12px;
   }
-  .trend-legend span{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;}
+  .trend-legend span,.trend-legend .lg-chip{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;}
+  .trend-legend .lg-chip{background:none;border:0;padding:4px 0;margin:-4px 0;font:inherit;color:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+  .trend-legend .lg-chip.off{opacity:.4;text-decoration:line-through;}
   .trend-legend i{flex:none;}
   .lg-line{display:inline-block;width:14px;height:0;border-top:2px solid var(--mint);}
   .lg-dash{display:inline-block;width:14px;height:0;border-top:2px dashed var(--text3);}
@@ -2172,9 +2171,19 @@ async function saveSnapshotNow(){
 
 let trendRange = 'all';
 let trendChart = null;
-let plOverlay = true; // true: 자산 추이 차트에 직전 기록 대비 손익 막대를 겹쳐서 표시
-function togglePlOverlay(){
-  plOverlay = !plOverlay;
+// 자산 추이 차트 항목별 표시 여부 (범례 칩으로 온/오프). 마지막 선택은 브라우저에 저장
+const TREND_SERIES_KEYS = ['eval','adj','cost','ret','pl'];
+let trendSeries = { eval:true, adj:true, cost:true, ret:true, pl:true };
+try{
+  const saved = JSON.parse(localStorage.getItem('trend-series') || 'null');
+  if(saved && typeof saved === 'object'){
+    TREND_SERIES_KEYS.forEach(k=>{ if(typeof saved[k] === 'boolean') trendSeries[k] = saved[k]; });
+  }
+}catch(e){}
+const trendOn = k => trendSeries[k] !== false;
+function toggleTrendSeries(k){
+  trendSeries[k] = !trendOn(k);
+  try{ localStorage.setItem('trend-series', JSON.stringify(trendSeries)); }catch(e){}
   renderAssetTrend();
 }
 const TREND_RANGES = [
@@ -2213,28 +2222,35 @@ function showTrendTip(i){
   guide.style.left = leftPct + '%';
   guide.style.display = 'block';
   dot.style.left = leftPct + '%';
-  dot.style.top = topPct + '%';
-  dot.style.display = 'block';
-  let rows = `<div class="trend-tip-date">${fmtDateDot(snap.date)}</div>
+  // 점은 켜진 첫 번째 선 위에 표시 (평가금액 → 원금 증가 제외 → 배당 포함 → 투자원금), 선이 모두 꺼져 있으면 숨김
+  let dotY = null;
+  if(c.on.eval) dotY = p.y;
+  else if(c.on.adj && c.adjValues && c.adjValues[i] != null) dotY = c.yOf(c.adjValues[i]);
+  else if(c.on.ret && c.totalReturnValues) dotY = c.yOf(c.totalReturnValues[i]);
+  else if(c.on.cost && c.costs[i] != null) dotY = c.yOf(c.costs[i]);
+  if(dotY === null){ dot.style.display = 'none'; }
+  else{ dot.style.top = (dotY / c.h * 100) + '%'; dot.style.display = 'block'; }
+  let rows = `<div class="trend-tip-date">${fmtDateDot(snap.date)}</div>`;
+  if(c.on.eval) rows += `
     <div class="trend-tip-row"><span>평가금액</span><span class="num">${fmtWon(v)}</span></div>`;
-  if(c.adjValues && c.adjValues[i] !== null && c.adjValues[i] !== undefined){
+  if(c.on.adj && c.adjValues && c.adjValues[i] !== null && c.adjValues[i] !== undefined){
     rows += `
     <div class="trend-tip-row"><span>원금 증가 제외</span><span class="num" style="color:var(--blue)">${fmtWon(c.adjValues[i])}</span></div>`;
   }
-  if(cost !== null){
+  if(c.on.cost && cost !== null){
     const pl = v - cost;
     const pct = cost ? (pl / cost) * 100 : null;
     rows += `
       <div class="trend-tip-row"><span>투자원금</span><span class="num">${fmtWon(cost)}</span></div>
       <div class="trend-tip-row"><span>평가손익</span><span class="num ${plClass(pl)}">${fmtPL(pl)}${pct!==null ? ' ('+fmtPercent(pct)+')' : ''}</span></div>`;
   }
-  if(c.totalReturnValues && c.totalReturnValues[i] !== undefined){
+  if(c.on.ret && c.totalReturnValues && c.totalReturnValues[i] !== undefined){
     rows += `
       <div class="trend-tip-row"><span>배당 포함 총수익</span><span class="num text-gold">${fmtWon(c.totalReturnValues[i])}</span></div>`;
   }
   // 직전 기록 대비 순수 손익 (원금 추가분 제외) — 배당 아래에 표시
   const pcost = i > 0 ? c.costs[i-1] : null;
-  if(cost !== null && pcost !== null && pcost !== undefined){
+  if(c.on.pl && cost !== null && pcost !== null && pcost !== undefined){
     const dpl = (v - cost) - (c.snaps[i-1].totals[currentOwner] - pcost);
     rows += `
       <div class="trend-tip-row"><span>직전 대비 손익</span><span class="num ${plClass(dpl)}">${fmtPL(dpl)}</span></div>`;
@@ -2327,7 +2343,6 @@ function renderAssetTrend(){
   ).join('')}</div>`;
 
   let periodHtml = '';
-  let plToggleBtnHtml = '';
   let chartHtml = '';
   let minmaxText = '';
   trendChart = null;
@@ -2347,7 +2362,12 @@ function renderAssetTrend(){
     const baseCost = costs.find(c=>c!==null);
     const adjValues = costs.map((c,i)=> (c===null || baseCost===undefined) ? null : values[i] - (c - baseCost));
     const w = 600, h = 140, pad = 8;
-    const all = values.concat(costs.filter(c=>c!==null)).concat(totalReturnValues).concat(adjValues.filter(v=>v!==null));
+    let all = [];
+    if(trendOn('eval')) all = all.concat(values);
+    if(trendOn('cost')) all = all.concat(costs.filter(c=>c!==null));
+    if(trendOn('ret')) all = all.concat(totalReturnValues);
+    if(trendOn('adj')) all = all.concat(adjValues.filter(v=>v!==null));
+    if(!all.length) all = values.concat(costs.filter(c=>c!==null)); // 전부 꺼져 있어도 스케일 계산은 가능하게
     const min = Math.min(...all);
     const max = Math.max(...all);
     const span = (max - min) || 1;
@@ -2361,7 +2381,7 @@ function renderAssetTrend(){
     const totalReturnPts = totalReturnValues.map((v,i)=>`${xOf(i).toFixed(1)},${yOf(v).toFixed(1)}`);
     const adjPts = adjValues.map((v,i)=> v===null ? null : `${xOf(i).toFixed(1)},${yOf(v).toFixed(1)}`).filter(Boolean);
     const hasAdj = adjPts.length >= 2;
-    trendChart = { snaps, costs, totalReturnValues: hasTotalReturn ? totalReturnValues : null, adjValues: hasAdj ? adjValues : null, points, w, h };
+    trendChart = { snaps, costs, totalReturnValues: hasTotalReturn ? totalReturnValues : null, adjValues: hasAdj ? adjValues : null, points, w, h, yOf, on: Object.assign({}, trendSeries) };
 
     const first = values[0];
     const firstDelta = values[values.length-1] - first;
@@ -2392,7 +2412,7 @@ function renderAssetTrend(){
     }
     const canPl = plDeltas.length >= 1;
     let plOverlaySvg = '', plOverlayLabels = '', plUnit = '';
-    if(canPl && plOverlay){
+    if(canPl && trendOn('pl')){
       // 막대가 너무 많으면 폭이 얇아져 읽기 어려우므로 주간 → 월간 순으로 합산해서 30개 안팎으로 유지.
       // 변화량은 더하면 그 기간 전체의 변화량이 되므로 값은 정확하다. 막대 위치는 묶음의 마지막 기록 날짜.
       const MAX_BARS = 30;
@@ -2447,11 +2467,11 @@ function renderAssetTrend(){
       <div class="trend-svg-wrap" id="trendChartWrap">
         ${plOverlayLabels}
         <svg viewBox="0 0 ${w} ${h}" width="100%" height="${h}" preserveAspectRatio="none">
-          <polygon points="${areaPoints}" fill="${areaColor}" opacity="0.6"></polygon>
-          ${hasCost ? `<polyline points="${costPts.join(' ')}" fill="none" stroke="var(--text3)" stroke-width="1.5" stroke-dasharray="4 3" stroke-linejoin="round" vector-effect="non-scaling-stroke"></polyline>` : ''}
-          <polyline points="${polyPoints}" fill="none" stroke="${lineColor}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"></polyline>
-          ${hasAdj ? `<polyline points="${adjPts.join(' ')}" fill="none" stroke="var(--blue)" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"></polyline>` : ''}
-          ${hasTotalReturn ? `<polyline points="${totalReturnPts.join(' ')}" fill="none" stroke="var(--gold)" stroke-width="1.8" stroke-dasharray="1 3.5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"></polyline>` : ''}
+          ${trendOn('eval') ? `<polygon points="${areaPoints}" fill="${areaColor}" opacity="0.6"></polygon>` : ''}
+          ${hasCost && trendOn('cost') ? `<polyline points="${costPts.join(' ')}" fill="none" stroke="var(--text3)" stroke-width="1.5" stroke-dasharray="4 3" stroke-linejoin="round" vector-effect="non-scaling-stroke"></polyline>` : ''}
+          ${trendOn('eval') ? `<polyline points="${polyPoints}" fill="none" stroke="${lineColor}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"></polyline>` : ''}
+          ${hasAdj && trendOn('adj') ? `<polyline points="${adjPts.join(' ')}" fill="none" stroke="var(--blue)" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"></polyline>` : ''}
+          ${hasTotalReturn && trendOn('ret') ? `<polyline points="${totalReturnPts.join(' ')}" fill="none" stroke="var(--gold)" stroke-width="1.8" stroke-dasharray="1 3.5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"></polyline>` : ''}
           ${plOverlaySvg}
         </svg>
         <div class="trend-guide" id="trendGuide"></div>
@@ -2462,9 +2482,8 @@ function renderAssetTrend(){
         <span>${fmtDateDot(snaps[0].date)}</span>
         <span>${fmtDateDot(snaps[snaps.length-1].date)}</span>
       </div>
-      ${hasCost || hasAdj || hasTotalReturn || (canPl && plOverlay) ? `<div class="trend-legend"><span><i class="lg-line"></i>평가금액</span>${hasAdj ? `<span><i class="lg-line" style="border-top-color:var(--blue)"></i>원금 증가 제외</span>` : ''}${hasCost ? `<span><i class="lg-dash"></i>투자원금</span>` : ''}${hasTotalReturn ? `<span><i class="lg-dot"></i>배당 포함 총수익</span>` : ''}${canPl && plOverlay ? `<span><i class="lg-bar"></i>직전 대비 손익${plUnit} (왼쪽 축)</span>` : ''}</div>` : ''}
+      ${hasCost || hasAdj || hasTotalReturn || canPl ? `<div class="trend-legend"><button type="button" class="lg-chip${trendOn('eval') ? '' : ' off'}" onclick="toggleTrendSeries('eval')"><i class="lg-line"></i>평가금액</button>${hasAdj ? `<button type="button" class="lg-chip${trendOn('adj') ? '' : ' off'}" onclick="toggleTrendSeries('adj')"><i class="lg-line" style="border-top-color:var(--blue)"></i>원금 증가 제외</button>` : ''}${hasCost ? `<button type="button" class="lg-chip${trendOn('cost') ? '' : ' off'}" onclick="toggleTrendSeries('cost')"><i class="lg-dash"></i>투자원금</button>` : ''}${hasTotalReturn ? `<button type="button" class="lg-chip${trendOn('ret') ? '' : ' off'}" onclick="toggleTrendSeries('ret')"><i class="lg-dot"></i>배당 포함 총수익</button>` : ''}${canPl ? `<button type="button" class="lg-chip${trendOn('pl') ? '' : ' off'}" onclick="toggleTrendSeries('pl')"><i class="lg-bar"></i>직전 대비 손익${plUnit} (왼쪽 축)</button>` : ''}</div>` : ''}
     `;
-    plToggleBtnHtml = canPl ? `<button class="text-link-btn${plOverlay ? ' active' : ''}" onclick="togglePlOverlay()">직전 대비 손익 보기</button>` : '';
 
   }
 
@@ -2481,7 +2500,7 @@ function renderAssetTrend(){
       </div>
       ${rangeTabsHtml}
       ${chartHtml}
-      <div class="trend-actions">${plToggleBtnHtml}<button class="text-link-btn" onclick="openSnapshotSheet()">스냅샷 기록 관리</button></div>
+      <div class="trend-actions"><button class="text-link-btn" onclick="openSnapshotSheet()">스냅샷 기록 관리</button></div>
     </div>
   `;
   bindTrendChartEvents();
