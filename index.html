@@ -1339,7 +1339,7 @@
       <input type="password" id="gh_token" placeholder="Personal Access Token">
     </div>
     <div class="panel-caption warning">
-      ⚠️ 이 저장소의 Contents 권한만 있는 Fine-grained 토큰을 만들어서 쓰세요. 누구와도 공유하지 마세요. 토큰은 이 브라우저에만 저장되고 stock.json 파일 안에는 절대 포함되지 않아요.
+      ⚠️ 이 저장소의 Contents(읽기/쓰기)와 Actions(읽기/쓰기) 권한만 있는 Fine-grained 토큰을 만들어서 쓰세요. (Actions 권한은 "최신 시세 업데이트 실행" 버튼에 필요해요) 누구와도 공유하지 마세요. 토큰은 이 브라우저에만 저장되고 stock.json 파일 안에는 절대 포함되지 않아요.
     </div>
     <div class="form-actions">
       <button class="btn-ghost" onclick="closeForm('githubSettingsForm')">닫기</button>
@@ -1349,6 +1349,7 @@
 
   <div class="form-row mt-12" style="margin-bottom:0"><input type="text" id="gh_commit_msg" placeholder="커밋 메시지 (비워두면 기본 메시지)" maxlength="100" autocomplete="off"></div>
   <button class="action-btn-prominent full-width mt-8" onclick="pushToGithub()">GitHub에 저장</button>
+  <button class="btn-ghost full-width mt-8" id="priceUpdateBtn" onclick="runPriceUpdate()">최신 시세 업데이트 실행</button>
   <div id="githubSaveStatus" class="panel-caption mt-8"></div>
 </div>
 
@@ -4986,6 +4987,91 @@ async function pushToGithub(){
   }catch(e){
     statusEl.textContent = '저장 실패: ' + e.message;
     showToast('GitHub 저장에 실패했어요');
+  }
+}
+
+// ===== 최신 시세 업데이트: GitHub Actions의 update-price.yml 수동 실행 =====
+const PRICE_WORKFLOW_FILE = 'update-price.yml';
+let PRICE_POLL_MS = 5000;
+let priceUpdateRunning = false;
+async function runPriceUpdate(){
+  if(priceUpdateRunning){ showToast('이미 시세를 업데이트하는 중이에요'); return; }
+  const { repo, path, token } = loadGithubSettings();
+  if(!repo || !token){
+    showToast('먼저 "저장 설정"에서 저장소와 토큰을 입력해주세요');
+    document.getElementById('githubSettingsForm').classList.add('open');
+    return;
+  }
+  const statusEl = document.getElementById('githubSaveStatus');
+  const btn = document.getElementById('priceUpdateBtn');
+  const headers = { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github+json' };
+  const api = `https://api.github.com/repos/${repo}`;
+  const wfApi = `${api}/actions/workflows/${PRICE_WORKFLOW_FILE}`;
+  priceUpdateRunning = true;
+  btn.disabled = true;
+  btn.textContent = '시세 업데이트 중...';
+  try{
+    statusEl.textContent = '시세 업데이트를 요청하는 중...';
+    // 시계 차이와 상관없이 새 실행을 찾기 위해 요청 전 마지막 실행 id를 기억
+    let prevId = 0;
+    try{
+      const pr = await fetch(`${wfApi}/runs?per_page=1`, { headers, cache:'no-store' });
+      if(pr.ok){ const list = (await pr.json()).workflow_runs || []; prevId = list.length ? list[0].id : 0; }
+    }catch(e){}
+    let ref = 'main';
+    try{
+      const rr = await fetch(api, { headers });
+      if(rr.ok){ ref = (await rr.json()).default_branch || ref; }
+    }catch(e){}
+    const dRes = await fetch(`${wfApi}/dispatches`, {
+      method:'POST',
+      headers: { ...headers, 'Content-Type':'application/json' },
+      body: JSON.stringify({ ref })
+    });
+    if(dRes.status !== 204){
+      const err = await dRes.json().catch(()=>({}));
+      let hint = '';
+      if(dRes.status === 401 || dRes.status === 403) hint = ' · 토큰에 Actions 읽기/쓰기 권한이 필요해요';
+      else if(dRes.status === 404) hint = ' · 워크플로우 파일 이름 또는 토큰의 Actions 권한을 확인해주세요';
+      else if(dRes.status === 422) hint = ' · update-price.yml에 workflow_dispatch 트리거가 있어야 해요';
+      throw new Error((err.message || `요청 실패 (${dRes.status})`) + hint);
+    }
+    statusEl.textContent = '시세 업데이트 실행 중... (보통 1~2분)';
+    const deadline = Date.now() + 5 * 60 * 1000;
+    let run = null;
+    while(Date.now() < deadline){
+      await new Promise(r=>setTimeout(r, PRICE_POLL_MS));
+      let list = [];
+      try{
+        const lr = await fetch(`${wfApi}/runs?event=workflow_dispatch&per_page=5`, { headers, cache:'no-store' });
+        if(lr.ok) list = (await lr.json()).workflow_runs || [];
+      }catch(e){ continue; }
+      run = list.find(x=>x.id > prevId) || null;
+      if(run && run.status === 'completed') break;
+    }
+    if(!run || run.status !== 'completed') throw new Error('시간이 오래 걸리고 있어요. 잠시 후 새로고침해서 확인해주세요');
+    if(run.conclusion !== 'success') throw new Error(`실행이 실패했어요 (${run.conclusion}) · GitHub Actions 로그를 확인해주세요`);
+    // 갱신된 stock.json을 읽어 현재가를 바로 반영 (GitHub Pages 반영 지연과 무관)
+    let applied = null;
+    if(path){
+      statusEl.textContent = '최신 시세를 불러오는 중...';
+      const fr = await fetch(`${api}/contents/${path}`, { headers: { ...headers, 'Accept':'application/vnd.github.raw+json' }, cache:'no-store' });
+      if(!fr.ok) throw new Error(`stock.json 조회 실패 (${fr.status})`);
+      const remote = JSON.parse(await fr.text());
+      applied = mergeRemoteIntoLocal(remote);
+      await saveData();
+      render();
+    }
+    const note = applied ? ` (현재가 ${applied.prices}건 반영)` : '';
+    statusEl.textContent = '시세 업데이트 완료 · ' + new Date().toLocaleTimeString('ko-KR') + note;
+    showToast('최신 시세를 반영했어요' + note);
+  }catch(e){
+    statusEl.textContent = '시세 업데이트 실패: ' + e.message;
+    showToast('시세 업데이트에 실패했어요');
+  }finally{
+    priceUpdateRunning = false;
+    btn.disabled = false;
+    btn.textContent = '최신 시세 업데이트 실행';
   }
 }
 
