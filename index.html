@@ -4990,8 +4990,8 @@ async function pushToGithub(){
   }
 }
 
-// ===== 최신 시세 업데이트: GitHub Actions의 update-price.yml 수동 실행 =====
-const PRICE_WORKFLOW_FILE = 'update-price.yml';
+// ===== 최신 시세 업데이트: GitHub Actions의 update-prices.yml 수동 실행 =====
+const PRICE_WORKFLOW_FILE = 'update-prices.yml';
 let PRICE_POLL_MS = 5000;
 let priceUpdateRunning = false;
 async function runPriceUpdate(){
@@ -5006,12 +5006,37 @@ async function runPriceUpdate(){
   const btn = document.getElementById('priceUpdateBtn');
   const headers = { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github+json' };
   const api = `https://api.github.com/repos/${repo}`;
-  const wfApi = `${api}/actions/workflows/${PRICE_WORKFLOW_FILE}`;
+  let wfApi = `${api}/actions/workflows/${PRICE_WORKFLOW_FILE}`;
   priceUpdateRunning = true;
   btn.disabled = true;
   btn.textContent = '시세 업데이트 중...';
   try{
     statusEl.textContent = '시세 업데이트를 요청하는 중...';
+    // 워크플로우 확인: 파일 이름이 다르면 저장소의 워크플로우 목록에서 찾아보고, 못 찾으면 목록을 알려줌
+    const chk = await fetch(wfApi, { headers, cache:'no-store' });
+    if(chk.status === 404){
+      let wfs = null;
+      try{
+        const wr = await fetch(`${api}/actions/workflows?per_page=100`, { headers, cache:'no-store' });
+        if(wr.ok) wfs = (await wr.json()).workflows || [];
+        else if(wr.status === 404) throw new Error(`저장소 '${repo}'를 찾을 수 없어요 · 저장 설정의 저장소 이름과 토큰의 저장소 접근 권한을 확인해주세요`);
+      }catch(e){ if(e.message.indexOf('저장소 \'') === 0) throw e; }
+      if(wfs){
+        const cand = wfs.filter(w=>/price/i.test(w.path + ' ' + w.name));
+        if(cand.length === 1){
+          wfApi = `${api}/actions/workflows/${cand[0].id}`;
+        }else if(wfs.length){
+          throw new Error(`'${PRICE_WORKFLOW_FILE}'를 찾지 못했어요 · 이 저장소의 워크플로우: ` + wfs.map(w=>w.path.split('/').pop()).join(', '));
+        }else{
+          throw new Error(`저장소 '${repo}'에 워크플로우가 없어요 · .github/workflows 폴더(기본 브랜치)와 저장소 이름을 확인해주세요`);
+        }
+      }else{
+        throw new Error(`'${PRICE_WORKFLOW_FILE}'를 찾지 못했어요 · 파일 이름과 위치(.github/workflows, 기본 브랜치)를 확인해주세요`);
+      }
+    }else if(!chk.ok){
+      const ce = await chk.json().catch(()=>({}));
+      throw new Error((ce.message || `워크플로우 조회 실패 (${chk.status})`) + (chk.status === 403 || chk.status === 401 ? ' · 토큰에 Actions 읽기/쓰기 권한이 필요해요' : ''));
+    }
     // 시계 차이와 상관없이 새 실행을 찾기 위해 요청 전 마지막 실행 id를 기억
     let prevId = 0;
     try{
@@ -5032,8 +5057,8 @@ async function runPriceUpdate(){
       const err = await dRes.json().catch(()=>({}));
       let hint = '';
       if(dRes.status === 401 || dRes.status === 403) hint = ' · 토큰에 Actions 읽기/쓰기 권한이 필요해요';
-      else if(dRes.status === 404) hint = ' · 워크플로우 파일 이름 또는 토큰의 Actions 권한을 확인해주세요';
-      else if(dRes.status === 422) hint = ' · update-price.yml에 workflow_dispatch 트리거가 있어야 해요';
+      else if(dRes.status === 404) hint = ' · 워크플로우를 찾지 못했어요';
+      else if(dRes.status === 422) hint = ' · update-prices.yml에 workflow_dispatch 트리거가 있어야 해요';
       throw new Error((err.message || `요청 실패 (${dRes.status})`) + hint);
     }
     statusEl.textContent = '시세 업데이트 실행 중... (보통 1~2분)';
