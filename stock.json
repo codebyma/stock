@@ -685,7 +685,7 @@
       "sells": []
     }
   ],
-  "lastPriceUpdate": "2026-10-12 11:13 (KST)",
+  "lastPriceUpdate": "2026-10-12 13:57 (KST)",
   "snapshots": [
     {
       "date": "2026-09-02",
@@ -1026,9 +1026,9 @@
     {
       "date": "2026-10-12",
       "totals": {
-        "me": 31438952,
-        "wife": 90906090,
-        "ALL": 122345042
+        "me": 31457852,
+        "wife": 91011218,
+        "ALL": 122469070
       },
       "costs": {
         "me": 22336523,
@@ -1234,7 +1234,7 @@
       "key": "360750",
       "ticker": "360750",
       "name": "Ⓣ S&P500",
-      "currentPrice": 25985,
+      "currentPrice": 25987,
       "naverUrl": "https://m.stock.naver.com/domestic/stock/360750/analysis",
       "tossUrl": "https://tossinvest.com/_ul/kUSDQA",
       "priceUpdatedAt": "2026-10-12"
@@ -1243,7 +1243,7 @@
       "key": "133690",
       "ticker": "133690",
       "name": "Ⓣ 나스닥100",
-      "currentPrice": 183402,
+      "currentPrice": 183582,
       "naverUrl": "https://m.stock.naver.com/domestic/stock/133690/analysis",
       "tossUrl": "https://tossinvest.com/_ul/kUyScA",
       "priceUpdatedAt": "2026-10-12"
@@ -1252,7 +1252,7 @@
       "key": "381180",
       "ticker": "381180",
       "name": "Ⓣ 미국필라델피아반도체나스닥",
-      "currentPrice": 43815,
+      "currentPrice": 43955,
       "naverUrl": "https://m.stock.naver.com/domestic/stock/381180/analysis",
       "tossUrl": "https://tossinvest.com/_ul/kgSKyD",
       "priceUpdatedAt": "2026-10-12"
@@ -1261,7 +1261,7 @@
       "key": "305080",
       "ticker": "305080",
       "name": "Ⓣ 미국채10년선물",
-      "currentPrice": 11535,
+      "currentPrice": 11520,
       "naverUrl": "https://m.stock.naver.com/domestic/stock/305080/analysis",
       "tossUrl": "https://tossinvest.com/_ul/kIzzKD",
       "priceUpdatedAt": "2026-10-12"
@@ -1270,7 +1270,7 @@
       "key": "304660",
       "ticker": "304660",
       "name": "Ⓚ 미국30년국채울트라선물(H)",
-      "currentPrice": 6915,
+      "currentPrice": 6920,
       "naverUrl": "https://m.stock.naver.com/domestic/stock/304660/analysis",
       "tossUrl": "https://tossinvest.com/_ul/kIzzeG",
       "priceUpdatedAt": "2026-10-12"
@@ -1279,7 +1279,7 @@
       "key": "458730",
       "ticker": "458730",
       "name": "Ⓣ 미국배당다우존스",
-      "currentPrice": 14030,
+      "currentPrice": 14020,
       "naverUrl": "https://m.stock.naver.com/domestic/stock/458730/analysis",
       "tossUrl": "https://tossinvest.com/_ul/kUi3QA",
       "priceUpdatedAt": "2026-10-12"
@@ -1288,7 +1288,7 @@
       "key": "319640",
       "ticker": "319640",
       "name": "Ⓣ 골드선물(H)",
-      "currentPrice": 24665,
+      "currentPrice": 24580,
       "naverUrl": "https://m.stock.naver.com/domestic/stock/319640/analysis",
       "tossUrl": "https://tossinvest.com/_ul/kIzzaD",
       "priceUpdatedAt": "2026-10-12"
@@ -1297,7 +1297,7 @@
       "key": "0008S0",
       "ticker": "0008S0",
       "name": "Ⓣ 마국배당다우존스타켓데일리커버드콜",
-      "currentPrice": 9265,
+      "currentPrice": 9245,
       "naverUrl": "https://m.stock.naver.com/domestic/stock/0008S0/analysis",
       "tossUrl": "https://tossinvest.com/_ul/kUSDQA",
       "priceUpdatedAt": "2026-10-12"
@@ -1306,7 +1306,7 @@
       "key": "182480",
       "ticker": "182480",
       "name": "Ⓣ 미국MSCI리츠(합성H)",
-      "currentPrice": 12800,
+      "currentPrice": 12705,
       "naverUrl": "https://m.stock.naver.com/domestic/stock/182480/analysis",
       "tossUrl": "https://tossinvest.com/_ul/kIzzOD",
       "priceUpdatedAt": "2026-10-12"
@@ -1315,7 +1315,7 @@
       "key": "371460",
       "ticker": "371460",
       "name": "Ⓣ 차이나전기차SOLACTIVE",
-      "currentPrice": 9025,
+      "currentPrice": 8975,
       "naverUrl": "https://m.stock.naver.com/domestic/stock/371460/analysis",
       "tossUrl": "https://tossinvest.com/_ul/kIzz2C",
       "priceUpdatedAt": "2026-10-12"
@@ -1324,7 +1324,7 @@
       "key": "466940",
       "ticker": "466940",
       "name": "Ⓣ 은행고배당플러스TOP10",
-      "currentPrice": 24905,
+      "currentPrice": 25030,
       "naverUrl": "https://m.stock.naver.com/domestic/stock/466940/analysis",
       "tossUrl": "https://tossinvest.com/_ul/k4ikeF",
       "priceUpdatedAt": "2026-10-12"
@@ -1333,7 +1333,7 @@
       "key": "441640",
       "ticker": "441640",
       "name": "Ⓚ 미국배당커버드콜액티브",
-      "currentPrice": 12210,
+      "currentPrice": 12200,
       "naverUrl": "https://m.stock.naver.com/domestic/stock/441640/analysis",
       "tossUrl": "https://tossinvest.com/_ul/kQyzsB",
       "priceUpdatedAt": "2026-10-12"
@@ -1342,7 +1342,7 @@
       "key": "329650",
       "ticker": "329650",
       "name": "Ⓚ TRF3070",
-      "currentPrice": 14020,
+      "currentPrice": 14025,
       "naverUrl": "https://m.stock.naver.com/domestic/stock/329650/analysis",
       "tossUrl": "https://tossinvest.com/_ul/kIzzuC",
       "priceUpdatedAt": "2026-10-12",
@@ -1352,7 +1352,7 @@
       "key": "379800",
       "ticker": "379800",
       "name": "Ⓚ 미국S&P500",
-      "currentPrice": 23620,
+      "currentPrice": 23622,
       "naverUrl": "https://m.stock.naver.com/domestic/stock/379800/analysis",
       "tossUrl": "https://tossinvest.com/_ul/kUSkeF",
       "priceUpdatedAt": "2026-10-12"
@@ -1361,7 +1361,7 @@
       "key": "0043B0",
       "ticker": "0043B0",
       "name": "Ⓣ 머나마켓액티브",
-      "currentPrice": 103937,
+      "currentPrice": 103940,
       "priceUpdatedAt": "2026-10-12"
     }
   ],
